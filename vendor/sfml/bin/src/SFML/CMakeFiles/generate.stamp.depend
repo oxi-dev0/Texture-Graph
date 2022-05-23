@@ -1,0 +1,5 @@
+# CMake generation dependency list for this directory.
+C:/Program Files/CMake/share/cmake-3.23/Modules/CMakeParseArguments.cmake
+D:/Git Projects/biosim/vendor/SFML/cmake/CompilerWarnings.cmake
+D:/Git Projects/biosim/vendor/SFML/cmake/Macros.cmake
+D:/Git Projects/biosim/vendor/SFML/src/SFML/CMakeLists.txt

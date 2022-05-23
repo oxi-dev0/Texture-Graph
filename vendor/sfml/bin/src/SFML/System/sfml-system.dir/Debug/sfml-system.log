@@ -1,0 +1,10 @@
+﻿  Building Custom Rule D:/Git Projects/biosim/vendor/SFML/src/SFML/System/CMakeLists.txt
+  Clock.cpp
+  Err.cpp
+  Sleep.cpp
+  String.cpp
+  FileInputStream.cpp
+  MemoryInputStream.cpp
+  SleepImpl.cpp
+  Generating Code...
+  sfml-system.vcxproj -> D:\Git Projects\biosim\vendor\SFML\bin\lib\Debug\sfml-system-s-d.lib

@@ -1,0 +1,33 @@
+﻿  Building Custom Rule D:/Git Projects/biosim/vendor/SFML/src/SFML/Graphics/CMakeLists.txt
+  BlendMode.cpp
+  Font.cpp
+  Glsl.cpp
+  GLCheck.cpp
+  GLExtensions.cpp
+  Image.cpp
+  ImageLoader.cpp
+  RenderStates.cpp
+  RenderTexture.cpp
+  RenderTarget.cpp
+  RenderWindow.cpp
+  Shader.cpp
+  Texture.cpp
+  TextureSaver.cpp
+  Transform.cpp
+  Transformable.cpp
+  View.cpp
+  Shape.cpp
+  CircleShape.cpp
+  RectangleShape.cpp
+  Generating Code...
+  Compiling...
+  ConvexShape.cpp
+  Sprite.cpp
+  Text.cpp
+  VertexArray.cpp
+  VertexBuffer.cpp
+  RenderTextureImpl.cpp
+  RenderTextureImplFBO.cpp
+  RenderTextureImplDefault.cpp
+  Generating Code...
+  sfml-graphics.vcxproj -> D:\Git Projects\biosim\vendor\SFML\bin\lib\Release\sfml-graphics-s.lib

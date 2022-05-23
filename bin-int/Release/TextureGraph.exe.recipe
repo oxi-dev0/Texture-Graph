@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>D:\Git Projects\Texture-Graph\bin\Release\TextureGraph.exe</FullPath>
+      <FullPath>D:\Git Projects\TextureGraph\bin\Release\TextureGraph.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />

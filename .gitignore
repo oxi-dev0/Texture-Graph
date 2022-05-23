@@ -4,6 +4,8 @@
 .vs/
 .git/
 
+bin-int/
+
 # Compiled Object files
 *.slo
 *.lo

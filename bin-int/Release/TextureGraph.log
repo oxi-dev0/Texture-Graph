@@ -1,2 +1,13 @@
-﻿  imgui.cpp
-  TextureGraph.vcxproj -> D:\Git Projects\Texture-Graph\bin\Release\TextureGraph.exe
+﻿  ColourSchemes.cpp
+  Log.cpp
+  SysIntegration.cpp
+  Timer.cpp
+  main.cpp
+  imgui-SFML.cpp
+  imgui.cpp
+  imgui_demo.cpp
+  imgui_draw.cpp
+  imgui_tables.cpp
+D:\Git Projects\TextureGraph\vendor\imgui\imgui-SFML.cpp(584,19): warning C4834: discarding return value of function with 'nodiscard' attribute
+  imgui_widgets.cpp
+  TextureGraph.vcxproj -> D:\Git Projects\TextureGraph\bin\Release\TextureGraph.exe

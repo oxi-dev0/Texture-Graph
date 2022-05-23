@@ -97,12 +97,13 @@ int main(int argc, char** argv)
 
     LOG_INFO("Started Engine");
 
-
     sf::ContextSettings settings;
     settings.antialiasingLevel = 8;
 
     sf::RenderWindow window(sf::VideoMode(1920, 1080), "Texture Graph"); // Main editor window
     ImGui::SFML::Init(window, false);
+
+    ImGui::LoadIniSettingsFromDisk("resources/defaultlayout.ini");
 
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;

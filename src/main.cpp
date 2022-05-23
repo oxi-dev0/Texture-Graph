@@ -5,6 +5,8 @@
 #include <locale>
 #include <filesystem>
 
+#include <dwmapi.h>
+
 #include "imgui.h"
 #include "imgui-SFML.h"
 
@@ -24,7 +26,10 @@
 bool fullscreen = false;
 bool demoOpen = false;
 
-void UI_Dockspace()
+sf::Vector2u prevSize;
+sf::Vector2i prevPos;
+
+void UI_Dockspace(sf::RenderWindow& window)
 {
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y));
@@ -57,7 +62,20 @@ void UI_Dockspace()
 
         if (ImGui::BeginMenu("View")) {
             ImGui::PushItemFlag(ImGuiItemFlags_SelectableDontClosePopup, true);
-            ImGui::MenuItem("Fullscreen", "", &fullscreen);
+            if (ImGui::MenuItem("Fullscreen", "", &fullscreen)) {
+                if (fullscreen) {
+                    prevSize = window.getSize();
+                    prevPos = window.getPosition();
+                    /*window.setSize(sf::Vector2u(sf::VideoMode::getDesktopMode().width, sf::VideoMode::getDesktopMode().height));
+                    window.setPosition(sf::Vector2i(0, 0));*/
+                    window.create(sf::VideoMode::getFullscreenModes()[0], "Texture Graph", sf::Style::Fullscreen);
+                }
+                else {
+                    window.create(sf::VideoMode(prevSize.x, prevSize.y), "Texture Graph");
+                    window.setPosition(prevPos);
+                }
+            }
+            
             ImGui::PopItemFlag();
 
             ImGui::Separator();
@@ -151,7 +169,7 @@ int main(int argc, char** argv)
 
         ImGui::SFML::Update(window, deltaClock.restart());
 
-        UI_Dockspace();
+        UI_Dockspace(window);
 
         if (demoOpen) {
             ImGui::ShowDemoWindow(&demoOpen);

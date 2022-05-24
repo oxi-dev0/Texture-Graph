@@ -21,6 +21,7 @@ protected:
 
 public:
 	bool visible;
+	bool enabled;
 	ImGuiWindowFlags flags;
 	std::string name;
 

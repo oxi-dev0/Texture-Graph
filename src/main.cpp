@@ -34,7 +34,8 @@ enum WindowType {
 
 typedef std::tuple<std::string, WindowType, ImGuiWindowFlags> optionalWindow;
 std::vector<optionalWindow> optionalViews = {
-    optionalWindow("Graph Editor", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)
+    optionalWindow("Graph Editor", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
+    optionalWindow("SEX Editor", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)
 };
 
 int main(int argc, char** argv)
@@ -52,9 +53,10 @@ int main(int argc, char** argv)
     ImGui::LoadIniSettingsFromDisk("resources/defaultlayout.ini");
     LOG_INFO("Successfully loaded layout from 'resources/defaultlayout.ini'");
 
-    sf::RenderTexture newT; // trying to fix unique ptrs being deleted
+    //sf::RenderTexture newT; // trying to fix unique ptrs being deleted
 
     std::vector<SubWindow*> windows;
+    std::vector<sf::RenderTexture*> textures;
     for (auto& view : optionalViews) {
         std::string name = std::get<0>(view);
         WindowType type = std::get<1>(view);
@@ -62,11 +64,15 @@ int main(int argc, char** argv)
 
         switch (type) {
         case WindowType::Base:
+        {
             windows.push_back(new SubWindow(primaryWindow.window, name, flags));
-            break;
+        }   break;
         case WindowType::GraphEditor:
-            windows.push_back(new GraphEditorView(primaryWindow.window, newT, name, flags));
-            break;
+        {
+            sf::RenderTexture* tex = new sf::RenderTexture();
+            textures.push_back(tex);
+            windows.push_back(new GraphEditorView(primaryWindow.window, *tex, name, flags));
+        }   break;
         default:
             break;
         }
@@ -83,14 +89,13 @@ int main(int argc, char** argv)
         primaryWindow.BeginRender();
 
         for (SubWindow* window : windows) {
-            if (window->visible) {
-                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-                ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-                ImGui::Begin(window->name.c_str(), &window->visible, window->flags);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+            window->visible = ImGui::Begin(window->name.c_str(), &window->enabled, window->flags);
+            if(window->visible)
                 window->Render();
-                ImGui::End();
-                ImGui::PopStyleVar(2);
-            }
+            ImGui::End();
+            ImGui::PopStyleVar(2);
         }
 
         ImGui::Begin("Other");
@@ -98,6 +103,10 @@ int main(int argc, char** argv)
         ImGui::End();
 
         primaryWindow.EndRender();
+    }
+
+    for (auto* tex : textures) {
+        delete tex;
     }
 
     LOG_INFO("Stopping Engine");

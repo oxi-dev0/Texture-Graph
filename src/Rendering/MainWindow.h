@@ -33,6 +33,8 @@ public:
 	sf::RenderWindow window;
 	std::vector<SubWindow*>* views;
 
+	bool exit;
+
 private:
 	void MenuBar();
 	void InfoBar(float height = 20.0f);

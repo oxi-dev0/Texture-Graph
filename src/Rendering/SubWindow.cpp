@@ -2,6 +2,7 @@
 
 SubWindow::SubWindow(sf::RenderWindow& main_, std::string name_, ImGuiWindowFlags flags_) : main(main_) {
     visible = true;
+    enabled = true;
     name = name_;
     flags = flags_;
 }

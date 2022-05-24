@@ -9,6 +9,15 @@ void MainWindow::MenuBar() {
             {
                 //Do something
             }
+
+            ImGui::Separator();
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Quit")) {
+                exit = true;
+            }
+
             ImGui::EndMenu();
         }
 
@@ -31,7 +40,7 @@ void MainWindow::MenuBar() {
 
             if (ImGui::BeginMenu("Views")) {
                 for (SubWindow* window : *views) {
-                    ImGui::MenuItem("Graph Editor", "", &window->visible);
+                    ImGui::MenuItem(window->name.c_str(), "", &window->enabled);
                 }
                 ImGui::EndMenu();
             }
@@ -125,9 +134,11 @@ void MainWindow::Dockspace()
 MainWindow::MainWindow() {
     fullscreen = false;
     demoOpen = false;
+    exit = false;
 }
 
 MainWindow::MainWindow(std::string windowTitle) {
+    exit = false;
     Init(windowTitle);
 }
 
@@ -179,13 +190,15 @@ int MainWindow::Update() {
         }
 
         for (auto& view : *views) {
+            if (!view->visible) { continue; }
+
             auto transformed = Utility::Mapping::pixelToWindowLoc(sf::Mouse::getPosition(), window);
             if (transformed.x >= view->prevPos.x && transformed.x <= view->prevPos.x + view->prevSize.x && transformed.y >= view->prevPos.y && transformed.y <= view->prevPos.y + view->prevSize.y) {
                 view->ProcessEvent(event);
             }
         }
     }
-    if (br) {
+    if (br || exit) {
         return 1;
     }
 

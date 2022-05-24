@@ -8,63 +8,65 @@ GraphEditorView::GraphEditorView(sf::RenderWindow& main_, sf::RenderTexture& rt_
 	SetBGColor(ImVec4(bgColor.x * mul, bgColor.y * mul, bgColor.z * mul, 1));
 } // JUST CALLS CONSTRUCTOR FOR SUBWINDOW
 
-void GraphEditorView::Grid() {
+void GraphEditorView::Grid(bool updated) {
 	if (prevSize.x == 0) { return; }
 
-	int lineSpacing = 20;
-	ImVec4 bgColor = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
-	float mul = 0.4f;
-	ImVec4 col = ImVec4(bgColor.x * mul, bgColor.y * mul, bgColor.z * mul, 1);
-	sf::Color lineColor = sf::Color(col.x * 255, col.y * 255, col.z * 255, col.w * 255);
+	if (lines.getVertexCount() == 0 || updated) {
+		int lineSpacing = 40;
+		ImVec4 bgColor = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
+		float mul = 0.4f;
+		ImVec4 col = ImVec4(bgColor.x * mul, bgColor.y * mul, bgColor.z * mul, 1);
+		sf::Color lineColor = sf::Color(col.x * 255, col.y * 255, col.z * 255, col.w * 255);
 
-	int xSpace = std::floor((float)rt.mapCoordsToPixel(sf::Vector2f(lineSpacing, 0)).x - (float)rt.mapCoordsToPixel(sf::Vector2f(0, 0)).x);
-	int ySpace = std::floor((float)rt.mapCoordsToPixel(sf::Vector2f(0, lineSpacing)).y - (float)rt.mapCoordsToPixel(sf::Vector2f(0, 0)).y);
+		int xSpace = std::floor((float)rt.mapCoordsToPixel(sf::Vector2f(lineSpacing, 0)).x - (float)rt.mapCoordsToPixel(sf::Vector2f(0, 0)).x);
+		int ySpace = std::floor((float)rt.mapCoordsToPixel(sf::Vector2f(0, lineSpacing)).y - (float)rt.mapCoordsToPixel(sf::Vector2f(0, 0)).y);
 
-	sf::Vector2f offset = sf::Vector2f((float)((int)(vcenter.x*prevSize.x*(1/zoom)) % xSpace), (float)((int)(vcenter.y*prevSize.y * (1 / zoom)) % ySpace)); // -sf::Vector2f(lineSpacingX * std::floor(((vcenter.x * prevSize.x) - (prevSize.x / 2)) / sf::Vector2f(rt.mapCoordsToPixel(sf::Vector2f(lineSpacingX, 0)) - rt.mapCoordsToPixel(sf::Vector2f(0, 0))).length()), lineSpacingY * std::floor(((vcenter.y * prevSize.y) - (prevSize.y / 2)) / sf::Vector2f(rt.mapCoordsToPixel(sf::Vector2f(0, lineSpacingY)) - rt.mapCoordsToPixel(sf::Vector2f(0, 0))).length()));
+		sf::Vector2f offset = sf::Vector2f((float)((int)(vcenter.x * prevSize.x * (1 / zoom)) % xSpace), (float)((int)(vcenter.y * prevSize.y * (1 / zoom)) % ySpace)); // -sf::Vector2f(lineSpacingX * std::floor(((vcenter.x * prevSize.x) - (prevSize.x / 2)) / sf::Vector2f(rt.mapCoordsToPixel(sf::Vector2f(lineSpacingX, 0)) - rt.mapCoordsToPixel(sf::Vector2f(0, 0))).length()), lineSpacingY * std::floor(((vcenter.y * prevSize.y) - (prevSize.y / 2)) / sf::Vector2f(rt.mapCoordsToPixel(sf::Vector2f(0, lineSpacingY)) - rt.mapCoordsToPixel(sf::Vector2f(0, 0))).length()));
 
-	int totalLinesX = prevSize.x / xSpace;
-	int totalLinesY = prevSize.y / ySpace;
-	sf::VertexArray lines(sf::Lines, 2+((totalLinesX) + (totalLinesY))*2);
+		int totalLinesX = prevSize.x / xSpace;
+		int totalLinesY = prevSize.y / ySpace;
+		lines = sf::VertexArray(sf::Lines, 2 + ((totalLinesX)+(totalLinesY)) * 2);
 
-	for (int x = 0; x <= totalLinesX; x+=1) {
-		int i1 = x*2;
-		int i2 = (x*2) + 1;
+		for (int x = 0; x <= totalLinesX; x += 1) {
+			int i1 = x * 2;
+			int i2 = (x * 2) + 1;
 
-		// pixel space
-		float xPos = ((float)rt.mapCoordsToPixel(sf::Vector2f(lineSpacing, 0)).x - (float)rt.mapCoordsToPixel(sf::Vector2f(0, 0)).x) * (float)x;
+			// pixel space
+			float xPos = ((float)rt.mapCoordsToPixel(sf::Vector2f(lineSpacing, 0)).x - (float)rt.mapCoordsToPixel(sf::Vector2f(0, 0)).x) * (float)x;
 
-		lines[i1].position = sf::Vector2f(rt.mapPixelToCoords(sf::Vector2i(sf::Vector2f(xPos, 0) - offset)));
-		lines[i2].position = sf::Vector2f(rt.mapPixelToCoords(sf::Vector2i(sf::Vector2f(xPos, prevSize.y) - offset)));
-		lines[i1].color = lineColor;
-		lines[i2].color = lineColor;
-	}
+			lines[i1].position = sf::Vector2f(rt.mapPixelToCoords(sf::Vector2i(sf::Vector2f(xPos, 0 - lineSpacing) - offset)));
+			lines[i2].position = sf::Vector2f(rt.mapPixelToCoords(sf::Vector2i(sf::Vector2f(xPos, prevSize.y + lineSpacing) - offset)));
+			lines[i1].color = lineColor;
+			lines[i2].color = lineColor;
+		}
 
-	for (int y = 0; y <= totalLinesY; y += 1) {
-		int i1 = y * 2;
-		int i2 = (y * 2) + 1;
+		for (int y = 0; y <= totalLinesY; y += 1) {
+			int i1 = y * 2;
+			int i2 = (y * 2) + 1;
 
-		i1 += totalLinesX*2;
-		i2 += totalLinesX*2;
+			i1 += totalLinesX * 2;
+			i2 += totalLinesX * 2;
 
-		// pixel space
-		float yPos = ((float)rt.mapCoordsToPixel(sf::Vector2f(0, lineSpacing)).y - (float)rt.mapCoordsToPixel(sf::Vector2f(0, 0)).y) * (float)y;
+			// pixel space
+			float yPos = ((float)rt.mapCoordsToPixel(sf::Vector2f(0, lineSpacing)).y - (float)rt.mapCoordsToPixel(sf::Vector2f(0, 0)).y) * (float)y;
 
-		lines[i1].position = sf::Vector2f(rt.mapPixelToCoords(sf::Vector2i(sf::Vector2f(0, yPos) - offset)));
-		lines[i2].position = sf::Vector2f(rt.mapPixelToCoords(sf::Vector2i(sf::Vector2f(prevSize.x, yPos) - offset)));
-		lines[i1].color = lineColor;
-		lines[i2].color = lineColor;
+			lines[i1].position = sf::Vector2f(rt.mapPixelToCoords(sf::Vector2i(sf::Vector2f(0 - lineSpacing, yPos) - offset)));
+			lines[i2].position = sf::Vector2f(rt.mapPixelToCoords(sf::Vector2i(sf::Vector2f(prevSize.x + lineSpacing, yPos) - offset)));
+			lines[i1].color = lineColor;
+			lines[i2].color = lineColor;
+		}
 	}
 
 	rt.draw(lines);
 }
 
 // RENDER STEP FOR THIS VIEW
-void GraphEditorView::ImGuiRender() {
+void GraphEditorView::ImGuiRender(bool updated) {
 	if (moving) {
 		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeAll);
 	}
 
-	Grid();
+	Grid(moving || updated);
 
     sf::RectangleShape shape2(sf::Vector2f(50.0f, 20.0f));
     shape2.setFillColor(sf::Color::Red);
@@ -81,7 +83,7 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 	switch (event.type) {
 	case sf::Event::MouseButtonPressed:
 	{
-		if (event.mouseButton.button == sf::Mouse::Button::Right) {
+		if (event.mouseButton.button == sf::Mouse::Button::Middle) {
 			moving = true;
 			sf::Vector2i pos = sf::Mouse::getPosition();
 			oldPos = sf::Vector2f(pos.x, pos.y);
@@ -93,7 +95,7 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 	} break;
 	case  sf::Event::MouseButtonReleased:
 	{
-		if (event.mouseButton.button == sf::Mouse::Button::Right) {
+		if (event.mouseButton.button == sf::Mouse::Button::Middle) {
 			moving = false;
 			return true; // lose handling priority
 		}

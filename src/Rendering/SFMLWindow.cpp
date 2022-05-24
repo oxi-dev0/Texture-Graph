@@ -57,7 +57,7 @@ void SFMLWindow::InfoBar(float height) {
 	ImGui::PopStyleVar(2);
 }
 
-void SFMLWindow::ImGuiRender() {
+void SFMLWindow::ImGuiRender(bool updated) {
 
 }
 
@@ -67,23 +67,24 @@ bool SFMLWindow::ProcessEvent(sf::Event& event) {
 
 void SFMLWindow::Render() {
 	ImVec2 contentAvail = ImGui::GetContentRegionAvail();
+	ImVec2 pos = GetPos();
 	rt.clear(bgCol);
 
-	ImGuiRender();
+	ImGuiRender((pos.x != prevPos.x || pos.y != prevPos.y) || (contentAvail.x != prevSize.x || contentAvail.y != prevSize.y) || prevZoom != zoom || updated);
+	if(updated) updated = false;
 
 	rt.display();
 
 	view.setCenter(sf::Vector2f(vcenter.x * contentAvail.x, vcenter.y * contentAvail.y) + sf::Vector2f(contentAvail.x / 2.0f, contentAvail.y / 2.0f));
 	view.setSize(contentAvail.x, contentAvail.y);
 	view.setViewport(sf::FloatRect(sf::Vector2f(0, 0), sf::Vector2f(contentAvail.x / (float)rt.getSize().x, contentAvail.y / (float)rt.getSize().y)));
-	prevZoom = std::lerp(prevZoom, zoom, 0.6f);
+	prevZoom = std::lerp(prevZoom, zoom, 0.8f);
 	view.zoom(prevZoom);
 	rt.setView(view);
 
 	ImGui::Image(rt, sf::Vector2f(rt.getSize().x, rt.getSize().y));
 	InfoBar(25.0f);
 
-	ImVec2 pos = GetPos();
 	prevPos = sf::Vector2i(pos.x, pos.y);
 	prevSize = sf::Vector2u((unsigned int)contentAvail.x, (unsigned int)contentAvail.y);
 }

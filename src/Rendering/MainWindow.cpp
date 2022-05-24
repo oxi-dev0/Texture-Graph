@@ -80,7 +80,7 @@ void MainWindow::InfoBar(float height) {
 
     std::stringstream mouseStream;
     sf::Vector2f mousePos = Utility::Mapping::pixelToWindowLoc(sf::Mouse::getPosition(), window);
-    mouseStream << "(" << mousePos.x << ", " << mousePos.y << ")";
+    mouseStream << "Mouse: (" << mousePos.x << ", " << mousePos.y << ")";
     ImGui::Text(mouseStream.str().c_str());
 
     ImGui::SameLine(0.0f, 25.0f);
@@ -174,10 +174,20 @@ void MainWindow::SetFullscreen(bool newFullscreen) {
         prevSize = window.getSize();
         prevPos = window.getPosition();
         window.create(sf::VideoMode::getFullscreenModes()[0], title.c_str(), sf::Style::Fullscreen); // Switch to fullscreen
+        for (auto* view : *views) {
+            if (view->enabled) {
+                view->updated = true;
+            }
+        }
     }
     else {
         window.create(sf::VideoMode(prevSize.x, prevSize.y), title.c_str()); // Return to old view
         window.setPosition(prevPos);
+        for (auto* view : *views) {
+            if (view->enabled) {
+                view->updated = true;
+            }
+        }
     }
 }
 

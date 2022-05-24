@@ -50,6 +50,9 @@ int main(int argc, char** argv)
 
     MainWindow primaryWindow("Texture Graph");
 
+    ImGuiIO& io = ImGui::GetIO();
+    io.IniFilename = "resources/imgui.ini";
+
     ImGui::LoadIniSettingsFromDisk("resources/defaultlayout.ini");
     LOG_INFO("Successfully loaded layout from 'resources/defaultlayout.ini'");
 

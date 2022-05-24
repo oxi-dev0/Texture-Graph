@@ -35,7 +35,6 @@ enum WindowType {
 typedef std::tuple<std::string, WindowType, ImGuiWindowFlags> optionalWindow;
 std::vector<optionalWindow> optionalViews = {
     optionalWindow("SFML Graph View", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
-    optionalWindow("SFML Graph View 2", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)
 };
 
 int main(int argc, char** argv)
@@ -89,17 +88,19 @@ int main(int argc, char** argv)
         primaryWindow.BeginRender();
 
         for (SubWindow* window : windows) {
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-            window->visible = ImGui::Begin(window->name.c_str(), &window->enabled, window->flags);
-            if(window->visible)
-                window->Render();
-            ImGui::End();
-            ImGui::PopStyleVar(2);
+            if (window->enabled) {
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+                window->visible = ImGui::Begin(window->name.c_str(), &window->enabled, window->flags);
+                if (window->visible)
+                    window->Render();
+                ImGui::End();
+                ImGui::PopStyleVar(2);
+            }
         }
 
         ImGui::Begin("Other");
-        ImGui::Button("UWU");
+        ImGui::Button("WOW");
         ImGui::End();
 
         primaryWindow.EndRender();

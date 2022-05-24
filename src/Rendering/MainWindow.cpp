@@ -24,15 +24,7 @@ void MainWindow::MenuBar() {
         if (ImGui::BeginMenu("View")) {
             //ImGui::PushItemFlag(ImGuiItemFlags_SelectableDontClosePopup, true);
             if (ImGui::MenuItem("Fullscreen", "", &fullscreen)) {
-                if (fullscreen) {
-                    prevSize = window.getSize();
-                    prevPos = window.getPosition();
-                    window.create(sf::VideoMode::getFullscreenModes()[0], title.c_str(), sf::Style::Fullscreen); // Switch to fullscreen
-                }
-                else {
-                    window.create(sf::VideoMode(prevSize.x, prevSize.y), title.c_str()); // Return to old view
-                    window.setPosition(prevPos);
-                }
+                SetFullscreen(fullscreen);
             }
             //ImGui::PopItemFlag();
 
@@ -94,7 +86,7 @@ void MainWindow::InfoBar(float height) {
     ImGui::SameLine(0.0f, 25.0f);
 
     std::stringstream fpsStream;
-    fpsStream << "FPS: " << 1.0f/prevDeltaTime.asSeconds();
+    fpsStream << "FPS: " << (round(1.0f/prevDeltaTime.asSeconds()));
     ImGui::Text(fpsStream.str().c_str());
 
     ImGui::End();
@@ -146,6 +138,7 @@ void MainWindow::Init(std::string windowTitle) {
     title = windowTitle;
     fullscreen = false;
     demoOpen = false;
+    handlingView = nullptr;
 
     // INIT WINDOW
     window.create(sf::VideoMode(1920, 1080), windowTitle.c_str()); // Main editor window
@@ -177,6 +170,15 @@ void MainWindow::Init(std::string windowTitle) {
 
 void MainWindow::SetFullscreen(bool newFullscreen) {
     fullscreen = newFullscreen;
+    if (fullscreen) {
+        prevSize = window.getSize();
+        prevPos = window.getPosition();
+        window.create(sf::VideoMode::getFullscreenModes()[0], title.c_str(), sf::Style::Fullscreen); // Switch to fullscreen
+    }
+    else {
+        window.create(sf::VideoMode(prevSize.x, prevSize.y), title.c_str()); // Return to old view
+        window.setPosition(prevPos);
+    }
 }
 
 // 0: Fine, 1: Exit
@@ -188,13 +190,36 @@ int MainWindow::Update() {
         if (event.type == sf::Event::Closed) {
             br = true;
         }
+        if (event.type == sf::Event::KeyPressed) {
+            Keybinds::KeybindEvent keyEvent = Keybinds::ProcessEvent(event);
+            switch (keyEvent) {
+            case Keybinds::KeybindEvent_FullscreenToggle:
+                SetFullscreen(!fullscreen);
+                break;
+            default:
+                break;
+            }
+        }
 
         for (auto& view : *views) {
             if (!view->visible) { continue; }
 
             auto transformed = Utility::Mapping::pixelToWindowLoc(sf::Mouse::getPosition(), window);
-            if (transformed.x >= view->prevPos.x && transformed.x <= view->prevPos.x + view->prevSize.x && transformed.y >= view->prevPos.y && transformed.y <= view->prevPos.y + view->prevSize.y) {
-                view->ProcessEvent(event);
+            if ((transformed.x >= view->prevPos.x && transformed.x <= view->prevPos.x + view->prevSize.x && transformed.y >= view->prevPos.y && transformed.y <= view->prevPos.y + view->prevSize.y) || handlingView == view) {
+                if (view->ProcessEvent(event)) {
+                    //LOG_TRACE("Handle event from Window '{0}'", view->name);
+                    if (handlingView == nullptr) {
+                        handlingView = view;
+                        //LOG_TRACE("Window '{0}' gained handle", view->name);
+                    }
+                    else {
+                        if (handlingView == view) {
+                            handlingView = nullptr;
+                            //LOG_TRACE("Window '{0}' lost handle", view->name);
+                        }
+                    }
+                    
+                };
             }
         }
     }

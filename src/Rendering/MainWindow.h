@@ -12,6 +12,7 @@
 #include "../Utils/Mapping.h"
 #include "ColourSchemes.h"
 #include "SubWindow.h"
+#include "../Config/Keybinds.h"
 
 #include <string>
 #include <sstream>
@@ -28,6 +29,8 @@ private:
 
 	sf::Vector2u prevSize;
 	sf::Vector2i prevPos;
+
+	SubWindow* handlingView;
 
 public:
 	sf::RenderWindow window;

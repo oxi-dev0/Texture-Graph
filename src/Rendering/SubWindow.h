@@ -38,7 +38,7 @@ public:
 	SubWindow(sf::RenderWindow& main_, std::string name_, ImGuiWindowFlags flags_);
 	~SubWindow();
 
-	virtual void ProcessEvent(sf::Event& event);
+	virtual bool ProcessEvent(sf::Event& event); // Returns true if wants to toggle handling
 	virtual void Render();
 };
 

@@ -15,7 +15,7 @@ protected:
 public:
 	GraphEditorView(sf::RenderWindow& main_, sf::RenderTexture& rt_, std::string name_, ImGuiWindowFlags flags_);
 
-	virtual void ProcessEvent(sf::Event& event); 
+	virtual bool ProcessEvent(sf::Event& event); 
 
 };
 

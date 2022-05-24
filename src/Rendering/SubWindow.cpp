@@ -11,8 +11,8 @@ SubWindow::~SubWindow() {
 	//delete& rt;
 }
 
-void SubWindow::ProcessEvent(sf::Event& event) {
-
+bool SubWindow::ProcessEvent(sf::Event& event) {
+    return false;
 }
 
 void SubWindow::ImGuiRender() {

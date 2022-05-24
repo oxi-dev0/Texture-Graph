@@ -15,14 +15,16 @@ protected:
 	sf::Vector2f vcenter; // events have to be implemented in child window
 
 protected:
+	virtual void InfoBar(float height);
 	virtual void ImGuiRender();
+
 	void SetBGColor(ImVec4 color);
 
 public:
 
 	SFMLWindow(sf::RenderWindow& main_, sf::RenderTexture& rt_, std::string name_, ImGuiWindowFlags flags_);
 
-	virtual void ProcessEvent(sf::Event& event);
+	virtual bool ProcessEvent(sf::Event& event);
 	virtual void Render();
 };
 

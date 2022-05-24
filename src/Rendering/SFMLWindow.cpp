@@ -22,12 +22,47 @@ void SFMLWindow::SetBGColor(ImVec4 color) {
 	bgCol = sf::Color(color.x * 255, color.y * 255, color.z * 255, color.w * 255);
 }
 
+void SFMLWindow::InfoBar(float height) {
+	ImGui::SetNextWindowPos(ImVec2(prevPos.x, prevPos.y + prevSize.y - height));
+	ImGuiWindowFlags window_flags = 0
+		| ImGuiWindowFlags_NoDocking
+		| ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse
+		| ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
+		| ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus
+		| ImGuiWindowFlags_AlwaysUseWindowPadding;
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 2.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+
+	ImVec4 bgColor = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
+	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(bgColor.x * 1.0f, bgColor.y * 1.0f, bgColor.z * 1.0f, 1.0f));
+
+	std::stringstream idStream;
+	idStream << name << "INFOBAR";
+	ImGui::BeginChild(idStream.str().c_str(), ImVec2(prevSize.x, height), false, window_flags);
+
+	ImGui::PopStyleColor();
+
+	std::stringstream posStream;
+	posStream << "View: ("  << round(vcenter.x*100.0f)/100.0f << ", " << round(vcenter.y*100.0f)/100.0f << ")";
+	ImGui::Text(posStream.str().c_str());
+
+	ImGui::SameLine(0.0f, 25.0f);
+
+	std::stringstream zoomStream;
+	zoomStream << "Zoom: " << round(zoom*100.0f)/100.0f;
+	ImGui::Text(zoomStream.str().c_str());
+
+	ImGui::EndChild();
+	ImGui::PopStyleVar(2);
+}
+
 void SFMLWindow::ImGuiRender() {
 
 }
 
-void SFMLWindow::ProcessEvent(sf::Event& event) {
-
+bool SFMLWindow::ProcessEvent(sf::Event& event) {
+	return false;
 }
 
 void SFMLWindow::Render() {
@@ -40,12 +75,13 @@ void SFMLWindow::Render() {
 
 	view.setCenter(sf::Vector2f(vcenter.x * contentAvail.x, vcenter.y * contentAvail.y) + sf::Vector2f(contentAvail.x / 2.0f, contentAvail.y / 2.0f));
 	view.setSize(contentAvail.x, contentAvail.y);
-	view.setViewport(sf::FloatRect(sf::Vector2f(0, 0), sf::Vector2f(contentAvail.x / (float)main.getSize().x, contentAvail.y / (float)main.getSize().y)));
+	view.setViewport(sf::FloatRect(sf::Vector2f(0, 0), sf::Vector2f(contentAvail.x / (float)rt.getSize().x, contentAvail.y / (float)rt.getSize().y)));
 	prevZoom = std::lerp(prevZoom, zoom, 0.6f);
 	view.zoom(prevZoom);
 	rt.setView(view);
 
 	ImGui::Image(rt, sf::Vector2f(rt.getSize().x, rt.getSize().y));
+	InfoBar(25.0f);
 
 	ImVec2 pos = GetPos();
 	prevPos = sf::Vector2i(pos.x, pos.y);

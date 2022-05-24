@@ -34,8 +34,8 @@ enum WindowType {
 
 typedef std::tuple<std::string, WindowType, ImGuiWindowFlags> optionalWindow;
 std::vector<optionalWindow> optionalViews = {
-    optionalWindow("Graph Editor", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
-    optionalWindow("SEX Editor", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)
+    optionalWindow("SFML Graph View", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
+    optionalWindow("SFML Graph View 2", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)
 };
 
 int main(int argc, char** argv)

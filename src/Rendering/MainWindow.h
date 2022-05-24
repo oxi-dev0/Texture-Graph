@@ -9,7 +9,9 @@
 #include <SFML/Window.hpp>
 
 #include "../Utils/Log.h"
+#include "../Utils/Mapping.h"
 #include "ColourSchemes.h"
+#include "SubWindow.h"
 
 #include <string>
 #include <sstream>
@@ -22,14 +24,14 @@ private:
 	bool demoOpen;
 
 	sf::Time prevDeltaTime;
+	sf::Clock deltaClock;
 
 	sf::Vector2u prevSize;
 	sf::Vector2i prevPos;
 
-	sf::Clock deltaClock;
-
 public:
 	sf::RenderWindow window;
+	std::vector<SubWindow*>* views;
 
 private:
 	void MenuBar();

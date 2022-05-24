@@ -21,9 +21,21 @@
 #include "Rendering/ColourSchemes.h"
 #include "Rendering/MainWindow.h"
 
+#include "Rendering/SubWindow.h"
+#include "Views/GraphEditorView.h"
+
 #define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 
+enum WindowType {
+    Base,
+    GraphEditor
+};
+
+typedef std::tuple<std::string, WindowType, ImGuiWindowFlags> optionalWindow;
+std::vector<optionalWindow> optionalViews = {
+    optionalWindow("Graph Editor", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)
+};
 
 int main(int argc, char** argv)
 {
@@ -40,17 +52,27 @@ int main(int argc, char** argv)
     ImGui::LoadIniSettingsFromDisk("resources/defaultlayout.ini");
     LOG_INFO("Successfully loaded layout from 'resources/defaultlayout.ini'");
 
-    sf::ContextSettings settings;
-    settings.antialiasingLevel = 8;
-    sf::RenderTexture nodeGraph;
-    if (!nodeGraph.create(640, 420, settings)) {
-        LOG_CRITICAL("Could not initialise the graph texture.");
-        return 0;
-    }
+    sf::RenderTexture newT; // trying to fix unique ptrs being deleted
 
-    sf::RectangleShape shape2(sf::Vector2f(50.0f, 20.0f));
-    shape2.setFillColor(sf::Color::Red);
+    std::vector<SubWindow*> windows;
+    for (auto& view : optionalViews) {
+        std::string name = std::get<0>(view);
+        WindowType type = std::get<1>(view);
+        ImGuiWindowFlags flags = std::get<2>(view);
 
+        switch (type) {
+        case WindowType::Base:
+            windows.push_back(new SubWindow(primaryWindow.window, name, flags));
+            break;
+        case WindowType::GraphEditor:
+            windows.push_back(new GraphEditorView(primaryWindow.window, newT, name, flags));
+            break;
+        default:
+            break;
+        }
+    } // Generates the toggle windows, such as the graph editor and inspector
+
+    primaryWindow.views = &windows;
     
     while (primaryWindow.window.isOpen())
     {
@@ -58,15 +80,18 @@ int main(int argc, char** argv)
             break; // Exit app
         };
 
-        nodeGraph.clear();
-        nodeGraph.draw(shape2);
-        nodeGraph.display();
-
         primaryWindow.BeginRender();
 
-        ImGui::Begin("Graph Editor");
-        ImGui::Image(nodeGraph, sf::Vector2f(nodeGraph.getSize()));
-        ImGui::End();
+        for (SubWindow* window : windows) {
+            if (window->visible) {
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+                ImGui::Begin(window->name.c_str(), &window->visible, window->flags);
+                window->Render();
+                ImGui::End();
+                ImGui::PopStyleVar(2);
+            }
+        }
 
         ImGui::Begin("Other");
         ImGui::Button("UWU");

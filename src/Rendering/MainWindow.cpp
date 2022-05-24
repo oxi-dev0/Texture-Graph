@@ -29,6 +29,15 @@ void MainWindow::MenuBar() {
 
             ImGui::Separator();
 
+            if (ImGui::BeginMenu("Views")) {
+                for (SubWindow* window : *views) {
+                    ImGui::MenuItem("Graph Editor", "", &window->visible);
+                }
+                ImGui::EndMenu();
+            }
+
+            ImGui::Separator();
+
             ImGui::MenuItem("ImGui Demo", "", &demoOpen);
             if (ImGui::BeginMenu("Layout")) {
                 if (ImGui::BeginMenu("Debug")) {
@@ -67,6 +76,13 @@ void MainWindow::InfoBar(float height) {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 2.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::Begin("INFOBAR", NULL, window_flags);
+
+    std::stringstream mouseStream;
+    sf::Vector2f mousePos = Utility::Mapping::pixelToWindowLoc(sf::Mouse::getPosition(), window);
+    mouseStream << "(" << mousePos.x << ", " << mousePos.y << ")";
+    ImGui::Text(mouseStream.str().c_str());
+
+    ImGui::SameLine(0.0f, 25.0f);
 
     std::stringstream fpsStream;
     fpsStream << "FPS: " << 1.0f/prevDeltaTime.asSeconds();
@@ -160,6 +176,13 @@ int MainWindow::Update() {
         ImGui::SFML::ProcessEvent(window, event);
         if (event.type == sf::Event::Closed) {
             br = true;
+        }
+
+        for (auto& view : *views) {
+            auto transformed = Utility::Mapping::pixelToWindowLoc(sf::Mouse::getPosition(), window);
+            if (transformed.x >= view->prevPos.x && transformed.x <= view->prevPos.x + view->prevSize.x && transformed.y >= view->prevPos.y && transformed.y <= view->prevPos.y + view->prevSize.y) {
+                view->ProcessEvent(event);
+            }
         }
     }
     if (br) {

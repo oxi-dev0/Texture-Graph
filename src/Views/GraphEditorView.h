@@ -10,9 +10,9 @@ private:
 	sf::VertexArray lines;
 
 private:
-	void Grid(bool updated);
+	void Grid();
 protected:
-	virtual void ImGuiRender(bool updated);
+	virtual void ImGuiRender();
 public:
 	GraphEditorView(sf::RenderWindow& main_, sf::RenderTexture& rt_, std::string name_, ImGuiWindowFlags flags_);
 

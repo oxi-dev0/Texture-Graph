@@ -27,7 +27,6 @@ public:
 
 	ImVec2 prevSize;
 	ImVec2 prevPos;
-	bool updated;
 
 protected:
 	ImVec2 GetPos(); // Must be called in render context

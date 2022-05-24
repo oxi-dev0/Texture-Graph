@@ -17,16 +17,23 @@ void MainWindow::MenuBar() {
             if (ImGui::MenuItem("Quit")) {
                 exit = true;
             }
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "(Ctrl+Q)");
 
             ImGui::EndMenu();
         }
 
         if (ImGui::BeginMenu("View")) {
             //ImGui::PushItemFlag(ImGuiItemFlags_SelectableDontClosePopup, true);
+            //ImGui::PopItemFlag();
+
             if (ImGui::MenuItem("Fullscreen", "", &fullscreen)) {
                 SetFullscreen(fullscreen);
             }
-            //ImGui::PopItemFlag();
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "(F11)");
+            ImGui::SameLine();
+            ImGui::Text("    "); // Make space for menu item checkmark
 
             ImGui::Separator();
 
@@ -127,6 +134,8 @@ MainWindow::MainWindow() {
     fullscreen = false;
     demoOpen = false;
     exit = false;
+    handlingView = nullptr;
+    views = nullptr;
 }
 
 MainWindow::MainWindow(std::string windowTitle) {
@@ -174,20 +183,10 @@ void MainWindow::SetFullscreen(bool newFullscreen) {
         prevSize = window.getSize();
         prevPos = window.getPosition();
         window.create(sf::VideoMode::getFullscreenModes()[0], title.c_str(), sf::Style::Fullscreen); // Switch to fullscreen
-        for (auto* view : *views) {
-            if (view->enabled) {
-                view->updated = true;
-            }
-        }
     }
     else {
         window.create(sf::VideoMode(prevSize.x, prevSize.y), title.c_str()); // Return to old view
         window.setPosition(prevPos);
-        for (auto* view : *views) {
-            if (view->enabled) {
-                view->updated = true;
-            }
-        }
     }
 }
 
@@ -205,6 +204,9 @@ int MainWindow::Update() {
             switch (keyEvent) {
             case Keybinds::KeybindEvent_FullscreenToggle:
                 SetFullscreen(!fullscreen);
+                break;
+            case Keybinds::KeybindEvent_Exit:
+                exit = true;
                 break;
             default:
                 break;
@@ -244,7 +246,7 @@ void MainWindow::BeginRender() {
     prevDeltaTime = deltaClock.restart();
     ImGui::SFML::Update(window, prevDeltaTime);
     ImVec4 bgColor = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
-    window.clear(sf::Color(bgColor.x * 100, bgColor.y * 100, bgColor.z * 100, 255));
+    window.clear(sf::Color((sf::Uint8)(bgColor.x * 100.0f), (sf::Uint8)(bgColor.y * 100.0f), (sf::Uint8)(bgColor.z * 100.0f), (sf::Uint8)255));
 
     Dockspace();
 

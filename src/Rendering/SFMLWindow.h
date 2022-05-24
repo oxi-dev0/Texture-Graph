@@ -16,7 +16,7 @@ protected:
 
 protected:
 	virtual void InfoBar(float height);
-	virtual void ImGuiRender(bool updated);
+	virtual void ImGuiRender();
 
 	void SetBGColor(ImVec4 color);
 

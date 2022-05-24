@@ -5,7 +5,6 @@ SubWindow::SubWindow(sf::RenderWindow& main_, std::string name_, ImGuiWindowFlag
     enabled = true;
     name = name_;
     flags = flags_;
-    updated = false;
 }
 
 SubWindow::~SubWindow() {
@@ -34,6 +33,6 @@ void SubWindow::Render() {
     ImGuiRender(true);
 
     ImVec2 pos = GetPos();
-    prevPos = sf::Vector2i(pos.x, pos.y);
+    prevPos = sf::Vector2i((int)pos.x, (int)pos.y);
     prevSize = sf::Vector2u((unsigned int)contentAvail.x, (unsigned int)contentAvail.y);
 }

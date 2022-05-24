@@ -12,7 +12,7 @@
 #include "../Utils/Mapping.h"
 #include "ColourSchemes.h"
 #include "SubWindow.h"
-#include "../Config/Keybinds.h"
+#include "../Utils/Keybinds.h"
 
 #include <string>
 #include <sstream>

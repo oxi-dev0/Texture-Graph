@@ -5,6 +5,7 @@
 .git/
 
 bin-int/
+bin/Debug
 
 # Compiled Object files
 *.slo

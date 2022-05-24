@@ -581,7 +581,7 @@ void UpdateFontTexture() {
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
     sf::Texture& texture = *s_currWindowCtx->fontTexture;
-    texture.create(width, height);
+    bool dis = texture.create(width, height);
     texture.update(pixels);
 
     ImTextureID texID = convertGLTextureHandleToImTextureID(texture.getNativeHandle());

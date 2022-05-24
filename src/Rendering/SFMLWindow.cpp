@@ -19,7 +19,7 @@ SFMLWindow::SFMLWindow(sf::RenderWindow& main_, sf::RenderTexture& rt_, std::str
 } // JUST CALLS CONSTRUCTOR FOR SUBWINDOW
 
 void SFMLWindow::SetBGColor(ImVec4 color) {
-	bgCol = sf::Color(color.x * 255, color.y * 255, color.z * 255, color.w * 255);
+	bgCol = sf::Color((sf::Uint8)(color.x * 255), (sf::Uint8)(color.y * 255), (sf::Uint8)(color.z * 255), (sf::Uint8)(color.w * 255));
 }
 
 void SFMLWindow::InfoBar(float height) {
@@ -57,7 +57,7 @@ void SFMLWindow::InfoBar(float height) {
 	ImGui::PopStyleVar(2);
 }
 
-void SFMLWindow::ImGuiRender(bool updated) {
+void SFMLWindow::ImGuiRender() {
 
 }
 
@@ -70,8 +70,7 @@ void SFMLWindow::Render() {
 	ImVec2 pos = GetPos();
 	rt.clear(bgCol);
 
-	ImGuiRender((pos.x != prevPos.x || pos.y != prevPos.y) || (contentAvail.x != prevSize.x || contentAvail.y != prevSize.y) || prevZoom != zoom || updated);
-	if(updated) updated = false;
+	ImGuiRender();
 
 	rt.display();
 
@@ -82,9 +81,9 @@ void SFMLWindow::Render() {
 	view.zoom(prevZoom);
 	rt.setView(view);
 
-	ImGui::Image(rt, sf::Vector2f(rt.getSize().x, rt.getSize().y));
+	ImGui::Image(rt, sf::Vector2f((float)rt.getSize().x, (float)rt.getSize().y));
 	InfoBar(25.0f);
 
-	prevPos = sf::Vector2i(pos.x, pos.y);
+	prevPos = sf::Vector2i((int)pos.x, (int)pos.y);
 	prevSize = sf::Vector2u((unsigned int)contentAvail.x, (unsigned int)contentAvail.y);
 }

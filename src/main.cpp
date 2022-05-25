@@ -14,15 +14,15 @@
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
 
-#include "Utils/Log.h"
-#include "Utils/Timer.h"
+#include "Core/Utils/Log.h"
+#include "Core/Utils/Timer.h"
 #include <imgui_internal.h>
 
-#include "Rendering/ColourSchemes.h"
-#include "Rendering/MainWindow.h"
+#include "Core/Rendering/ColourSchemes.h"
+#include "Core/Rendering/MainWindow.h"
 
-#include "Rendering/SubWindow.h"
-#include "Views/GraphEditorView.h"
+#include "Core/Rendering/SubWindow.h"
+#include "Core/Rendering/Views/GraphEditorView.h"
 
 #define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING

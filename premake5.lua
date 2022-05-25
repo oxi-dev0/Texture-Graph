@@ -17,12 +17,16 @@ project "TextureGraph"
 
 	targetdir ("bin/" .. outputdir)
 	objdir ("bin-int/" .. outputdir)
+	debugdir "%{cfg.targetdir}"
 
 	buildoptions { "/bigobj" }
 
 	postbuildcommands {
 	  "{MKDIR} %{cfg.targetdir}/resources",
-	  "{COPY} resources %{cfg.targetdir}/resources"
+	  "{MKDIR} %{cfg.targetdir}/library",
+	  "{MKDIR} %{cfg.targetdir}/library/Nodes",
+	  "{COPY} resources %{cfg.targetdir}/resources",
+	  "{COPY} src/Nodes %{cfg.targetdir}/library/Nodes"
 	}
 
 	files 
@@ -30,7 +34,8 @@ project "TextureGraph"
 		"src/**.h",
 		"src/**.cpp",
 		"vendor/imgui/**.cpp",
-		"vendor/imgui/**.h"
+		"vendor/imgui/**.h",
+		"src/**.tgnode"
 	}
 
 	includedirs

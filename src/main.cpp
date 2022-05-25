@@ -24,6 +24,8 @@
 #include "Core/Rendering/SubWindow.h"
 #include "Core/Rendering/Views/GraphEditorView.h"
 
+#include "Core/Graph/Node/GraphNode.h"
+
 #define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 
@@ -38,6 +40,14 @@ std::vector<optionalWindow> optionalViews = {
     //optionalWindow("Graph Editor 2", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
 };
 
+std::vector<sf::RenderTexture*> textures;
+void OnExit() {
+    for (auto* tex : textures) {
+        if (tex == nullptr) { continue; }
+        delete tex;
+    }
+}
+
 int main(int argc, char** argv)
 {
 #ifdef DIST
@@ -45,6 +55,7 @@ int main(int argc, char** argv)
 #else
     Utility::Log::Init();
 #endif
+    std::atexit(OnExit);
 
     LOG_INFO("Starting Engine\n");
 
@@ -56,10 +67,17 @@ int main(int argc, char** argv)
     ImGui::LoadIniSettingsFromDisk("resources/defaultlayout.ini");
     LOG_INFO("Successfully loaded layout from 'resources/defaultlayout.ini'");
 
+    LOG_INFO("TESTING TGNF LOADER");
+    GraphNode newNode = GraphNode::LoadFromTGNF("library/Nodes/SimpleSC.tgnode");
+    LOG_INFO("Parsed name: {0}", newNode.displayName);
+    LOG_INFO("Parsed color: ({0}, {1}, {2}, {3})", newNode.displayColor.r, newNode.displayColor.g, newNode.displayColor.b, newNode.displayColor.a);
+    for (std::map<std::string, std::string>::iterator it = newNode.luaVarDisplayNames.begin(); it != newNode.luaVarDisplayNames.end(); ++it) {
+        LOG_INFO("Parsed varname: {0} : {1}", it->first, it->second);
+    }
+
     //sf::RenderTexture newT; // trying to fix unique ptrs being deleted
 
     std::vector<SubWindow*> windows;
-    std::vector<sf::RenderTexture*> textures;
     for (auto& view : optionalViews) {
         std::string name = std::get<0>(view);
         WindowType type = std::get<1>(view);
@@ -108,10 +126,6 @@ int main(int argc, char** argv)
         ImGui::End();
 
         primaryWindow.EndRender();
-    }
-
-    for (auto* tex : textures) {
-        delete tex;
     }
 
     LOG_INFO("Stopping Engine");

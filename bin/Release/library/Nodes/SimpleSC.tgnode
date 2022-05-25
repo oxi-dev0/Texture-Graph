@@ -1,0 +1,21 @@
+metadata
+    name "Simple_Colour"
+    color 0x8AE9C1FF
+
+    varname Colour "Colour"
+    varname Out "Out"
+
+    display Out
+metadata
+
+param color Colour
+output tex Out
+
+exec
+{
+    for x=1, sizeX do
+        for y=1, sizeY do
+            Out[x,y] = Colour
+        end
+    end
+}

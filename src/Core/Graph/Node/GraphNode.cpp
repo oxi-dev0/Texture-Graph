@@ -2,11 +2,11 @@
 
 #define TGNL_LINE_ASSERT(keyword, expected, given, file)	if (expected != given) { LOG_CRITICAL("Too many parameters passed to keyword '{3}'. {1} expected but {2} were given. (Node Class '{0}')", file, expected, given, keyword); }
 
-#define TGNL_PARAM_ASSERT(type, file)						if (Utility::String::includes({"tex"}, Utility::String::toLower(type))) { LOG_CRITICAL("Type 'tex' is not allowed to be used with the keyword 'param'. (Node Class '{0}')", file); }
-#define TGNL_PIN_ASSERT(keyword, type, file)				if (Utility::String::includes({"string"}, Utility::String::toLower(type))) { LOG_CRITICAL("Type 'string' is not allowed to be used with the keyword '{1}'. (Node Class '{0}')", file, keyword); }
-#define TGNL_DISPLAY_ASSERT(type, file)						if (!Utility::String::includes({"tex", "int", "float", "color", "bool"}, Utility::String::toLower(type))) { LOG_CRITICAL("Type '{0}' cannot be used with keyword 'display'. (Node Class {1})", type, file); }
+#define TGNL_PARAM_ASSERT(type, file)						if (Utility::String::includes({"colortex", "greytex"}, Utility::String::toLower(type))) { LOG_CRITICAL("Type '{1}' is not allowed to be used with the keyword 'param'. (Node Class '{0}')", file, type); }
+#define TGNL_PIN_ASSERT(keyword, type, file)				if (!Utility::String::includes({"colortex", "greytex"}, Utility::String::toLower(type))) { LOG_CRITICAL("Type '{2}' is not allowed to be used with the keyword '{1}'. (Node Class '{0}')", file, keyword, type); }
+#define TGNL_DISPLAY_ASSERT(type, file)						if (!Utility::String::includes({"colortex", "greytex"}, Utility::String::toLower(type))) { LOG_CRITICAL("Type '{0}' cannot be used with keyword 'display'. (Node Class {1})", type, file); }
 
-#define TGNL_TYPE_ASSERT(keyword, type, file)				if (!Utility::String::includes({"tex", "int", "float", "color", "bool", "string"}, Utility::String::toLower(type))) { LOG_CRITICAL("Unrecognised type '{0}' given to '{2}'. (Node Class '{1}')", type, file, keyword); }
+#define TGNL_TYPE_ASSERT(keyword, type, file)				if (!Utility::String::includes({"greytex", "int", "float", "color", "bool", "colortex"}, Utility::String::toLower(type))) { LOG_CRITICAL("Unrecognised type '{0}' given to '{2}'. (Node Class '{1}')", type, file, keyword); }
 #define TGNL_FLOAT_ASSERT(keyword, string, file)			if (!Utility::String::isFloat(string)) { LOG_CRITICAL("Invalid value passed to keyword '{0}'. Expected valid float, but got '{1}'. (Node Class '{2}')", keyword, string, file); }
 #define TGNL_INT_ASSERT(keyword, string, file)				if (!Utility::String::isInt(string)) { LOG_CRITICAL("Invalid value passed to keyword '{0}'. Expected valid int, but got '{1}'. (Node Class '{2}')", keyword, string, file); }
 #define TGNL_BOOL_ASSERT(keyword, bool, file)				if (!Utility::String::includes({"false", "true"}, Utility::String::toLower(bool))) { LOG_CRITICAL("Unrecognised bool '{0}' given to keyword '{2}'. (Node Class '{1}')", bool, file, keyword); }
@@ -235,12 +235,11 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 			TGNL_INT_ASSERT("default", data, classFile);
 			newNode.luaVarData[var].intVar = std::stoi(data);
 			break;
-		case Types::DataType_String:
-			TGNL_STRING_ASSERT("default", data, classFile);
-			newNode.luaVarData[var].stringVar = data;
+		case Types::DataType::DataType_ColorTex:
+			LOG_CRITICAL("Type 'colortex' is not compatible with keyword 'default'. (Node Class '{0}')", classFile);
 			break;
-		case Types::DataType::DataType_Tex:
-			LOG_CRITICAL("Type 'tex' is not compatible with keyword 'default'. (Node Class '{0}')", classFile);
+		case Types::DataType::DataType_GreyTex:
+			LOG_CRITICAL("Type 'greytex' is not compatible with keyword 'default'. (Node Class '{0}')", classFile);
 			break;
 		}
 	}

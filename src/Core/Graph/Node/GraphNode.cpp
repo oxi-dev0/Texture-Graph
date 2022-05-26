@@ -400,13 +400,14 @@ void GraphNode::SFMLRender(sf::RenderTarget& target) {
 		float y = nodePos.y + PIN_PADDING + ((p + 1) * rPinSpace);
 		float x = nodePos.x + nodeWidth;
 		sf::CircleShape pinDot;
-		sf::CircleShape pinCircle;
+		sf::RectangleShape pinCircle;
 		pinCircle.setOrigin(sf::Vector2f(PIN_RADIUS, PIN_RADIUS));
 		pinDot.setOrigin(sf::Vector2f(PIN_RADIUS/5, PIN_RADIUS/5));
 		pinDot.setPosition(sf::Vector2f(x, y));
 		pinCircle.setPosition(sf::Vector2f(x, y));
 		pinDot.setRadius(PIN_RADIUS/5);
-		pinCircle.setRadius(PIN_RADIUS);
+		pinCircle.setSize(sf::Vector2f(PIN_RADIUS*2, PIN_RADIUS*2));
+		pinCircle.setRotation(sf::degrees(45.0f));
 		pinDot.setFillColor(sf::Color::Black);
 		pinCircle.setFillColor(sf::Color(245, 127, 196));
 		target.draw(pinCircle);

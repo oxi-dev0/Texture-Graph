@@ -1,0 +1,24 @@
+metadata
+    name "Texture Add"
+    color 0xFA7A39FF
+    category "Math"
+
+    varname Out "Out"
+    varname A "A"
+    varname B "B"
+
+    display Out
+metadata
+
+output tex Out
+input tex A
+input tex B
+
+exec
+{
+    for x=1, sizeX do
+        for y=1, sizeY do
+            Out[x][y] = A[x][y] + B[x][y]
+        end
+    end
+}

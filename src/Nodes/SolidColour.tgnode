@@ -50,7 +50,7 @@ exec
 					Colour.a = 255-Colour.a
 				end
 			end
-			Out[x,y] = Colour
+			Out[x][y] = Colour
 		end
 	end
 }

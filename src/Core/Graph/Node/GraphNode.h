@@ -37,12 +37,12 @@ public:
 
 	std::vector<NodePin> pins; // Pin Definitions
 
-	std::map<int, int> inPins; // Pin Id -> Pin Index
-	std::map<int, int> outPins;
+	std::map<int, int> pinIds; // Pin Id -> Pin Index
 
 	std::map<std::string, std::string> luaVarDisplayNames; // Lua Var Name -> Display Name
 	std::map<std::string, LuaVar> luaVars; // Lua Var Name -> Lua Var
 	std::map<int, int> pinLuaVars; // Pin Id -> Lua Var Index
+	std::map<std::string, int> luaVarPins; // Lua Var Name -> Pin Id
 	std::map<std::string, int> paramLuaVars; // Param Name -> Lua Var Index
 	std::map<std::string, Types::WildData> luaVarData; // Lua Var Name -> Data
 	std::string displayVar; // Lua Var Name
@@ -59,13 +59,13 @@ public:
 		category = "";
 		displayColor = sf::Color(0, 0, 0, 255);
 		pins = std::vector<NodePin>();
-		inPins = std::map<int, int>();
-		outPins = std::map<int, int>();
+		pinIds = std::map<int, int>();
 		luaVarDisplayNames = std::map<std::string, std::string>();
 		luaVars = std::map<std::string, LuaVar>();
 		pinLuaVars = std::map<int, int>();
 		paramLuaVars = std::map<std::string, int>();
 		luaVarData = std::map<std::string, Types::WildData>();
+		luaVarPins = std::map<std::string, int>();
 		displayVar = "";
 		luaLines = std::vector<std::string>();
 		nodePos = sf::Vector2f(0, 0);

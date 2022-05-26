@@ -34,33 +34,33 @@ metadata
     display Out
 metadata
 
-output tex Out
-input tex A
-input tex B
-input tex C
-input tex D
-input tex E
-input tex F 
-input tex G 
-input tex H
-input tex I
-input tex J
-input tex K
-input tex L
-input tex M
-input tex N
-input tex O
-input tex P
-input tex Q
-input tex R
-input tex S
-input tex T
-input tex U
-input tex V
-input tex W
-input tex X
-input tex Y
-input tex Z
+output colortex Out
+input colortex A
+input colortex B
+input colortex C
+input colortex D
+input colortex E
+input colortex F 
+input colortex G 
+input colortex H
+input colortex I
+input colortex J
+input greytex K
+input greytex L
+input greytex M
+input greytex N
+input greytex O
+input greytex P
+input greytex Q
+input greytex R
+input greytex S
+input greytex T
+input greytex U
+input greytex V
+input greytex W
+input greytex X
+input greytex Y
+input greytex Z
 
 exec
 {

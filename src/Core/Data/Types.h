@@ -6,7 +6,8 @@
 #include <SFML/Window.hpp>
 
 namespace Types {
-	typedef std::vector<std::vector<sf::Color>> tex;
+	typedef std::vector<std::vector<sf::Color>> colortex;
+	typedef std::vector<std::vector<int>> greytex;
 
 	enum DataType {
 		DataType_Color, // {r=0,g=0,b=0,a=255}
@@ -47,21 +48,23 @@ namespace Types {
 		float floatVar = 0.0f;
 		sf::Color colorVar;
 		std::string stringVar;
-		tex texVar;
+		colortex colortexVar;
+		greytex greytexVar;
 		DataType dataType;
 
 		WildData(bool b) { boolVar = b; dataType = DataType::DataType_Bool; }
 		WildData(int i) { intVar = i; dataType = DataType::DataType_Int; }
 		WildData(float f) { floatVar = f; dataType = DataType::DataType_Float; }
 		WildData(sf::Color c) { colorVar = c; dataType = DataType::DataType_Color; }
-		WildData(tex t) { texVar = t; dataType = DataType::DataType_Tex; }
-		WildData(std::string s) { stringVar = s; dataType = DataType::DataType_String; }
+		WildData(colortex t) { colortexVar = t; dataType = DataType::DataType_ColorTex; }
+		WildData(greytex t) { greytexVar = t; dataType = DataType::DataType_GreyTex; }
 		WildData() {
 			boolVar = false;
 			intVar = 0;
 			floatVar = 0.0f;
 			colorVar = sf::Color::White;
-			texVar = tex();
+			colortexVar = colortex();
+			greytexVar = greytex();
 			dataType = DataType::DataType_Bool;
 			stringVar = "";
 		}

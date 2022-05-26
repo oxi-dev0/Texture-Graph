@@ -12,7 +12,7 @@ metadata
 metadata
 
 param color Colour
-output tex Out
+output colortex Out
 
 exec
 {

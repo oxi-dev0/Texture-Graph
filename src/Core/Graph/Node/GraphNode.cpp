@@ -177,7 +177,8 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 			Types::WildData newData = Types::WildData();
 			newData.dataType = dataType;
 			newNode.luaVarData.insert({ data[2], newData });
-			newNode.outPins.insert({ newPin.pinId, (int)newNode.pins.size() -1});
+			newNode.pinIds.insert({ newPin.pinId, (int)newNode.pins.size() -1});
+			newNode.luaVarPins.insert({ data[2], newPin.pinId });
 			continue;
 		}
 		if (keyword == "input") {
@@ -204,7 +205,8 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 			Types::WildData newData = Types::WildData();
 			newData.dataType = dataType;
 			newNode.luaVarData.insert({ data[2], newData });
-			newNode.inPins.insert({ newPin.pinId, (int)newNode.pins.size() - 1 });
+			newNode.pinIds.insert({ newPin.pinId, (int)newNode.pins.size() - 1 });
+			newNode.luaVarPins.insert({ data[2], newPin.pinId });
 			continue;
 		} 
 	}
@@ -247,6 +249,9 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 	if (newNode.displayVar != "") {
 		if (newNode.luaVars.find(newNode.displayVar) != newNode.luaVars.end()) {
 			TGNL_DISPLAY_ASSERT(Types::typeToString[newNode.luaVars.find(newNode.displayVar)->second.type], classFile);
+			if (newNode.pins[newNode.pinIds[newNode.luaVarPins[newNode.luaVars.find(newNode.displayVar)->second.name]]].dir == Direction::In) {
+				LOG_CRITICAL("Only 'Out' facing pins can be used for keyword 'display'. Variable '{0}' is facing in. (Node Class '{1}')", newNode.displayVar, classFile);
+			}
 		}
 		else {
 			LOG_CRITICAL("Variable '{0}' given to keyword 'display' is not defined. (Node Class '{1}')", newNode.displayVar, classFile)
@@ -341,17 +346,23 @@ void GraphNode::SFMLRender(sf::RenderTarget& target) {
 	float phSumOut = 0.0f;
 	int pCountIn = 0;
 	int pCountOut = 0;
+	std::vector<int> inPinIndexes;
+	std::vector<int> outPinIndexes;
+	int i = 0;
 	for (auto& pin : pins) {
 		auto type = pin.type;
 		pinHeights.push_back(PIN_COMPONENTHEIGHT);
 		if (pin.dir == Direction::In) {
 			phSumIn += PIN_COMPONENTHEIGHT;
 			pCountIn += 1;
+			inPinIndexes.push_back(i);
 		}
 		else {
 			phSumOut += PIN_COMPONENTHEIGHT;
 			pCountOut += 1;
+			outPinIndexes.push_back(i);
 		}
+		i++;
 	}
 
 	float neededPinHeight = std::max(phSumIn, phSumOut) + (PIN_PADDING * 2) + NODE_TITLE_HEIGHT;
@@ -406,7 +417,7 @@ void GraphNode::SFMLRender(sf::RenderTarget& target) {
 		pinCircle.setSize(sf::Vector2f(PIN_RADIUS * 2, PIN_RADIUS * 2));
 		pinCircle.setRotation(sf::degrees(45.0f));
 		pinDot.setFillColor(sf::Color::Black);
-		pinCircle.setFillColor(sf::Color(245, 127, 196));
+		pinCircle.setFillColor(Types::typeToColor[pins[inPinIndexes[p]].type]);
 		target.draw(pinCircle);
 		//target.draw(pinDot);
 	}
@@ -424,7 +435,7 @@ void GraphNode::SFMLRender(sf::RenderTarget& target) {
 		pinCircle.setSize(sf::Vector2f(PIN_RADIUS*2, PIN_RADIUS*2));
 		pinCircle.setRotation(sf::degrees(45.0f));
 		pinDot.setFillColor(sf::Color::Black);
-		pinCircle.setFillColor(sf::Color(245, 127, 196));
+		pinCircle.setFillColor(Types::typeToColor[pins[outPinIndexes[p]].type]);
 		target.draw(pinCircle);
 		//target.draw(pinDot);
 	}

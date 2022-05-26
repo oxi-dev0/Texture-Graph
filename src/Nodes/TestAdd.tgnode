@@ -10,9 +10,9 @@ metadata
     display Out
 metadata
 
-output tex Out
-input tex A
-input tex B
+output colortex Out
+input colortex A
+input colortex B
 
 exec
 {

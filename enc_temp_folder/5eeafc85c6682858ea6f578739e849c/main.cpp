@@ -77,9 +77,11 @@ int main(int argc, char** argv)
     Utility::Timer tmr;
     GraphNode newNode = GraphNode::LoadFromTGNF("library/Nodes/SimpleSC.tgnode");
     LOG_INFO("Successfully compiled {0} in {1}s", "library/Nodes/SimpleSC.tgnode", tmr.Elapsed());
-    tmr.Reset();
-    GraphNode newNode2 = GraphNode::LoadFromTGNF("library/Nodes/TestOverflow.tgnode");
-    LOG_INFO("Successfully compiled {0} in {1}s", "library/Nodes/TestOverflow.tgnode", tmr.Elapsed());
+    for (int i = 0; i < 10000; i++) {
+        tmr.Reset();
+        GraphNode newNode2 = GraphNode::LoadFromTGNF("library/Nodes/TestOverflow.tgnode");
+        LOG_INFO("Successfully compiled {0} in {1}s", "library/Nodes/TestOverflow.tgnode", tmr.Elapsed());
+    }
       
     //sf::RenderTexture newT; // trying to fix unique ptrs being deleted
 

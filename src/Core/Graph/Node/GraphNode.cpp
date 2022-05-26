@@ -11,7 +11,7 @@
 #define TGNL_INT_ASSERT(keyword, string, file)				if (!Utility::String::isInt(string)) { LOG_CRITICAL("Invalid value passed to keyword '{0}'. Expected valid int, but got '{1}'. (Node Class '{2}')", keyword, string, file); }
 #define TGNL_BOOL_ASSERT(keyword, bool, file)				if (!Utility::String::includes({"false", "true"}, Utility::String::toLower(bool))) { LOG_CRITICAL("Unrecognised bool '{0}' given to keyword '{2}'. (Node Class '{1}')", bool, file, keyword); }
 #define TGNL_STRING_ASSERT(keyword, string, file)			if (string[0] != '"' || string[string.size()-1] != '"') { LOG_CRITICAL("Invalid string given to keyword '{0}'. Received '{1}'. (Node Class '{2}')", keyword, string, file); }
-#define TGNL_COLOR_ASSERT(keyword, colorString, file)		if (colorString.substr(0,2) != "0x") { LOG_CRITICAL("Invalid color given to keyword '{0}'. Received '{1}', which is missing the '0x' prefix. (Node Class '{2}')", keyword, colorString, file); } if (colorString.size() != 10) { LOG_CRITICAL("Invalid color given to keyword '{0}'. Received '{1}', which has an incorrect length. (Node Class '{2}')", keyword, colorString, file); } 
+#define TGNL_COLOR_ASSERT(keyword, colorString, file)		if (colorString.substr(0,2) != "0x") { LOG_CRITICAL("Invalid color given to keyword '{0}'. Received '{1}', which is missing the '0x' prefix. (Node Class '{2}')", keyword, colorString, file); }												  if (colorString.size() != 10) { LOG_CRITICAL("Invalid color given to keyword '{0}'. Received '{1}', which has an incorrect length. (Node Class '{2}')", keyword, colorString, file); } 
 
 std::string RemoveStringIndicators(std::string orig) {
 	return orig.substr(1, orig.size() - 2);
@@ -317,8 +317,8 @@ const float NODE_MINHEIGHT = 110.0f;
 const float NODE_TITLE_HEIGHT = 15.0f;
 const float NODE_COLOR_THICKNESS = 1.0f;
 
-const float PIN_COMPONENTHEIGHT = 15.0f;
-const float PIN_PADDING = 10.0f;
+const float PIN_COMPONENTHEIGHT = 20.0f;
+const float PIN_PADDING = 0.0f;
 const float PIN_RADIUS = 5.0f;
 
 void GraphNode::SFMLRender(sf::RenderTarget& target) {
@@ -341,7 +341,7 @@ void GraphNode::SFMLRender(sf::RenderTarget& target) {
 		}
 	}
 
-	float neededPinHeight = std::max(phSumIn, phSumOut) + (PIN_PADDING * 2);
+	float neededPinHeight = std::max(phSumIn, phSumOut) + (PIN_PADDING * 2) + NODE_TITLE_HEIGHT;
 
 	float nodeHeight = std::max(NODE_MINHEIGHT, neededPinHeight);
 	float nodeWidth = NODE_MINWIDTH;
@@ -374,14 +374,14 @@ void GraphNode::SFMLRender(sf::RenderTarget& target) {
 	float lPinSpace = 0;
 	float rPinSpace = 0;
 	if (pCountIn != 0) {
-		lPinSpace = (nodeHeight - (PIN_PADDING * 2)) / (pCountIn+1);
+		lPinSpace = (nodeHeight - (PIN_PADDING * 2) - NODE_TITLE_HEIGHT) / (pCountIn+1);
 	}
 	if (pCountOut != 0) {
-		rPinSpace = (nodeHeight - (PIN_PADDING * 2)) / (pCountOut+1);
+		rPinSpace = (nodeHeight - (PIN_PADDING * 2) - NODE_TITLE_HEIGHT) / (pCountOut+1);
 	}
 
 	for (int p = 0; p < pCountIn; p++) {
-		float y = nodePos.y + PIN_PADDING + ((p + 1)* lPinSpace);
+		float y = nodePos.y + PIN_PADDING + ((p + 1)* lPinSpace) + NODE_TITLE_HEIGHT;
 		float x = nodePos.x;
 		sf::CircleShape pinDot;
 		sf::RectangleShape pinCircle;
@@ -399,7 +399,7 @@ void GraphNode::SFMLRender(sf::RenderTarget& target) {
 	}
 
 	for (int p = 0; p < pCountOut; p++) {
-		float y = nodePos.y + PIN_PADDING + ((p + 1) * rPinSpace);
+		float y = nodePos.y + PIN_PADDING + ((p + 1) * rPinSpace) + NODE_TITLE_HEIGHT;
 		float x = nodePos.x + nodeWidth;
 		sf::CircleShape pinDot;
 		sf::RectangleShape pinCircle;

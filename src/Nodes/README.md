@@ -96,7 +96,6 @@ These variables are extra and do not need to be defined in the `.tgnode` file.
 | --- | --- | --- |
 | `sizeX` | `int` | The graph texture width in pixels |
 | `sizeY` | `int` | The graph texture height in pixels |
-| `time` | `float` | The graph time in seconds |
 
 ## Example
 > Ignore the syntax highlighting for the TGNL code.

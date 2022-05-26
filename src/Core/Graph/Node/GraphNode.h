@@ -15,6 +15,7 @@
 #include "../../Utils/Strings.h"
 #include "../../Utils/Colors.h"
 #include "../../Utils/Log.h"
+#include "../../Rendering/RenderingGlobals.h"
 
 class GraphNode
 {
@@ -49,7 +50,6 @@ public:
 	std::vector<std::string> luaLines;
 
 	sf::Vector2f nodePos;
-	sf::Font font;
 
 public:
 	GraphNode() {
@@ -69,7 +69,6 @@ public:
 		displayVar = "";
 		luaLines = std::vector<std::string>();
 		nodePos = sf::Vector2f(0, 0);
-		font = sf::Font();
 	}
 
 	static GraphNode LoadFromTGNF(std::string classFile); // Load from Texture Graph Node File

@@ -19,6 +19,7 @@
 #include <imgui_internal.h>
 
 #include "Core/Rendering/ColourSchemes.h"
+#include "Core/Rendering/RenderingGlobals.h"
 #include "Core/Rendering/MainWindow.h"
 
 #include "Core/Rendering/SubWindow.h"
@@ -42,6 +43,10 @@ std::vector<optionalWindow> optionalViews = {
 
 std::vector<sf::RenderTexture*> textures;
 void OnExit() {
+    LOG_INFO("Stopping Engine");
+    ImGui::SFML::Shutdown();
+
+    RenderingGlobals::font.~Font();
     for (auto* tex : textures) {
         if (tex == nullptr) { continue; }
         delete tex;
@@ -62,6 +67,8 @@ int main(int argc, char** argv)
     std::at_quick_exit(OnExit);
     set_terminate(OnExit);
     set_unexpected(OnExit);
+
+    RenderingGlobals::Init();
 
     LOG_INFO("Starting Engine\n");
 
@@ -133,9 +140,6 @@ int main(int argc, char** argv)
 
         primaryWindow.EndRender();
     }
-
-    LOG_INFO("Stopping Engine");
-    ImGui::SFML::Shutdown();
 
     return 0;
 }

@@ -19,11 +19,12 @@ A VSCode syntax extension can be found [here](https://github.com/oxi-dev0/TGNL)
 | Type | Definition | Example | Can be parameter? | Can be pin? |
 | --- | --- | --- | --- | --- |
 |`string` | A single line `"` surrounded string | `"Hello World"` | &check; | &cross; |
-|`color` | A `0x` prefixed 8 char hex number that defines an RGBA color | `0xFF0000FF` | &check; | &check; |
-|`int` | A single line integer | `324` | &check; | &check; |
-|`float` | A single line float that includes a decimal point | `10.0` | &check; | &check; |
-|`bool` | Either `true` or `false` | | &check; | &check; |
-|`tex` | A 2D Array of `color` | | &cross; | &check; |
+|`color` | A `0x` prefixed 8 char hex number that defines an RGBA color | `0xFF0000FF` | &check; | &cross; |
+|`int` | A single line integer | `324` | &check; | &cross; |
+|`float` | A single line float that includes a decimal point | `10.0` | &check; | &cross; |
+|`bool` | Either `true` or `false` | | &check; | &cross; |
+|`colortex` | A 2D Array of `color` | | &cross; | &check; |
+|`greytex` | A 2D Array of `color` | | &cross; | &check; |
 > An `enum` type will be coming later in development
 
 ## Overview
@@ -47,7 +48,7 @@ The `metadata` keyword must be placed before and after the node metadata.
 | `varname [luavar] [string]` | Defines the display name of a lua var. This is required for each lua var |
 | `default [luavar] [data]` | Defines the default value of a parameter lua var. This is not required, but is only valid for parameter vars. `[data]`'s type depends on the variable's type |
 | | |
-| `display [luavar]` | Defines the lua var that should be used as the node preview. This is only valid for lua vars with type `tex`, `int`, `float`, `color`, or `bool` |
+| `display [luavar]` | Defines the output lua var that should be used as the node preview. This is only valid for lua vars with type `greytex`, or `colortex` |
 | | |
 | `show [luavar] [condition]` | Allows parameter lua vars to only be shown if one of the other parameter vars meet a condition. If a variable is not shown, it will be set to it's default value. Parameters being dynamically shown must have a default value declared |
 > `show` is not implemented currently, as I will be working on conditions later. It will most likely be worked on when I add the `enum` type.  
@@ -88,7 +89,8 @@ TGNL types are converted to lua types to allow them to be processed
 | `int` | `int` | |
 | `bool` | `bool` | |
 | `color` | `table` | Colors are formatted like this: `{r=255, g=0, b=0, a=255}`. These vars also get [metamethod overrides](http://lua-users.org/wiki/MetamethodsTutorial) for math operations. |
-| `tex` | `2D Table of Color(table)` | An example of getting the red channel of the pixel color at (25,25) would be `Texture[25][25].r`. | 
+| `colortex` | `2D Table of Color(table)` | An example of getting the red channel of the pixel color at (25,25) would be `Texture[25][25].r`. |
+| `greytex` | `2D Table of int(table)` | An example of getting the pixel value at (25,25) would be `Texture[25][25]`. |
 
 ### Other Vars
 Again, before the execution lua is ran, these variables get defined to allow the lua code to interface with the node's data.  

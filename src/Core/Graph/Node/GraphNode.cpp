@@ -128,7 +128,7 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 		}
 		if (parsedVariables) {
 			LOG_CRITICAL("Execution definition block must be after variable definition block. (Node Class '{0}')", classFile);
-		}
+		} 
 		if (keyword == "param") {
 			TGNL_LINE_ASSERT("param", 2, data.size() - 1, classFile);
 			TGNL_TYPE_ASSERT("param", data[1], classFile);
@@ -147,7 +147,7 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 				continue;
 			}
 			newNode.luaVars.insert({ data[2], LuaVar(data[2], dataType) });
-			newNode.paramLuaVars.insert({ newNode.luaVarDisplayNames.find(data[2])->first, newNode.luaVars.size()-1 });
+			newNode.paramLuaVars.insert({ newNode.luaVarDisplayNames.find(data[2])->first, (int)newNode.luaVars.size()-1 });
 			Types::WildData newData = Types::WildData();
 			newData.dataType = dataType;
 			newNode.luaVarData.insert({ data[2], newData });
@@ -170,14 +170,14 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 				LOG_CRITICAL("Output variable '{0}' requires a varname defintion in the metadata block, before it's definition. (Node Class '{1}')", data[2], classFile);
 				continue;
 			}
-			NodePin newPin = NodePin(newNode.pins.size(), newNode.nodeId, dataType, Direction::Out, newNode.luaVarDisplayNames[data[2]]);
+			NodePin newPin = NodePin((int)newNode.pins.size(), newNode.nodeId, dataType, Direction::Out, newNode.luaVarDisplayNames[data[2]]);
 			newNode.pins.push_back(newPin);
 			newNode.luaVars.insert({ data[2], LuaVar(data[2], dataType) });
-			newNode.pinLuaVars.insert({ newPin.pinId, newNode.luaVars.size() - 1 });
+			newNode.pinLuaVars.insert({ newPin.pinId, (int)newNode.luaVars.size() - 1 });
 			Types::WildData newData = Types::WildData();
 			newData.dataType = dataType;
 			newNode.luaVarData.insert({ data[2], newData });
-			newNode.outPins.insert({ newPin.pinId, newNode.pins.size() -1});
+			newNode.outPins.insert({ newPin.pinId, (int)newNode.pins.size() -1});
 			continue;
 		}
 		if (keyword == "input") {
@@ -197,14 +197,14 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 				LOG_CRITICAL("Input variable '{0}' requires a varname defintion in the metadata block, before it's definition. (Node Class '{1}')", data[2], classFile);
 				continue;
 			}
-			NodePin newPin = NodePin(newNode.pins.size(), newNode.nodeId, dataType, Direction::In, newNode.luaVarDisplayNames[data[2]]);
+			NodePin newPin = NodePin((int)newNode.pins.size(), newNode.nodeId, dataType, Direction::In, newNode.luaVarDisplayNames[data[2]]);
 			newNode.pins.push_back(newPin);
 			newNode.luaVars.insert({ data[2], LuaVar(data[2], dataType) });
-			newNode.pinLuaVars.insert({ newPin.pinId, newNode.luaVars.size()-1 });
+			newNode.pinLuaVars.insert({ newPin.pinId, (int)newNode.luaVars.size()-1 });
 			Types::WildData newData = Types::WildData();
 			newData.dataType = dataType;
 			newNode.luaVarData.insert({ data[2], newData });
-			newNode.inPins.insert({ newPin.pinId, newNode.pins.size() - 1 });
+			newNode.inPins.insert({ newPin.pinId, (int)newNode.pins.size() - 1 });
 			continue;
 		} 
 	}
@@ -266,16 +266,14 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 	}
 
 	if (!setName) {
-		LOG_CRITICAL("Missing metadata keyword 'name' (Node Class '{1}')", classFile);
+		LOG_CRITICAL("Missing metadata keyword 'name' (Node Class '{0}')", classFile);
 	}
 	if (!setColor) {
-		LOG_CRITICAL("Missing metadata keyword 'color' (Node Class '{1}')", classFile);
+		LOG_CRITICAL("Missing metadata keyword 'color' (Node Class '{0}')", classFile);
 	}
 	if (!setCategory) {
-		LOG_CRITICAL("Missing metadata keyword 'category' (Node Class '{1}')", classFile);
+		LOG_CRITICAL("Missing metadata keyword 'category' (Node Class '{0}')", classFile);
 	}
-
-	assert(newNode.font.loadFromFile("resources/NotoSans/NotoSans-Regular.ttf"));
 
 	return newNode;
 }
@@ -325,6 +323,8 @@ sf::Text ScaleCentered(sf::Text t, float factor) {
 	return t;
 }
 
+
+
 const float NODE_MINWIDTH = 100.0f;
 const float NODE_MINHEIGHT = 110.0f;
 
@@ -333,7 +333,7 @@ const float NODE_COLOR_THICKNESS = 1.0f;
 
 const float PIN_COMPONENTHEIGHT = 20.0f;
 const float PIN_PADDING = 0.0f;
-const float PIN_RADIUS = 5.0f;
+const float PIN_RADIUS = 3.5f;
 
 void GraphNode::SFMLRender(sf::RenderTarget& target) {
 	// Calculate sizes
@@ -380,7 +380,7 @@ void GraphNode::SFMLRender(sf::RenderTarget& target) {
 	colorRect.setFillColor(displayColor);
 	target.draw(colorRect);
 
-	sf::Text titleText = CenteredText(displayName, sf::Vector2f(nodePos.x + nodeWidth / 2, nodePos.y + (NODE_TITLE_HEIGHT / 2) - 2.0f), 48, font);
+	sf::Text titleText = CenteredText(displayName, sf::Vector2f(nodePos.x + nodeWidth / 2, nodePos.y + (NODE_TITLE_HEIGHT / 2) - 2.0f), 48, RenderingGlobals::font);
 	titleText = ScaleCentered(titleText, 0.2f);
 	titleText.setFillColor(sf::Color::White);
 	target.draw(titleText);

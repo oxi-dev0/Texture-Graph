@@ -54,6 +54,10 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 	bool execdata = false;
 	bool execprime = false;
 
+	bool setName = false;
+	bool setColor = false;
+	bool setCategory = false;
+
 	std::vector<std::string> luaLines;
 
 	std::map<std::string, std::string> pendingDefaults;
@@ -85,9 +89,9 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 
 		if (metadata) {
 			// METADATA PROCESSING
-			if (keyword == "name") { TGNL_LINE_ASSERT("name", 1, data.size() - 1, classFile) TGNL_STRING_ASSERT("name", data[1], classFile) newNode.displayName = RemoveStringIndicators(data[1]); continue; }
-			if (keyword == "color") { TGNL_LINE_ASSERT("color", 1, data.size() - 1, classFile) TGNL_COLOR_ASSERT("color", data[1], classFile) newNode.displayColor = Utility::Color::ColorFromHex(data[1]); continue; }
-			if (keyword == "category") { TGNL_LINE_ASSERT("category", 1, data.size() - 1, classFile) TGNL_STRING_ASSERT("category", data[1], classFile) newNode.category = RemoveStringIndicators(data[1]); continue; }
+			if (keyword == "name") { TGNL_LINE_ASSERT("name", 1, data.size() - 1, classFile) TGNL_STRING_ASSERT("name", data[1], classFile) newNode.displayName = RemoveStringIndicators(data[1]); setName = true; continue; }
+			if (keyword == "color") { TGNL_LINE_ASSERT("color", 1, data.size() - 1, classFile) TGNL_COLOR_ASSERT("color", data[1], classFile) newNode.displayColor = Utility::Color::ColorFromHex(data[1]); setColor = true; continue; }
+			if (keyword == "category") { TGNL_LINE_ASSERT("category", 1, data.size() - 1, classFile) TGNL_STRING_ASSERT("category", data[1], classFile) newNode.category = RemoveStringIndicators(data[1]); setCategory = true; continue; }
 			if (keyword == "varname") { TGNL_LINE_ASSERT("varname", 2, data.size() - 1, classFile) TGNL_STRING_ASSERT("varname", data[2], classFile) newNode.luaVarDisplayNames.insert({data[1], RemoveStringIndicators(data[2])}); continue; }
 			if (keyword == "display") { TGNL_LINE_ASSERT("color", 1, data.size() - 1, classFile) newNode.displayVar = data[1]; continue; }
 			if (keyword == "default") { TGNL_LINE_ASSERT("default", 2, data.size() - 1, classFile) pendingDefaults.insert({ data[1], data[2] }); continue; } // defaults have to be offset until all vars are loaded
@@ -259,6 +263,16 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 	newNode.luaLines = luaLines; 
 	if (newNode.luaLines.size() == 0 || newNode.luaLines[0] == "") {
 		LOG_CRITICAL("Missing execution lua. (Node Class '{0}')", classFile);
+	}
+
+	if (!setName) {
+		LOG_CRITICAL("Missing metadata keyword 'name' (Node Class '{1}')", classFile);
+	}
+	if (!setColor) {
+		LOG_CRITICAL("Missing metadata keyword 'color' (Node Class '{1}')", classFile);
+	}
+	if (!setCategory) {
+		LOG_CRITICAL("Missing metadata keyword 'category' (Node Class '{1}')", classFile);
 	}
 
 	assert(newNode.font.loadFromFile("resources/NotoSans/NotoSans-Regular.ttf"));

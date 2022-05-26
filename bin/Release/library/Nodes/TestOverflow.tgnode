@@ -1,0 +1,72 @@
+metadata
+    name "Test Overflow"
+    color 0xFA7A39FF
+    category "Math"
+
+    varname Out "Out"
+    varname A "A"
+    varname B "B"
+    varname C "C"
+    varname D "D"
+    varname E "E"
+    varname F "F"
+    varname G "G"
+    varname H "H"
+    varname I "I"
+    varname J "J"
+    varname K "K"
+    varname L "L"
+    varname M "M"
+    varname N "N"
+    varname O "O"
+    varname P "P"
+    varname Q "Q"
+    varname R "R"
+    varname S "S"
+    varname T "T"
+    varname U "U"
+    varname V "V"
+    varname W "W"
+    varname X "X"
+    varname Y "Y"
+    varname Z "Z"
+
+    display Out
+metadata
+
+output colortex Out
+input colortex A
+input colortex B
+input colortex C
+input colortex D
+input colortex E
+input colortex F 
+input colortex G 
+input colortex H
+input colortex I
+input colortex J
+input greytex K
+input greytex L
+input greytex M
+input greytex N
+input greytex O
+input greytex P
+input greytex Q
+input greytex R
+input greytex S
+input greytex T
+input greytex U
+input greytex V
+input greytex W
+input greytex X
+input greytex Y
+input greytex Z
+
+exec
+{
+    for x=1, sizeX do
+        for y=1, sizeY do
+            Out[x][y] = A[x][y] + B[x][y]
+        end
+    end
+}

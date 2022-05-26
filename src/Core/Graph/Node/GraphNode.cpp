@@ -340,6 +340,8 @@ const float PIN_PADDING = 0.0f;
 const float PIN_RADIUS = 3.5f;
 
 void GraphNode::SFMLRender(sf::RenderTarget& target) {
+	pinPosCache.clear();
+
 	// Calculate sizes
 	std::vector<float> pinHeights;
 	float phSumIn = 0.0f;
@@ -370,6 +372,7 @@ void GraphNode::SFMLRender(sf::RenderTarget& target) {
 	float nodeHeight = std::max(NODE_MINHEIGHT, neededPinHeight);
 	float nodeWidth = NODE_MINWIDTH;
 
+	// Draw node
 	sf::RectangleShape nodeRect;
 	nodeRect.setPosition(nodePos);
 	nodeRect.setSize(sf::Vector2f(nodeWidth, nodeHeight));
@@ -395,6 +398,7 @@ void GraphNode::SFMLRender(sf::RenderTarget& target) {
 	titleText.setFillColor(sf::Color::White);
 	target.draw(titleText);
 
+	// Calculate pin spacing
 	float lPinSpace = 0;
 	float rPinSpace = 0;
 	if (pCountIn != 0) {
@@ -404,6 +408,7 @@ void GraphNode::SFMLRender(sf::RenderTarget& target) {
 		rPinSpace = (nodeHeight - (PIN_PADDING * 2) - NODE_TITLE_HEIGHT) / (pCountOut+1);
 	}
 
+	// Draw in pins
 	for (int p = 0; p < pCountIn; p++) {
 		float y = nodePos.y + PIN_PADDING + ((p + 1)* lPinSpace) + NODE_TITLE_HEIGHT;
 		float x = nodePos.x;
@@ -418,10 +423,12 @@ void GraphNode::SFMLRender(sf::RenderTarget& target) {
 		pinCircle.setRotation(sf::degrees(45.0f));
 		pinDot.setFillColor(sf::Color::Black);
 		pinCircle.setFillColor(Types::typeToColor[pins[inPinIndexes[p]].type]);
+		pinPosCache.insert({ pins[inPinIndexes[p]].pinId, sf::Vector2f(x,y) });
 		target.draw(pinCircle);
 		//target.draw(pinDot);
 	}
 
+	// Draw out pins
 	for (int p = 0; p < pCountOut; p++) {
 		float y = nodePos.y + PIN_PADDING + ((p + 1) * rPinSpace) + NODE_TITLE_HEIGHT;
 		float x = nodePos.x + nodeWidth;
@@ -436,6 +443,7 @@ void GraphNode::SFMLRender(sf::RenderTarget& target) {
 		pinCircle.setRotation(sf::degrees(45.0f));
 		pinDot.setFillColor(sf::Color::Black);
 		pinCircle.setFillColor(Types::typeToColor[pins[outPinIndexes[p]].type]);
+		pinPosCache.insert({ pins[outPinIndexes[p]].pinId, sf::Vector2f(x,y) });
 		target.draw(pinCircle);
 		//target.draw(pinDot);
 	}

@@ -1,6 +1,7 @@
 metadata
-    name "Solid Colour"
+    name "Solid Colour Simple"
     color 0x8AE9C1FF
+    category "Constants"
 
     varname Colour "Colour"
     varname Out "Out"
@@ -11,13 +12,13 @@ metadata
 metadata
 
 param color Colour
-output tex Out
+output colortex Out
 
 exec
 {
     for x=1, sizeX do
         for y=1, sizeY do
-            Out[x,y] = Colour
+            Out[x][y] = Colour
         end
     end
 }

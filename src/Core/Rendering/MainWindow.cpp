@@ -66,6 +66,16 @@ void MainWindow::MenuBar() {
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("Engine")) {
+            if (ImGui::MenuItem("Recompile Nodes")) {
+                LibraryManager::LoadNodeLibrary();
+            }
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "(CTRL+R)");
+            
+            ImGui::EndMenu();
+        }
+
         ImGui::EndMenuBar();
     }
 }
@@ -209,6 +219,9 @@ int MainWindow::Update() {
                 break;
             case Keybinds::KeybindEvent_Exit:
                 exit = true;
+                break;
+            case Keybinds::KeybindEvent_RecompileNodes:
+                LibraryManager::LoadNodeLibrary();
                 break;
             default:
                 break;

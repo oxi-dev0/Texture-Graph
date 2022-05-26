@@ -45,6 +45,8 @@ public:
 	std::map<std::string, int> luaVarPins; // Lua Var Name -> Pin Id
 	std::map<std::string, int> paramLuaVars; // Param Name -> Lua Var Index
 	std::map<std::string, Types::WildData> luaVarData; // Lua Var Name -> Data
+	std::map<int, sf::Vector2f> pinPosCache; // Pin Id -> Location
+
 	std::string displayVar; // Lua Var Name
 
 	std::vector<std::string> luaLines;
@@ -66,6 +68,7 @@ public:
 		paramLuaVars = std::map<std::string, int>();
 		luaVarData = std::map<std::string, Types::WildData>();
 		luaVarPins = std::map<std::string, int>();
+		pinPosCache = std::map<int, sf::Vector2f>();
 		displayVar = "";
 		luaLines = std::vector<std::string>();
 		nodePos = sf::Vector2f(0, 0);

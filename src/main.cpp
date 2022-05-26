@@ -4,6 +4,7 @@
 #include <sstream>
 #include <locale>
 #include <filesystem>
+#include <functional>
 
 #include <dwmapi.h>
 
@@ -24,20 +25,25 @@
 
 #include "Core/Rendering/SubWindow.h"
 #include "Core/Rendering/Views/GraphEditorView.h"
+#include "Core/Rendering/Views/LibraryEditorView.h"
 
 #include "Core/Graph/Node/GraphNode.h"
+
+#include "Core/Library/LibraryManager.h"
 
 #define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 
 enum WindowType {
     Base,
-    GraphEditor
+    GraphEditor,
+    LibraryView
 };
 
 typedef std::tuple<std::string, WindowType, ImGuiWindowFlags> optionalWindow;
 std::vector<optionalWindow> optionalViews = {
     optionalWindow("Graph Editor", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
+    optionalWindow("Library", WindowType::LibraryView, 0)
     //optionalWindow("Graph Editor 2", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
 };
 
@@ -68,9 +74,10 @@ int main(int argc, char** argv)
     set_terminate(OnExit);
     set_unexpected(OnExit);
 
-    RenderingGlobals::Init();
+    LOG_INFO("Starting Engine");
+    LOG_INFO("");
 
-    LOG_INFO("Starting Engine\n");
+    RenderingGlobals::Init();
 
     MainWindow primaryWindow("Texture Graph");
 
@@ -79,14 +86,6 @@ int main(int argc, char** argv)
 
     ImGui::LoadIniSettingsFromDisk("resources/defaultlayout.ini");
     LOG_INFO("Successfully loaded layout from 'resources/defaultlayout.ini'");
-
-    LOG_INFO("TESTING TGNF LOADER");
-    Utility::Timer tmr;
-    GraphNode newNode = GraphNode::LoadFromTGNF("library/Nodes/SimpleSC.tgnode");
-    LOG_INFO("Successfully compiled {0} in {1}s", "library/Nodes/SimpleSC.tgnode", tmr.Elapsed());
-    tmr.Reset();
-    GraphNode newNode2 = GraphNode::LoadFromTGNF("library/Nodes/TestOverflow.tgnode");
-    LOG_INFO("Successfully compiled {0} in {1}s", "library/Nodes/TestOverflow.tgnode", tmr.Elapsed());
       
     //sf::RenderTexture newT; // trying to fix unique ptrs being deleted
 
@@ -107,10 +106,22 @@ int main(int argc, char** argv)
             textures.push_back(tex);
             windows.push_back(new GraphEditorView(primaryWindow.window, *tex, name, flags));
         }   break;
+        case WindowType::LibraryView:
+        {
+            auto* newView = new LibraryEditorView(primaryWindow.window, name, flags);
+            windows.push_back(newView);
+            LibraryManager::RegisterLoadCallback(std::bind(&LibraryEditorView::LoadNodes, newView));
+        }   break;
         default:
             break;
         }
     } // Generates the toggle windows, such as the graph editor and inspector
+
+    LOG_INFO("Successfully generated optional views");
+
+    LOG_INFO("");
+    LibraryManager::LoadNodeLibrary();
+    LOG_INFO("");
 
     primaryWindow.views = &windows;
     

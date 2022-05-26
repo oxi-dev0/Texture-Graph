@@ -32,6 +32,8 @@ protected:
 	ImVec2 GetPos(); // Must be called in render context
 
 protected:
+	virtual void InfoBarData();
+	virtual void InfoBar(float height);
 	virtual void ComponentRender();
 
 public:

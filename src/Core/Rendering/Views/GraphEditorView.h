@@ -10,7 +10,7 @@ private:
 	bool moving = false;
 	sf::VertexArray lines;
 
-	GraphNode tempNode;
+	std::vector<GraphNode> nodes;
 
 private:
 	void Grid();
@@ -21,5 +21,6 @@ public:
 
 	virtual bool ProcessEvent(sf::Event& event); 
 
+	void AddNode(std::string nodeClass);
 };
 

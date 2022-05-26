@@ -14,6 +14,8 @@
 #include "SubWindow.h"
 #include "../Utils/Keybinds.h"
 
+#include "../Library/LibraryManager.h"
+
 #include <string>
 #include <sstream>
 

@@ -15,7 +15,7 @@ protected:
 	sf::Vector2f vcenter; // events have to be implemented in child window
 
 protected:
-	virtual void InfoBar(float height);
+	virtual void InfoBarData();
 	virtual void ComponentRender();
 
 	void SetBGColor(ImVec4 color);

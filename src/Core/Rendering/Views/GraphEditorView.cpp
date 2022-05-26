@@ -6,7 +6,6 @@ GraphEditorView::GraphEditorView(sf::RenderWindow& main_, sf::RenderTexture& rt_
 	ImVec4 bgColor = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
 	float mul = 0.6f;
 	SetBGColor(ImVec4(bgColor.x * mul, bgColor.y * mul, bgColor.z * mul, 1));
-	tempNode = GraphNode::LoadFromTGNF("library/Nodes/Lerp.tgnode");
 } // JUST CALLS CONSTRUCTOR FOR SUBWINDOW
 
 void GraphEditorView::Grid() {
@@ -76,7 +75,15 @@ void GraphEditorView::ComponentRender() {
 	shape3.setPosition(sf::Vector2f(200.0f, 150.0f));
 	rt.draw(shape3);*/
 
-	tempNode.SFMLRender(rt);
+	for (auto& node : nodes) {
+		node.SFMLRender(rt);
+	}
+}
+
+// Add a new node to the graph
+void GraphEditorView::AddNode(std::string nodeClass) {
+	GraphNode newNode = GraphNode::LoadFromTGNF(nodeClass);
+	nodes.push_back(newNode);
 }
 
 // SFML EVENTS FOR THIS VIEW

@@ -11,5 +11,7 @@ namespace Utility {
 		void rtrim(std::string& s);
 		std::string toLower(std::string s);
 		bool includes(std::vector<std::string> checks, std::string s);
+		bool isInt(const std::string& s);
+		bool isFloat(const std::string& s);
 	}
 }

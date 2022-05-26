@@ -1,9 +1,11 @@
 metadata
-    name "Simple_Colour"
+    name "Simple Colour"
     color 0x8AE9C1FF
 
     varname Colour "Colour"
     varname Out "Out"
+
+    default Colour 0xFF0000FF
 
     display Out
 metadata

@@ -183,9 +183,11 @@ void MainWindow::SetFullscreen(bool newFullscreen) {
         prevSize = window.getSize();
         prevPos = window.getPosition();
         window.create(sf::VideoMode::getFullscreenModes()[0], title.c_str(), sf::Style::Fullscreen); // Switch to fullscreen
+        window.setVerticalSyncEnabled(true);
     }
     else {
         window.create(sf::VideoMode(prevSize.x, prevSize.y), title.c_str()); // Return to old view
+        window.setVerticalSyncEnabled(true);
         window.setPosition(prevPos);
     }
 }

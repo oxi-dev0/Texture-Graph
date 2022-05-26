@@ -60,5 +60,18 @@ namespace Utility {
 			}
 			return includes;
 		}
+
+		bool isInt(const std::string& s)
+		{
+			return !s.empty() && std::find_if(s.begin(),
+				s.end(), [](unsigned char c) { return !(std::isdigit(c) || c=='-'); }) == s.end();
+		}
+
+		bool isFloat(const std::string& s)
+		{
+			bool hasPoint = false;
+			return !s.empty() && std::find_if(s.begin(),
+				s.end(), [&hasPoint](unsigned char c) { if (c == '.') { hasPoint = true; } return !(std::isdigit(c) || c == '-' || c == '.'); }) == s.end() && hasPoint;
+		}
 	}
 }

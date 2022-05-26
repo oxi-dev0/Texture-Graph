@@ -48,14 +48,20 @@ void OnExit() {
     }
 }
 
+
 int main(int argc, char** argv)
 {
 #ifdef DIST
     FreeConsole();
 #else
-    Utility::Log::Init();
+    Utility::Log::Init(); 
 #endif
+
+    // Exit handler
     std::atexit(OnExit);
+    std::at_quick_exit(OnExit);
+    set_terminate(OnExit);
+    set_unexpected(OnExit);
 
     LOG_INFO("Starting Engine\n");
 
@@ -71,7 +77,10 @@ int main(int argc, char** argv)
     Utility::Timer tmr;
     GraphNode newNode = GraphNode::LoadFromTGNF("library/Nodes/SimpleSC.tgnode");
     LOG_INFO("Successfully compiled {0} in {1}s", "library/Nodes/SimpleSC.tgnode", tmr.Elapsed());
-
+    tmr.Reset();
+    GraphNode newNode2 = GraphNode::LoadFromTGNF("library/Nodes/SolidColour.tgnode");
+    LOG_INFO("Successfully compiled {0} in {1}s", "library/Nodes/SolidColour.tgnode", tmr.Elapsed());
+      
     //sf::RenderTexture newT; // trying to fix unique ptrs being deleted
 
     std::vector<SubWindow*> windows;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <iostream>
 
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
@@ -23,7 +24,7 @@ namespace Utility {
 #define LOG_WARN(...)			::Utility::Log::GetLogger()->warn(__VA_ARGS__)
 #define LOG_INFO(...)			::Utility::Log::GetLogger()->info(__VA_ARGS__)
 #define LOG_TRACE(...)			::Utility::Log::GetLogger()->trace(__VA_ARGS__)
-#define LOG_CRITICAL(...)		::Utility::Log::GetLogger()->critical(__VA_ARGS__)
+#define LOG_CRITICAL(...)		::Utility::Log::GetLogger()->critical(__VA_ARGS__); LOG_ERROR("Press ENTER to continue..."); std::cin.get(); std::exit(134);
 
 // Strip trace and info from release build
 #ifdef RELEASE
@@ -42,5 +43,5 @@ namespace Utility {
 	#define LOG_WARN
 	#define LOG_INFO
 	#define LOG_TRACE
-	#define LOG_CRITICAL
+	#define LOG_CRITICAL	std::cin.get(); std::exit(134);
 #endif

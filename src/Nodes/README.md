@@ -42,6 +42,7 @@ The `metadata` keyword must be placed before and after the node metadata.
 | --- | --- |
 | `name [string]` | Defines the name of the Node |
 | `color [color]` | Defines the color of the Node |
+| `category [string]` | Defines the category of the Node |
 | | |
 | `varname [luavar] [string]` | Defines the display name of a lua var. This is required for each lua var |
 | `default [luavar] [data]` | Defines the default value of a parameter lua var. This is not required, but is only valid for parameter vars. `[data]`'s type depends on the variable's type |

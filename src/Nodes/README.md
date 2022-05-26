@@ -102,7 +102,7 @@ These variables are extra and do not need to be defined in the `.tgnode` file.
 > Ignore the syntax highlighting for the TGNL code.
 ```lua
 metadata
-    name "Simple Colour"
+    name "Solid Colour"
     color 0x8AE9C1FF
 
     varname Colour "Colour"

@@ -18,7 +18,7 @@ A VSCode syntax extension can be found [here](https://github.com/oxi-dev0/TGNL)
 ## Types
 | Type | Definition | Example | Can be parameter? | Can be pin? |
 | --- | --- | --- | --- | --- |
-|`string` | A single line `"` surrounded string | `"Hello World"` | &check; | &cross; |
+|`string` | A single line `"` surrounded string | `"Hello World"` | &cross; | &cross; |
 |`color` | A `0x` prefixed 8 char hex number that defines an RGBA color | `0xFF0000FF` | &check; | &cross; |
 |`int` | A single line integer | `324` | &check; | &cross; |
 |`float` | A single line float that includes a decimal point | `10.0` | &check; | &cross; |

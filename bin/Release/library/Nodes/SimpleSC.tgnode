@@ -1,5 +1,5 @@
 metadata
-    name "Simple Colour"
+    name "Solid Colour"
     color 0x8AE9C1FF
 
     varname Colour "Colour"

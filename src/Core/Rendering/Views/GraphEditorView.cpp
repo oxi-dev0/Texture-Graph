@@ -6,6 +6,7 @@ GraphEditorView::GraphEditorView(sf::RenderWindow& main_, sf::RenderTexture& rt_
 	ImVec4 bgColor = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
 	float mul = 0.6f;
 	SetBGColor(ImVec4(bgColor.x * mul, bgColor.y * mul, bgColor.z * mul, 1));
+	tempNode = GraphNode::LoadFromTGNF("library/Nodes/SimpleSC.tgnode");
 } // JUST CALLS CONSTRUCTOR FOR SUBWINDOW
 
 void GraphEditorView::Grid() {
@@ -59,21 +60,23 @@ void GraphEditorView::Grid() {
 }
 
 // RENDER STEP FOR THIS VIEW
-void GraphEditorView::ImGuiRender() {
+void GraphEditorView::ComponentRender() {
 	if (moving) {
 		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeAll);
 	}
 
 	Grid();
 
-    sf::RectangleShape shape2(sf::Vector2f(50.0f, 20.0f));
+    /*sf::RectangleShape shape2(sf::Vector2f(50.0f, 20.0f));
     shape2.setFillColor(sf::Color::Red);
     rt.draw(shape2);
 
 	sf::RectangleShape shape3(sf::Vector2f(40.0f, 50.0f));
 	shape3.setFillColor(sf::Color::Green);
 	shape3.setPosition(sf::Vector2f(200.0f, 150.0f));
-	rt.draw(shape3);
+	rt.draw(shape3);*/
+
+	tempNode.SFMLRender(rt);
 }
 
 // SFML EVENTS FOR THIS VIEW

@@ -32,6 +32,7 @@ public:
 
 	std::string displayName;
 	sf::Color displayColor;
+	std::string category;
 
 	std::vector<NodePin> pins; // Pin Definitions
 
@@ -47,11 +48,15 @@ public:
 
 	std::vector<std::string> luaLines;
 
+	sf::Vector2f nodePos;
+	sf::Font font;
+
 public:
 	GraphNode() {
 		nodeClass = "";
 		nodeId = 0;
 		displayName = "";
+		category = "";
 		displayColor = sf::Color(0, 0, 0, 255);
 		pins = std::vector<NodePin>();
 		inPins = std::map<int, int>();
@@ -63,8 +68,12 @@ public:
 		luaVarData = std::map<std::string, Types::WildData>();
 		displayVar = "";
 		luaLines = std::vector<std::string>();
+		nodePos = sf::Vector2f(0, 0);
+		font = sf::Font();
 	}
 
 	static GraphNode LoadFromTGNF(std::string classFile); // Load from Texture Graph Node File
+
+	void SFMLRender(sf::RenderTarget& target);
 };
 

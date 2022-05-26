@@ -9,11 +9,12 @@ SFMLWindow::SFMLWindow(sf::RenderWindow& main_, sf::RenderTexture& rt_, std::str
 	bgCol = sf::Color(0, 0, 0, 255);
 
 	sf::ContextSettings settings;
-	settings.antialiasingLevel = 8;
-	if (!rt.create(sf::VideoMode::getDesktopMode().width, sf::VideoMode::getDesktopMode().height, settings)) {
+	settings.antialiasingLevel = 4;
+	if (!rt.create(sf::VideoMode::getDesktopMode().width*1.0f, sf::VideoMode::getDesktopMode().height*1.0f, settings)) {
 		LOG_CRITICAL("Failed to initialise the SFMLWindow render texture.");
 		std::exit(2);
 	}
+	LOG_INFO("Initilised SFML Texture ({0}x{1})", rt.getSize().x, rt.getSize().y);
 
 	rt.setView(view);
 } // JUST CALLS CONSTRUCTOR FOR SUBWINDOW
@@ -57,7 +58,7 @@ void SFMLWindow::InfoBar(float height) {
 	ImGui::PopStyleVar(2);
 }
 
-void SFMLWindow::ImGuiRender() {
+void SFMLWindow::ComponentRender() {
 
 }
 
@@ -70,7 +71,7 @@ void SFMLWindow::Render() {
 	ImVec2 pos = GetPos();
 	rt.clear(bgCol);
 
-	ImGuiRender();
+	ComponentRender();
 
 	rt.display();
 

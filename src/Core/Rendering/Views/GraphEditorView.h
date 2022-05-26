@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../SFMLWindow.h"
+#include "../../Graph/Node/GraphNode.h"
 
 class GraphEditorView : public SFMLWindow
 {
@@ -9,10 +10,12 @@ private:
 	bool moving = false;
 	sf::VertexArray lines;
 
+	GraphNode tempNode;
+
 private:
 	void Grid();
 protected:
-	virtual void ImGuiRender();
+	virtual void ComponentRender();
 public:
 	GraphEditorView(sf::RenderWindow& main_, sf::RenderTexture& rt_, std::string name_, ImGuiWindowFlags flags_);
 

@@ -32,7 +32,7 @@ protected:
 	ImVec2 GetPos(); // Must be called in render context
 
 protected:
-	virtual void ImGuiRender(bool updated);
+	virtual void ComponentRender();
 
 public:
 	SubWindow(sf::RenderWindow& main_, std::string name_, ImGuiWindowFlags flags_);

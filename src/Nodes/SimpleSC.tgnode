@@ -1,6 +1,7 @@
 metadata
-    name "Simple Colour"
+    name "Solid Colour"
     color 0x8AE9C1FF
+    category "Constants"
 
     varname Colour "Colour"
     varname Out "Out"

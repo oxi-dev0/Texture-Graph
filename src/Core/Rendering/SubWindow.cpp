@@ -15,7 +15,7 @@ bool SubWindow::ProcessEvent(sf::Event& event) {
     return false;
 }
 
-void SubWindow::ImGuiRender(bool updated) {
+void SubWindow::ComponentRender() {
 
 }
 
@@ -30,7 +30,7 @@ ImVec2 SubWindow::GetPos() {
 
 void SubWindow::Render() {
     ImVec2 contentAvail = ImGui::GetContentRegionAvail();
-    ImGuiRender(true);
+    ComponentRender();
 
     ImVec2 pos = GetPos();
     prevPos = sf::Vector2i((int)pos.x, (int)pos.y);

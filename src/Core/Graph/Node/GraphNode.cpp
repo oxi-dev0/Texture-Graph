@@ -86,6 +86,7 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 			// METADATA PROCESSING
 			if (keyword == "name") { TGNL_LINE_ASSERT("name", 1, data.size() - 1, classFile) TGNL_STRING_ASSERT("name", data[1], classFile) newNode.displayName = RemoveStringIndicators(data[1]); continue; }
 			if (keyword == "color") { TGNL_LINE_ASSERT("color", 1, data.size() - 1, classFile) TGNL_COLOR_ASSERT("color", data[1], classFile) newNode.displayColor = Utility::Color::ColorFromHex(data[1]); continue; }
+			if (keyword == "category") { TGNL_LINE_ASSERT("category", 1, data.size() - 1, classFile) TGNL_STRING_ASSERT("category", data[1], classFile) newNode.category = RemoveStringIndicators(data[1]); continue; }
 			if (keyword == "varname") { TGNL_LINE_ASSERT("varname", 2, data.size() - 1, classFile) TGNL_STRING_ASSERT("varname", data[2], classFile) newNode.luaVarDisplayNames.insert({data[1], RemoveStringIndicators(data[2])}); continue; }
 			if (keyword == "display") { TGNL_LINE_ASSERT("color", 1, data.size() - 1, classFile) newNode.displayVar = data[1]; continue; }
 			if (keyword == "default") { TGNL_LINE_ASSERT("default", 2, data.size() - 1, classFile) pendingDefaults.insert({ data[1], data[2] }); continue; } // defaults have to be offset until all vars are loaded
@@ -259,5 +260,156 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 		LOG_CRITICAL("Missing execution lua. (Node Class '{0}')", classFile);
 	}
 
+	assert(newNode.font.loadFromFile("resources/NotoSans/NotoSans-Regular.ttf"));
+
 	return newNode;
+}
+
+sf::Text CenteredText(std::string s, sf::Vector2f centerPos, unsigned int textSize, sf::Font& font) {
+	sf::Text text;
+	text.setFont(font);
+	text.setString(s);
+	text.setCharacterSize(textSize);
+
+	//CENTER
+	size_t CharacterSize = text.getCharacterSize();
+	size_t MaxHeight = 0;
+
+	for (size_t x = 0; x < s.size(); ++x)
+	{
+		sf::Uint32 Character = s.at(x);
+
+		const sf::Glyph& CurrentGlyph = font.getGlyph(Character, (unsigned int)CharacterSize, false);
+
+		size_t Height = (size_t)CurrentGlyph.bounds.height;
+
+		if (MaxHeight < Height)
+			MaxHeight = Height;
+	}
+
+	sf::FloatRect rect = text.getLocalBounds();
+
+	rect.left = (float)((centerPos.x) - (rect.width / 2.0f));
+	rect.top = (float)((centerPos.y) - (MaxHeight / 2.0f) - (rect.height - MaxHeight) + ((rect.height - CharacterSize) / 2.0f));
+
+	text.setPosition(sf::Vector2f(rect.left, rect.top));
+	return text;
+}
+
+sf::Text ScaleCentered(sf::Text t, float factor) {
+	auto bBefore = t.getGlobalBounds();
+	t.setScale(sf::Vector2f(factor, factor));
+	auto bAfter = t.getGlobalBounds();
+	auto rBefore = bBefore.left + bBefore.width;
+	auto rAfter = bAfter.left + bAfter.width;
+	auto hBefore = bBefore.top + bBefore.height;
+	auto hAfter = bAfter.top + bAfter.height;
+	auto rdiff = rBefore - rAfter;
+	auto hdiff = hBefore - hAfter;
+	t.setPosition(t.getPosition() + sf::Vector2f(rdiff / 2, hdiff / 2));
+	return t;
+}
+
+const float NODE_MINWIDTH = 100.0f;
+const float NODE_MINHEIGHT = 110.0f;
+
+const float NODE_TITLE_HEIGHT = 15.0f;
+const float NODE_COLOR_THICKNESS = 1.0f;
+
+const float PIN_COMPONENTHEIGHT = 15.0f;
+const float PIN_PADDING = 10.0f;
+const float PIN_RADIUS = 5.0f;
+
+void GraphNode::SFMLRender(sf::RenderTarget& target) {
+	// Calculate sizes
+	std::vector<float> pinHeights;
+	float phSumIn = 0.0f;
+	float phSumOut = 0.0f;
+	int pCountIn = 0;
+	int pCountOut = 0;
+	for (auto& pin : pins) {
+		auto type = pin.type;
+		pinHeights.push_back(PIN_COMPONENTHEIGHT);
+		if (pin.dir == Direction::In) {
+			phSumIn += PIN_COMPONENTHEIGHT;
+			pCountIn += 1;
+		}
+		else {
+			phSumOut += PIN_COMPONENTHEIGHT;
+			pCountOut += 1;
+		}
+	}
+
+	float neededPinHeight = std::max(phSumIn, phSumOut) + (PIN_PADDING * 2);
+
+	float nodeHeight = std::max(NODE_MINHEIGHT, neededPinHeight);
+	float nodeWidth = NODE_MINWIDTH;
+
+	sf::RectangleShape nodeRect;
+	nodeRect.setPosition(nodePos);
+	nodeRect.setSize(sf::Vector2f(nodeWidth, nodeHeight));
+	nodeRect.setFillColor(sf::Color(70, 70, 70));
+	nodeRect.setOutlineColor(sf::Color(120, 120, 120));
+	nodeRect.setOutlineThickness(0.4f);
+	target.draw(nodeRect);
+
+	sf::RectangleShape titleRect;
+	titleRect.setPosition(nodePos);
+	titleRect.setSize(sf::Vector2f(nodeWidth, NODE_TITLE_HEIGHT));
+	titleRect.setFillColor(sf::Color(50, 50, 50));
+	target.draw(titleRect);
+
+	sf::RectangleShape colorRect;
+	colorRect.setPosition(sf::Vector2f(nodePos.x, (nodePos.y + NODE_TITLE_HEIGHT) - (NODE_COLOR_THICKNESS / 2)));
+	colorRect.setSize(sf::Vector2f(nodeWidth, NODE_COLOR_THICKNESS));
+	colorRect.setFillColor(displayColor);
+	target.draw(colorRect);
+
+	sf::Text titleText = CenteredText(displayName, sf::Vector2f(nodePos.x + nodeWidth / 2, nodePos.y + (NODE_TITLE_HEIGHT / 2) - 2.0f), 48, font);
+	titleText = ScaleCentered(titleText, 0.2f);
+	titleText.setFillColor(sf::Color::White);
+	target.draw(titleText);
+
+	float lPinSpace = 0;
+	float rPinSpace = 0;
+	if (pCountIn != 0) {
+		lPinSpace = (nodeHeight - (PIN_PADDING * 2)) / (pCountIn+1);
+	}
+	if (pCountOut != 0) {
+		rPinSpace = (nodeHeight - (PIN_PADDING * 2)) / (pCountOut+1);
+	}
+
+	for (int p = 0; p < pCountIn; p++) {
+		float y = nodePos.y + PIN_PADDING + ((p + 1)* lPinSpace);
+		float x = nodePos.x;
+		sf::CircleShape pinDot;
+		sf::CircleShape pinCircle;
+		pinCircle.setOrigin(sf::Vector2f(PIN_RADIUS, PIN_RADIUS));
+		pinDot.setOrigin(sf::Vector2f(PIN_RADIUS / 5, PIN_RADIUS / 5));
+		pinDot.setPosition(sf::Vector2f(x, y));
+		pinCircle.setPosition(sf::Vector2f(x, y));
+		pinDot.setRadius(PIN_RADIUS / 5);
+		pinCircle.setRadius(PIN_RADIUS);
+		pinDot.setFillColor(sf::Color::Black);
+		pinCircle.setFillColor(sf::Color(245, 127, 196));
+		target.draw(pinCircle);
+		//target.draw(pinDot);
+	}
+
+	for (int p = 0; p < pCountOut; p++) {
+		float y = nodePos.y + PIN_PADDING + ((p + 1) * rPinSpace);
+		float x = nodePos.x + nodeWidth;
+		sf::CircleShape pinDot;
+		sf::CircleShape pinCircle;
+		pinCircle.setOrigin(sf::Vector2f(PIN_RADIUS, PIN_RADIUS));
+		pinDot.setOrigin(sf::Vector2f(PIN_RADIUS/5, PIN_RADIUS/5));
+		pinDot.setPosition(sf::Vector2f(x, y));
+		pinCircle.setPosition(sf::Vector2f(x, y));
+		pinDot.setRadius(PIN_RADIUS/5);
+		pinCircle.setRadius(PIN_RADIUS);
+		pinDot.setFillColor(sf::Color::Black);
+		pinCircle.setFillColor(sf::Color(245, 127, 196));
+		target.draw(pinCircle);
+		//target.draw(pinDot);
+	}
 }

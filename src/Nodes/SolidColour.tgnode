@@ -1,6 +1,7 @@
 metadata
 	name "Solid Colour"
 	color 0x8AE9C1FF
+	category "Constants"
 
 	# varname [lua var] [display name]
 	varname Colour "Colour"

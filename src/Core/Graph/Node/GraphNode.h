@@ -32,9 +32,10 @@ public:
 	std::string displayName;
 	sf::Color displayColor;
 
+	// Actual pin definition
 	std::vector<NodePin> pins;
 
-	// pin id, pin index (in pins)
+	// pin id, pin index (in pins vector)
 	std::map<int, int> inPins;
 	std::map<int, int> outPins;
 

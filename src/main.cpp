@@ -68,12 +68,9 @@ int main(int argc, char** argv)
     LOG_INFO("Successfully loaded layout from 'resources/defaultlayout.ini'");
 
     LOG_INFO("TESTING TGNF LOADER");
+    Utility::Timer tmr;
     GraphNode newNode = GraphNode::LoadFromTGNF("library/Nodes/SimpleSC.tgnode");
-    LOG_INFO("Parsed name: {0}", newNode.displayName);
-    LOG_INFO("Parsed color: ({0}, {1}, {2}, {3})", newNode.displayColor.r, newNode.displayColor.g, newNode.displayColor.b, newNode.displayColor.a);
-    for (std::map<std::string, std::string>::iterator it = newNode.luaVarDisplayNames.begin(); it != newNode.luaVarDisplayNames.end(); ++it) {
-        LOG_INFO("Parsed varname: {0} : {1}", it->first, it->second);
-    }
+    LOG_INFO("Successfully compiled {0} in {1}s", "library/Nodes/SimpleSC.tgnode", tmr.Elapsed());
 
     //sf::RenderTexture newT; // trying to fix unique ptrs being deleted
 

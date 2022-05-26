@@ -187,7 +187,7 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 			newNode.luaVarData.insert({ data[2], newData });
 			newNode.inPins.insert({ newPin.pinId, newNode.pins.size() - 1 });
 			continue;
-		}
+		} 
 	}
 
 	for (std::map<std::string, std::string>::iterator it = pendingDefaults.begin(); it != pendingDefaults.end(); ++it) {

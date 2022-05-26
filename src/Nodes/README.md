@@ -24,7 +24,7 @@ A VSCode syntax extension can be found [here](https://github.com/oxi-dev0/TGNL)
 |`float` | A single line float that includes a decimal point | `10.0` | &check; | &cross; |
 |`bool` | Either `true` or `false` | | &check; | &cross; |
 |`colortex` | A 2D Array of `color` | | &cross; | &check; |
-|`greytex` | A 2D Array of `color` | | &cross; | &check; |
+|`greytex` | A 2D Array of `int` | | &cross; | &check; |
 > An `enum` type will be coming later in development
 
 ## Overview

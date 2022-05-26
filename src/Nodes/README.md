@@ -125,6 +125,8 @@ exec
     end
 }
 ```
+> SimpleSC.tgnode
+
 #### Example metadata
 This metadata sets the Node's name to be 'Simple Colour', and gives it the colour 0x8AE9C1FF, which is RGBA(138, 233, 193, 255). It then defines two display names for the variables `Colour` and `Out`. It sets `Colour`'s default value to 0xFF0000FF, which is RGBA(255, 0, 0, 255), and then specifies the variable `Out` to be the display variable for the Node. (It will show up on the Node in the graph).
 

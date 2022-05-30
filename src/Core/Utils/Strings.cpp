@@ -17,6 +17,20 @@ namespace Utility {
 			return output;
 		}
 
+		std::string replace(std::string s, char target, char replace)
+		{
+			std::string ret;
+			for (auto c : s) {
+				if (c == target) {
+					ret += replace;
+				}
+				else {
+					ret += c;
+				}
+			}
+			return ret;
+		}
+
 		std::string join(std::vector<std::string> lst, std::string delim, int startIndex)
 		{
 			std::string ret;

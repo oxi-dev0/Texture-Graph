@@ -15,9 +15,11 @@
 #include "../Utils/Keybinds.h"
 
 #include "../Library/LibraryManager.h"
+#include "../Graph/GraphSerializer.h"
 
 #include <string>
 #include <sstream>
+#include <thread>
 
 class MainWindow
 {
@@ -37,6 +39,8 @@ private:
 public:
 	sf::RenderWindow window;
 	std::vector<SubWindow*>* views;
+
+	GraphEditorView* selectedGraph;
 
 	bool exit;
 

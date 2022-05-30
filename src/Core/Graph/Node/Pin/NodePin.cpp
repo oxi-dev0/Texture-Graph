@@ -1,19 +1,19 @@
 #include "NodePin.h"
 
 NodePin::NodePin() {
-	pinId = 0;
+	pinIndex = 0;
 	nodeId = 0;
 	type = Types::DataType::DataType_Bool;
 	dir = Direction::In;
 	displayName = "";
-	inNodeId = 0;
-	inPinId = 0;
+	inNodeId = -1;
+	inPinIndex = -1;
 	outNodeIds = std::vector<int>();
-	outPinIds = std::vector<int>();
+	outPinIndexes = std::vector<int>();
 }
 
-NodePin::NodePin(int pinId_, int nodeId_, Types::DataType type_, Direction dir_, std::string displayName_) {
-	pinId = pinId_;
+NodePin::NodePin(int pinId_, int nodeId_, Types::DataType type_, Direction dir_, std::string displayName_) : NodePin()  {
+	pinIndex = pinId_;
 	nodeId = nodeId_;
 	type = type_;
 	dir = dir_;

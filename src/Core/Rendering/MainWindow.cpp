@@ -7,10 +7,18 @@ void MainWindow::MenuBar() {
         {
             if (ImGui::MenuItem("New"))
             {
-                //Do something
+                selectedGraph->Clear();
             }
 
             ImGui::Separator();
+
+            if (ImGui::MenuItem("Open Graph")) {
+                Serialization::Graph::AskLoadGraphFromFile(*selectedGraph);
+            }
+
+            if (ImGui::MenuItem("Save Graph As..")) {
+                Serialization::Graph::AskSaveGraphToFile(*selectedGraph);
+            }
 
             ImGui::Separator();
 
@@ -67,11 +75,21 @@ void MainWindow::MenuBar() {
         }
 
         if (ImGui::BeginMenu("Engine")) {
-            if (ImGui::MenuItem("Recompile Nodes")) {
+            if (ImGui::MenuItem("Recompile Node Library")) {
                 LibraryManager::LoadNodeLibrary();
             }
             ImGui::SameLine();
             ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "(CTRL+R)");
+
+            if (ImGui::MenuItem("Regenerate Thumbnails")) {
+                LibraryManager::LoadNodeLibrary(true);
+            }
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Evaluate Nodes")) {
+                selectedGraph->EvaluateNodes();
+            }
             
             ImGui::EndMenu();
         }

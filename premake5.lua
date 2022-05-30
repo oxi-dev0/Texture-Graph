@@ -42,11 +42,13 @@ project "TextureGraph"
 	{
 		"vendor/sfml/include/",
 		"vendor/spdlog/include",
-		"vendor/imgui"
+		"vendor/imgui",
+		"vendor/nfd/src/include",
+		"vendor/lua/include"
 	}
 
-	libdirs { "vendor/sfml/extlibs/libs-msvc-universal/x64", "vendor/sfml/lib" }
-	links { "opengl32.lib", "freetype.lib", "winmm.lib", "gdi32.lib", "openal32.lib", "flac.lib", "vorbisenc.lib", "vorbisfile.lib", "vorbis.lib", "ogg.lib", "ws2_32.lib", "legacy_stdio_definitions.lib" }
+	libdirs { "vendor/sfml/extlibs/libs-msvc-universal/x64", "vendor/sfml/lib", "vendor/nfd/build/src/Release", "vendor/lua" }
+	links { "opengl32.lib", "freetype.lib", "winmm.lib", "gdi32.lib", "openal32.lib", "flac.lib", "vorbisenc.lib", "vorbisfile.lib", "vorbis.lib", "ogg.lib", "ws2_32.lib", "legacy_stdio_definitions.lib", "nfd.lib", "lua54.lib" }
 
 
 	filter "system:windows"

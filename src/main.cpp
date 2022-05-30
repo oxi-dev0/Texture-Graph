@@ -22,14 +22,19 @@
 #include "Core/Rendering/ColourSchemes.h"
 #include "Core/Rendering/RenderingGlobals.h"
 #include "Core/Rendering/MainWindow.h"
+#include "Core/Rendering/CachedImages.h"
 
 #include "Core/Rendering/SubWindow.h"
 #include "Core/Rendering/Views/GraphEditorView.h"
-#include "Core/Rendering/Views/LibraryEditorView.h"
+#include "Core/Rendering/Views/LibraryView.h"
+#include "Core/Rendering/Views/InspectorView.h"
 
 #include "Core/Graph/Node/GraphNode.h"
+#include "Core/Graph/GraphSerializer.h"
 
 #include "Core/Library/LibraryManager.h"
+
+#include "Core/Lua/LuaManager.h"
 
 #define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
@@ -37,13 +42,15 @@
 enum WindowType {
     Base,
     GraphEditor,
-    LibraryView
+    LibraryView,
+    Inspector
 };
 
 typedef std::tuple<std::string, WindowType, ImGuiWindowFlags> optionalWindow;
 std::vector<optionalWindow> optionalViews = {
     optionalWindow("Graph Editor", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
-    optionalWindow("Library", WindowType::LibraryView, 0)
+    optionalWindow("Library", WindowType::LibraryView, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
+    optionalWindow("Inspector", WindowType::Inspector, 0)
     //optionalWindow("Graph Editor 2", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
 };
 
@@ -51,6 +58,9 @@ std::vector<sf::RenderTexture*> textures;
 void OnExit() {
     LOG_INFO("Stopping Engine");
     ImGui::SFML::Shutdown();
+    NFD_Quit();
+    LuaManager::Exit();
+    ImageCache::Exit();
 
     RenderingGlobals::font.~Font();
     for (auto* tex : textures) {
@@ -78,6 +88,9 @@ int main(int argc, char** argv)
     LOG_INFO("");
 
     RenderingGlobals::Init();
+    NFD_Init();
+    LuaManager::Init();
+    ImageCache::Init();
 
     MainWindow primaryWindow("Texture Graph");
 
@@ -104,7 +117,10 @@ int main(int argc, char** argv)
         {
             sf::RenderTexture* tex = new sf::RenderTexture();
             textures.push_back(tex);
-            windows.push_back(new GraphEditorView(primaryWindow.window, *tex, name, flags));
+            auto* newView = new GraphEditorView(primaryWindow.window, *tex, name, flags);
+            windows.push_back(newView);
+            primaryWindow.selectedGraph = newView;
+
         }   break;
         case WindowType::LibraryView:
         {
@@ -112,6 +128,12 @@ int main(int argc, char** argv)
             windows.push_back(newView);
             LibraryManager::RegisterLoadCallback(std::bind(&LibraryEditorView::LoadNodes, newView));
         }   break;
+        case WindowType::Inspector:
+        {
+            auto* newView = new InspectorView(primaryWindow.window, name, flags);
+            newView->SetGraph(primaryWindow.selectedGraph);
+            windows.push_back(newView);
+        } break;
         default:
             break;
         }
@@ -144,10 +166,6 @@ int main(int argc, char** argv)
                 ImGui::PopStyleVar(2);
             }
         }
-
-        ImGui::Begin("Other");
-        ImGui::Button("WOW");
-        ImGui::End();
 
         primaryWindow.EndRender();
     }

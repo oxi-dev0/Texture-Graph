@@ -83,6 +83,12 @@ IMGUI_SFML_API void Image(const sf::Sprite& sprite, const sf::Vector2f& size,
                           const sf::Color& tintColor = sf::Color::White,
                           const sf::Color& borderColor = sf::Color::Transparent);
 
+IMGUI_SFML_API bool ImageButtonWithText(const sf::Texture& texture, const char* label, 
+                                        int framePadding, const sf::Vector2f imageSize, 
+                                        const sf::Vector2f size=sf::Vector2f(0,0),
+                                        const sf::Color& bgColor=sf::Color::Transparent,
+                                        const sf::Color& tintColor=sf::Color::White);
+
 // ImageButton overloads for sf::Texture
 IMGUI_SFML_API bool ImageButton(const sf::Texture& texture, const int framePadding = -1,
                                 const sf::Color& bgColor = sf::Color::Transparent,

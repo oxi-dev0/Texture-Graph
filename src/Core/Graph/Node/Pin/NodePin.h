@@ -13,7 +13,7 @@ enum Direction {
 class NodePin
 {
 public:
-	int pinId;
+	int pinIndex;
 	int nodeId;
 	Types::DataType type;
 	Direction dir;
@@ -21,10 +21,10 @@ public:
 	std::string displayName;
 
 	int inNodeId;
-	int inPinId;
+	int inPinIndex;
 
 	std::vector<int> outNodeIds;
-	std::vector<int> outPinIds;
+	std::vector<int> outPinIndexes;
 
 	NodePin();
 	NodePin(int pinId_, int nodeId_, Types::DataType type_, Direction dir_, std::string displayName_);

@@ -753,7 +753,7 @@ bool ImGui::InvisibleButton(const char* str_id, const ImVec2& size_arg, ImGuiBut
     return pressed;
 }
 
-bool ImGui::ArrowButtonEx(const char* str_id, ImGuiDir dir, ImVec2 size, ImGuiButtonFlags flags)
+bool ImGui::ArrowButtonEx(const char* str_id, ImGuiDir dir, ImVec2 size, ImGuiButtonFlags flags, bool* hoveredPtr, bool* selectedPtr, bool headerCol)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = GetCurrentWindow();
@@ -770,24 +770,46 @@ bool ImGui::ArrowButtonEx(const char* str_id, ImGuiDir dir, ImVec2 size, ImGuiBu
     if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
         flags |= ImGuiButtonFlags_Repeat;
 
-    bool hovered, held;
-    bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
+    bool hovered = false; bool held = false;
+    bool hoveredC = false;
+    bool pressed = ButtonBehavior(bb, id, &hoveredC, &held, flags);
+    if (hoveredPtr != nullptr) {
+        if (!hoveredC) {
+            hovered = *hoveredPtr;
+        }
+        else {
+            hovered = hoveredC;
+        }
+    }
+    else {
+        hovered = hoveredC;
+    }
 
     // Render
-    const ImU32 bg_col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+    ImU32 bg_col; 
+    if (selectedPtr == nullptr) {
+        bg_col = GetColorU32((held && hovered) ? (headerCol ? ImGuiCol_HeaderActive : ImGuiCol_ButtonActive) : hovered ? (headerCol ? ImGuiCol_HeaderHovered : ImGuiCol_ButtonHovered) : (headerCol ? ImGuiCol_Header : ImGuiCol_Button));
+    }
+    else {
+        bg_col = GetColorU32(hovered ? (headerCol ? ImGuiCol_HeaderActive : ImGuiCol_ButtonActive) : *selectedPtr ? (headerCol ? ImGuiCol_HeaderActive : ImGuiCol_ButtonActive) : (headerCol ? ImGuiCol_Header : ImGuiCol_Button));
+    }
     const ImU32 text_col = GetColorU32(ImGuiCol_Text);
     RenderNavHighlight(bb, id);
     RenderFrame(bb.Min, bb.Max, bg_col, true, g.Style.FrameRounding);
     RenderArrow(window->DrawList, bb.Min + ImVec2(ImMax(0.0f, (size.x - g.FontSize) * 0.5f), ImMax(0.0f, (size.y - g.FontSize) * 0.5f)), text_col, dir);
 
+    if (hoveredPtr != nullptr) {
+        *hoveredPtr = hoveredC;
+    }
+
     IMGUI_TEST_ENGINE_ITEM_INFO(id, str_id, g.LastItemData.StatusFlags);
     return pressed;
 }
 
-bool ImGui::ArrowButton(const char* str_id, ImGuiDir dir)
+bool ImGui::ArrowButton(const char* str_id, ImGuiDir dir, bool* hoveredPtr, bool* selectedPtr, bool headerCol)
 {
     float sz = GetFrameHeight();
-    return ArrowButtonEx(str_id, dir, ImVec2(sz, sz), ImGuiButtonFlags_None);
+    return ArrowButtonEx(str_id, dir, ImVec2(sz, sz), ImGuiButtonFlags_None, hoveredPtr, selectedPtr, headerCol);
 }
 
 // Button to close a window
@@ -1031,6 +1053,55 @@ void ImGui::Image(ImTextureID user_texture_id, const ImVec2& size, const ImVec2&
     }
 }
 
+bool ImGui::ImageButtonWithText(ImTextureID texId,const char* label,const ImVec2& imageSize, const ImVec2& size_arg, const ImVec2 &uv0, const ImVec2 &uv1, int frame_padding, const ImVec4 &bg_col, const ImVec4 &tint_col) {
+    ImGuiWindow* window = GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+
+    ImVec2 size = imageSize;
+    if (size.x <= 0 && size.y <= 0) { size.x = size.y = ImGui::GetTextLineHeightWithSpacing(); }
+    else {
+        if (size.x <= 0)          size.x = size.y;
+        else if (size.y <= 0)     size.y = size.x;
+        size *= window->FontWindowScale * ImGui::GetIO().FontGlobalScale;
+    }
+
+    ImGuiContext& g = *GImGui;
+    const ImGuiStyle& style = g.Style;
+
+    const ImGuiID id = window->GetID(label);
+    const ImVec2 textSize = ImGui::CalcTextSize(label, NULL, true);
+    const bool hasText = textSize.x > 0;
+
+    const float innerSpacing = hasText ? ((frame_padding >= 0) ? (float)frame_padding + 5.f : (style.ItemInnerSpacing.x)) : 0.f;
+    const ImVec2 padding = (frame_padding >= 0) ? ImVec2((float)frame_padding, (float)frame_padding) : style.FramePadding;
+    const ImVec2 totalSizeWithoutPadding(size.x + innerSpacing + textSize.x, size.y > textSize.y ? size.y : textSize.y);
+    ImVec2 calcSize = CalcItemSize(size_arg, textSize.x + style.FramePadding.x * 2.0f, textSize.y + style.FramePadding.y * 2.0f);
+
+    const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + totalSizeWithoutPadding + ImVec2(calcSize.x,0) + padding * 2);
+    ImVec2 start(0, 0);
+    start = window->DC.CursorPos + padding; if (size.y < textSize.y) start.y += (textSize.y - size.y) * .5f;
+    const ImRect image_bb(start, start + size);
+    start = window->DC.CursorPos + padding; start.x += size.x + innerSpacing; if (size.y > textSize.y) start.y += (size.y - textSize.y) * .5f;
+    ItemSize(bb);
+    if (!ItemAdd(bb, id))
+        return false;
+
+    bool hovered = false, held = false;
+    bool pressed = ButtonBehavior(bb, id, &hovered, &held);
+
+    // Render
+    const ImU32 col = GetColorU32((hovered && held) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+    RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0f, style.FrameRounding));
+    if (bg_col.w > 0.0f)
+        window->DrawList->AddRectFilled(image_bb.Min, image_bb.Max, GetColorU32(bg_col));
+
+    window->DrawList->AddImage(texId, image_bb.Min, image_bb.Max, uv0, uv1, GetColorU32(tint_col));
+
+    if (textSize.x > 0) ImGui::RenderText(start, label);
+    return pressed;
+}
+
 // ImageButton() is flawed as 'id' is always derived from 'texture_id' (see #2464 #1390)
 // We provide this internal helper to write your own variant while we figure out how to redesign the public ImageButton() API.
 bool ImGui::ImageButtonEx(ImGuiID id, ImTextureID texture_id, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec2& padding, const ImVec4& bg_col, const ImVec4& tint_col)
@@ -1079,6 +1150,8 @@ bool ImGui::ImageButton(ImTextureID user_texture_id, const ImVec2& size, const I
     const ImVec2 padding = (frame_padding >= 0) ? ImVec2((float)frame_padding, (float)frame_padding) : g.Style.FramePadding;
     return ImageButtonEx(id, user_texture_id, size, uv0, uv1, padding, bg_col, tint_col);
 }
+
+
 
 bool ImGui::Checkbox(const char* label, bool* v)
 {
@@ -6146,7 +6219,7 @@ bool ImGui::CollapsingHeader(const char* label, bool* p_visible, ImGuiTreeNodeFl
 // But you need to make sure the ID is unique, e.g. enclose calls in PushID/PopID or use ##unique_id.
 // With this scheme, ImGuiSelectableFlags_SpanAllColumns and ImGuiSelectableFlags_AllowItemOverlap are also frequently used flags.
 // FIXME: Selectable() with (size.x == 0.0f) and (SelectableTextAlign.x > 0.0f) followed by SameLine() is currently not supported.
-bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags flags, const ImVec2& size_arg)
+bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags flags, const ImVec2& size_arg, bool ignoreLineTextBaseOffset, bool* hoveredPtr, bool renderBgAlways)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
@@ -6160,10 +6233,10 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
     ImVec2 label_size = CalcTextSize(label, NULL, true);
     ImVec2 size(size_arg.x != 0.0f ? size_arg.x : label_size.x, size_arg.y != 0.0f ? size_arg.y : label_size.y);
     ImVec2 pos = window->DC.CursorPos;
-    pos.y += window->DC.CurrLineTextBaseOffset;
+    pos.y += ignoreLineTextBaseOffset ? 0.0f : window->DC.CurrLineTextBaseOffset;
     ItemSize(size, 0.0f);
 
-    // Fill horizontal space
+    // Fill horizontal space 
     // We don't support (size < 0.0f) in Selectable() because the ItemSpacing extension would make explicitly right-aligned sizes not visibly match other widgets.
     const bool span_all_columns = (flags & ImGuiSelectableFlags_SpanAllColumns) != 0;
     const float min_x = span_all_columns ? window->ParentWorkRect.Min.x : pos.x;
@@ -6172,8 +6245,8 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
         size.x = ImMax(label_size.x, max_x - min_x);
 
     // Text stays at the submission position, but bounding box may be extended on both sides
-    const ImVec2 text_min = pos;
-    const ImVec2 text_max(min_x + size.x, pos.y + size.y);
+    const ImVec2 text_min = pos + style.FramePadding;
+    const ImVec2 text_max(min_x + size.x + style.FramePadding.x, pos.y + size.y + style.FramePadding.y);
 
     // Selectables are meant to be tightly packed together with no click-gap, so we extend their box to cover spacing between selectable.
     ImRect bb(min_x, pos.y, text_max.x, text_max.y);
@@ -6230,8 +6303,20 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
     if (flags & ImGuiSelectableFlags_AllowItemOverlap)  { button_flags |= ImGuiButtonFlags_AllowItemOverlap; }
 
     const bool was_selected = selected;
-    bool hovered, held;
-    bool pressed = ButtonBehavior(bb, id, &hovered, &held, button_flags);
+    bool hoveredC = false;
+    bool hovered = false; bool held = false;
+    bool pressed = ButtonBehavior(bb, id, &hoveredC, &held, button_flags);
+    if (hoveredPtr != nullptr) {
+        if (!hoveredC) {
+            hovered = *hoveredPtr;
+        }
+        else {
+            hovered = hoveredC;
+        }
+    }
+    else {
+        hovered = hoveredC;
+    }
 
     // Auto-select when moved into
     // - This will be more fully fleshed in the range-select branch
@@ -6266,12 +6351,16 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
     // Render
     if (held && (flags & ImGuiSelectableFlags_DrawHoveredWhenHeld))
         hovered = true;
-    if (hovered || selected)
+    if (hovered || selected || renderBgAlways)
     {
-        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
+        const ImU32 col = GetColorU32(hovered ? ImGuiCol_HeaderActive : selected ? ImGuiCol_HeaderActive : ImGuiCol_Header);
         RenderFrame(bb.Min, bb.Max, col, false, 0.0f);
     }
     RenderNavHighlight(bb, id, ImGuiNavHighlightFlags_TypeThin | ImGuiNavHighlightFlags_NoRounding);
+
+    if (hoveredPtr != nullptr) {
+        *hoveredPtr = hoveredC;
+    }
 
     if (span_all_columns && window->DC.CurrentColumns)
         PopColumnsBackground();
@@ -6291,9 +6380,9 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
     return pressed; //-V1020
 }
 
-bool ImGui::Selectable(const char* label, bool* p_selected, ImGuiSelectableFlags flags, const ImVec2& size_arg)
+bool ImGui::Selectable(const char* label, bool* p_selected, ImGuiSelectableFlags flags, const ImVec2& size_arg, bool ignoreLineTextBaseOffset, bool* hoveredPtr, bool renderBgAlways)
 {
-    if (Selectable(label, *p_selected, flags, size_arg))
+    if (Selectable(label, *p_selected, flags, size_arg, ignoreLineTextBaseOffset, hoveredPtr, renderBgAlways))
     {
         *p_selected = !*p_selected;
         return true;

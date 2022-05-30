@@ -147,7 +147,7 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 				continue;
 			}
 			newNode.luaVars.insert({ data[2], LuaVar(data[2], dataType) });
-			newNode.paramLuaVars.insert({ newNode.luaVarDisplayNames.find(data[2])->first, (int)newNode.luaVars.size()-1 });
+			newNode.paramLuaVars.insert({ newNode.luaVarDisplayNames.find(data[2])->second, data[2]});
 			Types::WildData newData = Types::WildData();
 			newData.dataType = dataType;
 			newNode.luaVarData.insert({ data[2], newData });
@@ -170,15 +170,15 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 				LOG_CRITICAL("Output variable '{0}' requires a varname defintion in the metadata block, before it's definition. (Node Class '{1}')", data[2], classFile);
 				continue;
 			}
+
 			NodePin newPin = NodePin((int)newNode.pins.size(), newNode.nodeId, dataType, Direction::Out, newNode.luaVarDisplayNames[data[2]]);
 			newNode.pins.push_back(newPin);
 			newNode.luaVars.insert({ data[2], LuaVar(data[2], dataType) });
-			newNode.pinLuaVars.insert({ newPin.pinId, (int)newNode.luaVars.size() - 1 });
+			newNode.pinLuaVars.insert({ newPin.pinIndex, data[2]});
 			Types::WildData newData = Types::WildData();
 			newData.dataType = dataType;
 			newNode.luaVarData.insert({ data[2], newData });
-			newNode.pinIds.insert({ newPin.pinId, (int)newNode.pins.size() -1});
-			newNode.luaVarPins.insert({ data[2], newPin.pinId });
+			newNode.luaVarPins.insert({ data[2], newPin.pinIndex });
 			continue;
 		}
 		if (keyword == "input") {
@@ -201,12 +201,11 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 			NodePin newPin = NodePin((int)newNode.pins.size(), newNode.nodeId, dataType, Direction::In, newNode.luaVarDisplayNames[data[2]]);
 			newNode.pins.push_back(newPin);
 			newNode.luaVars.insert({ data[2], LuaVar(data[2], dataType) });
-			newNode.pinLuaVars.insert({ newPin.pinId, (int)newNode.luaVars.size()-1 });
+			newNode.pinLuaVars.insert({ newPin.pinIndex, data[2] });
 			Types::WildData newData = Types::WildData();
 			newData.dataType = dataType;
 			newNode.luaVarData.insert({ data[2], newData });
-			newNode.pinIds.insert({ newPin.pinId, (int)newNode.pins.size() - 1 });
-			newNode.luaVarPins.insert({ data[2], newPin.pinId });
+			newNode.luaVarPins.insert({ data[2], newPin.pinIndex });
 			continue;
 		} 
 	}
@@ -249,12 +248,12 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 	if (newNode.displayVar != "") {
 		if (newNode.luaVars.find(newNode.displayVar) != newNode.luaVars.end()) {
 			TGNL_DISPLAY_ASSERT(Types::typeToString[newNode.luaVars.find(newNode.displayVar)->second.type], classFile);
-			if (newNode.pins[newNode.pinIds[newNode.luaVarPins[newNode.luaVars.find(newNode.displayVar)->second.name]]].dir == Direction::In) {
+			if (newNode.pins[newNode.luaVarPins[newNode.luaVars.find(newNode.displayVar)->second.name]].dir == Direction::In) {
 				LOG_CRITICAL("Only 'Out' facing pins can be used for keyword 'display'. Variable '{0}' is facing in. (Node Class '{1}')", newNode.displayVar, classFile);
 			}
 		}
 		else {
-			LOG_CRITICAL("Variable '{0}' given to keyword 'display' is not defined. (Node Class '{1}')", newNode.displayVar, classFile)
+			LOG_CRITICAL("Variable '{0}' given to keyword 'display' is not defined. (Node Class '{1}')", newNode.displayVar, classFile);
 		}
 	}
 
@@ -278,6 +277,21 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 	if (!setCategory) {
 		LOG_CRITICAL("Missing metadata keyword 'category' (Node Class '{0}')", classFile);
 	}
+
+	std::ofstream tempFile;
+	std::stringstream fileName;
+	auto splitClass = Utility::String::split(newNode.nodeClass, '/');
+	auto classNameLast = splitClass[splitClass.size() - 1];
+
+	classNameLast = Utility::String::split(classNameLast, '.')[0];
+	fileName << "temp/" << classNameLast << ".lua";
+	tempFile.open(fileName.str());
+	for (auto line : newNode.luaLines) {
+		tempFile << line << "\n";
+	}
+	tempFile.close();
+
+	newNode.luaTempFile = fileName.str();
 
 	return newNode;
 }
@@ -328,18 +342,72 @@ sf::Text ScaleCentered(sf::Text t, float factor) {
 }
 
 
-
 const float NODE_MINWIDTH = 100.0f;
-const float NODE_MINHEIGHT = 110.0f;
+const float NODE_MINHEIGHT = 130.0f;
 
 const float NODE_TITLE_HEIGHT = 15.0f;
 const float NODE_COLOR_THICKNESS = 1.0f;
 
 const float PIN_COMPONENTHEIGHT = 20.0f;
 const float PIN_PADDING = 0.0f;
-const float PIN_RADIUS = 3.5f;
+const float PIN_RADIUS = 6.5f;
 
-void GraphNode::SFMLRender(sf::RenderTarget& target) {
+
+sf::FloatRect GraphNode::calcBounds() {
+	std::vector<float> pinHeights;
+	float phSumIn = 0.0f;
+	float phSumOut = 0.0f;
+	int pCountIn = 0;
+	int pCountOut = 0;
+	std::vector<int> inPinIndexes;
+	std::vector<int> outPinIndexes;
+	int i = 0;
+	for (auto& pin : pins) {
+		auto type = pin.type;
+		pinHeights.push_back(PIN_COMPONENTHEIGHT);
+		if (pin.dir == Direction::In) {
+			phSumIn += PIN_COMPONENTHEIGHT;
+			pCountIn += 1;
+			inPinIndexes.push_back(i);
+		}
+		else {
+			phSumOut += PIN_COMPONENTHEIGHT;
+			pCountOut += 1;
+			outPinIndexes.push_back(i);
+		}
+		i++;
+	}
+
+	float neededPinHeight = std::max(phSumIn, phSumOut) + (PIN_PADDING * 2) + NODE_TITLE_HEIGHT;
+
+	float nodeHeight = std::max(NODE_MINHEIGHT, neededPinHeight);
+	float nodeWidth = NODE_MINWIDTH;
+
+	return sf::FloatRect(nodePos, sf::Vector2f(nodeWidth, nodeHeight));
+}
+
+float remapRange(float value, float low1, float high1, float low2, float high2) {
+	return low2 + (value - low1) * (high2 - low2) / (high1 - low1);
+}
+
+sf::Color threeColorLerp(sf::Color a, sf::Color b, sf::Color c, float t) {
+	sf::Color r = sf::Color::White;
+	if (t <= 0.5) {
+		r.r = (int)std::lerp(a.r, b.r, t * 2.f);
+		r.g = (int)std::lerp(a.g, b.g, t * 2.f);
+		r.b = (int)std::lerp(a.b, b.b, t * 2.f);
+		r.a = (int)std::lerp(a.a, b.a, t * 2.f);
+	}
+	else {
+		r.r = (int)std::lerp(b.r, c.r, (t-0.5f) * 2.f);
+		r.g = (int)std::lerp(b.g, c.g, (t-0.5f) * 2.f);
+		r.b = (int)std::lerp(b.b, c.b, (t-0.5f) * 2.f);
+		r.a = (int)std::lerp(b.a, c.a, (t-0.5f) * 2.f);
+	}
+	return r;
+}
+
+void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selected) {
 	pinPosCache.clear();
 
 	// Calculate sizes
@@ -372,13 +440,22 @@ void GraphNode::SFMLRender(sf::RenderTarget& target) {
 	float nodeHeight = std::max(NODE_MINHEIGHT, neededPinHeight);
 	float nodeWidth = NODE_MINWIDTH;
 
+	if (selected && false) {
+		// Draw select highlight
+		sf::RectangleShape selectRect;
+		selectRect.setPosition(sf::Vector2f(nodePos.x, nodePos.y + nodeHeight));
+		selectRect.setSize(sf::Vector2f(nodeWidth, 3));
+		selectRect.setFillColor(sf::Color(246, 157, 190, 255));
+		target.draw(selectRect);
+	}
+
 	// Draw node
 	sf::RectangleShape nodeRect;
 	nodeRect.setPosition(nodePos);
 	nodeRect.setSize(sf::Vector2f(nodeWidth, nodeHeight));
 	nodeRect.setFillColor(sf::Color(70, 70, 70));
-	nodeRect.setOutlineColor(sf::Color(120, 120, 120));
-	nodeRect.setOutlineThickness(0.4f);
+	nodeRect.setOutlineColor(!selected ? sf::Color(120, 120, 120) : sf::Color(246, 157, 190, 255));
+	nodeRect.setOutlineThickness(!selected ? 0.4f : 1.f);
 	target.draw(nodeRect);
 
 	sf::RectangleShape titleRect;
@@ -393,10 +470,36 @@ void GraphNode::SFMLRender(sf::RenderTarget& target) {
 	colorRect.setFillColor(displayColor);
 	target.draw(colorRect);
 
-	sf::Text titleText = CenteredText(displayName, sf::Vector2f(nodePos.x + nodeWidth / 2, nodePos.y + (NODE_TITLE_HEIGHT / 2) - 2.0f), 48, RenderingGlobals::font);
-	titleText = ScaleCentered(titleText, 0.2f);
+	const float baseTextSize = 9.6f;
+	const float DPIScaleMax = 5.0f;
+	const float DPIScaleMin = 0.2f;
+	float textDPIScale = remapRange(zoomLevel, 0.5f, 2.0f, DPIScaleMax, DPIScaleMin);
+	textDPIScale = std::clamp(textDPIScale, DPIScaleMin, DPIScaleMax);
+
+	sf::Text titleText = CenteredText(displayName, sf::Vector2f(nodePos.x + nodeWidth / 2, nodePos.y + (NODE_TITLE_HEIGHT / 2) - 2.0f), (unsigned int)(baseTextSize*textDPIScale), RenderingGlobals::font);
+	titleText = ScaleCentered(titleText, 1/textDPIScale);
 	titleText.setFillColor(sf::Color::White);
 	target.draw(titleText);
+
+	float tWidth = nodeWidth;
+	float tHeight = tWidth;
+	float displayPosY = (NODE_TITLE_HEIGHT / 2) + nodePos.y + (nodeHeight / 2) - (tHeight / 2);
+
+	// Draw transparency preview texture
+	sf::Sprite transparentSprite;
+	transparentSprite.setTexture(*ImageCache::images["transparencyPreview"]);
+	sf::Vector2u trSize = ImageCache::images["transparencyPreview"]->getSize();
+	transparentSprite.setScale(sf::Vector2f(tWidth / trSize.x, tHeight / trSize.y));
+	transparentSprite.setPosition(sf::Vector2f(nodePos.x, displayPosY));
+	target.draw(transparentSprite);
+
+	// Draw display texture
+	sf::Sprite displaySprite;
+	displaySprite.setTexture(displayTexture);
+	sf::Vector2u tSize = displayTexture.getSize();
+	displaySprite.setScale(sf::Vector2f(tWidth / tSize.x, tHeight / tSize.y));
+	displaySprite.setPosition(sf::Vector2f(nodePos.x, displayPosY));
+	target.draw(displaySprite);
 
 	// Calculate pin spacing
 	float lPinSpace = 0;
@@ -409,42 +512,350 @@ void GraphNode::SFMLRender(sf::RenderTarget& target) {
 	}
 
 	// Draw in pins
+	sf::VertexArray pinVerts(sf::Triangles, (pCountIn + pCountOut) * 3 * 2);
 	for (int p = 0; p < pCountIn; p++) {
 		float y = nodePos.y + PIN_PADDING + ((p + 1)* lPinSpace) + NODE_TITLE_HEIGHT;
 		float x = nodePos.x;
-		sf::CircleShape pinDot;
-		sf::RectangleShape pinCircle;
-		pinCircle.setOrigin(sf::Vector2f(PIN_RADIUS, PIN_RADIUS));
-		pinDot.setOrigin(sf::Vector2f(PIN_RADIUS / 5, PIN_RADIUS / 5));
-		pinDot.setPosition(sf::Vector2f(x, y));
-		pinCircle.setPosition(sf::Vector2f(x, y));
-		pinDot.setRadius(PIN_RADIUS / 5);
-		pinCircle.setSize(sf::Vector2f(PIN_RADIUS * 2, PIN_RADIUS * 2));
-		pinCircle.setRotation(sf::degrees(45.0f));
-		pinDot.setFillColor(sf::Color::Black);
-		pinCircle.setFillColor(Types::typeToColor[pins[inPinIndexes[p]].type]);
-		pinPosCache.insert({ pins[inPinIndexes[p]].pinId, sf::Vector2f(x,y) });
-		target.draw(pinCircle);
-		//target.draw(pinDot);
+		sf::Color color = Types::typeToColor[pins[inPinIndexes[p]].type];
+
+		sf::Vector2f verts[4];
+		verts[0] = sf::Vector2f(x - PIN_RADIUS, y);
+		verts[1] = sf::Vector2f(x, y - PIN_RADIUS);
+		verts[2] = sf::Vector2f(x + PIN_RADIUS, y);
+		verts[3] = sf::Vector2f(x, y + PIN_RADIUS);
+
+		pinVerts[(p * 6) + 0].position = verts[0];
+		pinVerts[(p * 6) + 1].position = verts[1];
+		pinVerts[(p * 6) + 2].position = verts[2];
+		pinVerts[(p * 6) + 3].position = verts[2];
+		pinVerts[(p * 6) + 4].position = verts[3];
+		pinVerts[(p * 6) + 5].position = verts[0];
+
+		for (int j = p * 6; j < (p * 6) + 6; j++) {
+			pinVerts[j].color = color;
+		}
+
+		pinPosCache.insert({ pins[inPinIndexes[p]].pinIndex, sf::Vector2f(x,y) });
 	}
 
 	// Draw out pins
-	for (int p = 0; p < pCountOut; p++) {
-		float y = nodePos.y + PIN_PADDING + ((p + 1) * rPinSpace) + NODE_TITLE_HEIGHT;
+	for (int p = pCountIn; p < pCountOut + pCountIn; p++) {
+		float y = nodePos.y + PIN_PADDING + (((p- pCountIn) + 1) * rPinSpace) + NODE_TITLE_HEIGHT;
 		float x = nodePos.x + nodeWidth;
-		sf::CircleShape pinDot;
-		sf::RectangleShape pinCircle;
-		pinCircle.setOrigin(sf::Vector2f(PIN_RADIUS, PIN_RADIUS));
-		pinDot.setOrigin(sf::Vector2f(PIN_RADIUS/5, PIN_RADIUS/5));
-		pinDot.setPosition(sf::Vector2f(x, y));
-		pinCircle.setPosition(sf::Vector2f(x, y));
-		pinDot.setRadius(PIN_RADIUS/5);
-		pinCircle.setSize(sf::Vector2f(PIN_RADIUS*2, PIN_RADIUS*2));
-		pinCircle.setRotation(sf::degrees(45.0f));
-		pinDot.setFillColor(sf::Color::Black);
-		pinCircle.setFillColor(Types::typeToColor[pins[outPinIndexes[p]].type]);
-		pinPosCache.insert({ pins[outPinIndexes[p]].pinId, sf::Vector2f(x,y) });
-		target.draw(pinCircle);
-		//target.draw(pinDot);
+		sf::Color color = Types::typeToColor[pins[outPinIndexes[p-pCountIn]].type];
+
+		sf::Vector2f verts[4];
+		verts[0] = sf::Vector2f(x - PIN_RADIUS, y);
+		verts[1] = sf::Vector2f(x, y - PIN_RADIUS);
+		verts[2] = sf::Vector2f(x + PIN_RADIUS, y);
+		verts[3] = sf::Vector2f(x, y + PIN_RADIUS);
+
+		pinVerts[(p * 6) + 0].position = verts[0];
+		pinVerts[(p * 6) + 1].position = verts[1];
+		pinVerts[(p * 6) + 2].position = verts[2];
+		pinVerts[(p * 6) + 3].position = verts[2];
+		pinVerts[(p * 6) + 4].position = verts[3];
+		pinVerts[(p * 6) + 5].position = verts[0];
+
+		for (int j = p * 6; j < (p * 6) + 6; j++) {
+			pinVerts[j].color = color;
+		}
+		pinPosCache.insert({ pins[outPinIndexes[p - pCountIn]].pinIndex, sf::Vector2f(x,y) });
 	}
+
+	target.draw(pinVerts);
+
+	sf::Text timingText = CenteredText(std::format("{:.2f}", prevEvalTime * 1000.0f) + "ms", sf::Vector2f(nodePos.x + nodeWidth / 2, nodePos.y + NODE_TITLE_HEIGHT + nodeHeight), (unsigned int)(baseTextSize * textDPIScale), RenderingGlobals::font);
+	timingText = ScaleCentered(timingText, 1 / textDPIScale); 
+	sf::Color badC = sf::Color(237, 159, 114, 255);
+	sf::Color okC = sf::Color(237, 210, 114, 255);
+	sf::Color goodC = sf::Color(178, 237, 114, 255);
+	timingText.setFillColor(threeColorLerp(badC, okC, goodC, remapRange(prevEvalTime*1000.0f, 30.f, 120.f, 1.f, 0.f)));
+	target.draw(timingText);
+}
+
+void GraphNode::Execute()
+{
+	lua_State* L;
+	L = luaL_newstate();
+	luaL_openlibs(L);
+
+	// Globals
+	lua_pushinteger(L, texSize.x);
+	lua_setglobal(L, "sizeX");
+	lua_pushinteger(L, texSize.y);
+	lua_setglobal(L, "sizeY");
+
+	Utility::Timer fullTimr;
+	Utility::Timer varTmr;
+
+	for (auto& var : luaVars) {
+		auto& varName = var.first;
+		auto& data = luaVarData[varName];
+
+		bool ranSet = false;
+
+		switch (data.dataType)
+		{
+		case Types::DataType_Bool:
+			lua_pushboolean(L, data.boolVar);
+			break;
+		case Types::DataType_Float:
+			lua_pushnumber(L, lua_Number((double)data.floatVar));
+			break;
+		case Types::DataType_Int: 
+			lua_pushinteger(L, data.intVar);
+			break;
+		case Types::DataType_Color:
+		{
+			lua_createtable(L, 0, 4);
+			lua_pushnumber(L, data.colorVar.r);
+			lua_setfield(L, -2, "r");
+
+			lua_pushnumber(L, data.colorVar.g);
+			lua_setfield(L, -2, "g");
+
+			lua_pushnumber(L, data.colorVar.b);
+			lua_setfield(L, -2, "b");
+
+			lua_pushnumber(L, data.colorVar.a);
+			lua_setfield(L, -2, "a");
+		} break;
+		case Types::DataType_GreyTex:
+		{
+			lua_createtable(L, (int)data.greytexVar.size(), 0); // stack = -1: table
+
+			int xI = 1;
+			for (auto& xRow : data.greytexVar) {
+				lua_pushinteger(L, xI); // stack = -1: index, -2: table
+				lua_createtable(L, (int)xRow.size(), 0); // stack = -1: subtable, -2: index, -3: table
+
+				int yI = 1;
+				for (auto& y : xRow)
+				{
+					// stack = -1: subtable, -2: index, -3: table
+					lua_pushinteger(L, yI); // stack = -1: index, -2: subtable, -3: index, -4: table
+					lua_pushinteger(L, data.greytexVar[xI-1][yI-1]); // stack = -1: val, -2: index, -3: subtable, -4: index, -5: table
+
+					lua_rawset(L, -3);
+					// stack = -1: subtable, -2: index, -3: table
+					yI++;
+				}
+
+				// stack = -1: subtable, -2: index, -3: table
+				lua_rawset(L, -3);
+
+				xI++;
+			}
+		}	break;
+		case Types::DataType_ColorTex:
+		{
+			lua_createtable(L, (int)data.colortexVar.size(), 0); // stack = -1: table
+			
+			int xI = 1;
+			for (auto& xRow : data.colortexVar) {
+				lua_pushinteger(L, xI); // stack = -1: index, -2: table
+				lua_createtable(L, (int)xRow.size(), 0); // stack = -1: subtable, -2: index, -3: table
+
+				int yI = 1;
+				for (auto& y : xRow) 
+				{
+					// stack = -1: subtable, -2: index, -3: table
+					lua_pushinteger(L, yI); // stack = -1: index, -2: subtable, -3: index, -4: table
+					lua_createtable(L, 0, 4); // stack = -1: colortable, -2: index, -3: subtable, -4: index, -5: table
+
+					auto& color = data.colortexVar[xI-1][yI-1];
+
+					lua_pushnumber(L, color.r); // stack = -1: value, -2: colortable, -3: index, -4: subtable, -5: index, -6: table
+					lua_setfield(L, -2, "r"); // stack = -1: colortable, -2: index, -3: subtable, -4: index, -5: table
+
+					lua_pushnumber(L, color.g);
+					lua_setfield(L, -2, "g");
+
+					lua_pushnumber(L, color.b);
+					lua_setfield(L, -2, "b");
+
+					lua_pushnumber(L, color.a);
+					lua_setfield(L, -2, "a");
+
+					lua_rawset(L, -3); // // stack = -1: colortable, -2: index, -3: subtable, -4: index, -5: table => subtable[index] = colortable
+					// stack = -1: subtable, -2: index, -3: table
+					yI++;
+				}
+
+				// stack = -1: subtable, -2: index, -3: table
+				lua_rawset(L, -3);
+
+				xI++;
+			}
+		}	break;
+		default:
+			break;
+		}
+
+		if (!ranSet) {
+			lua_setglobal(L, varName.c_str());
+		}
+	}
+
+	LOG_TRACE("Converted c++ vars to lua in {0}ms", varTmr.Elapsed()*1000.f);
+	Utility::Timer execTmr; 
+	 
+	LuaManager::CheckLua(L, luaL_dofile(L, luaTempFile.c_str()), nodeClass);
+
+	LOG_TRACE("Executed node lua in {0}ms", execTmr.Elapsed()*1000.f);
+	Utility::Timer extractTmr;
+
+	int i = 0;
+	for (auto& pin : pins) {
+		if (pin.dir == Direction::Out) {
+			auto type = pin.type;
+			auto var = pinLuaVars[i];
+
+			lua_getglobal(L, var.c_str());
+			switch (type)
+			{
+			case Types::DataType_ColorTex:
+			{
+				if (!lua_istable(L, -1)) { LOG_ERROR("Node Class '{0}' lua return value of '{1}' is not a table.", nodeClass, var); }
+				size_t xLen = lua_rawlen(L, -1);
+				if (xLen != texSize.x) {
+					LOG_ERROR("Node Class '{0}' lua return value of '{1}' is not the correct size.", nodeClass, var);
+				}
+
+				Types::colortex colorTex;
+				lua_pushnil(L); // stack = -1: nil, -2: table
+				while (lua_next(L, -2) != 0) {
+					std::vector<sf::Color> yList;
+					// stack = -1: value, -2: key, -3: table
+					size_t yLen = lua_rawlen(L, -1);
+					if (yLen != texSize.y) {
+						LOG_ERROR("Node Class '{0}' lua return value of '{1}' is not the correct size.", nodeClass, var);
+					}
+
+					lua_pushnil(L); // stack = -1: nil, -2: value/table, -3: key, -4: table
+					while (lua_next(L, -2)) {
+						// stack = -1: value/color table, -2: key, -3: table, -4: key, -5: table
+						lua_getfield(L, -1, "r");
+						int r = (int)lua_tointeger(L, -1); 	// stack = -1: val, -2: color table, -3: key, -4: table, -5: key, -6: table
+						lua_pop(L, 1);
+						lua_getfield(L, -1, "g");
+						int g = (int)lua_tointeger(L, -1); 	// stack = -1: val, -2: color table, -3: key, -4: table, -5: key, -6: table
+						lua_pop(L, 1);
+						lua_getfield(L, -1, "b");
+						int b = (int)lua_tointeger(L, -1); 	// stack = -1: val, -2: color table, -3: key, -4: table, -5: key, -6: table
+						lua_pop(L, 1);
+						lua_getfield(L, -1, "a");
+						int a = (int)lua_tointeger(L, -1); 	// stack = -1: val, -2: color table, -3: key, -4: table, -5: key, -6: table
+						lua_pop(L, 1);
+						// stack = -1: value/color table, -2: key, -3: table, -4: key, -5: table
+						yList.push_back(sf::Color(r, g, b, a));
+						lua_pop(L, 1); // Remove value
+					}
+
+					colorTex.push_back(yList);
+					lua_pop(L, 1); // Remove variable
+				}
+				lua_pop(L, 1); // Remove table
+
+				luaVarData[var].colortexVar = colorTex;
+			}	break;
+			case Types::DataType_GreyTex:
+			{
+				if (!lua_istable(L, -1)) { LOG_ERROR("Node Class '{0}' lua return value of '{1}' is not a table.", nodeClass, var); }
+				size_t xLen = lua_rawlen(L, -1);
+				if (xLen != texSize.x) {
+					LOG_ERROR("Node Class '{0}' lua return value of '{1}' is not the correct size.", nodeClass, var);
+				}
+
+				Types::greytex greyTex;
+				lua_pushnil(L); // stack = -1: nil, -2: table
+				while (lua_next(L, -2) != 0) {
+					std::vector<int> yList;
+					// stack = -1: value, -2: key, -3: table
+					size_t yLen = lua_rawlen(L, -1);
+					if (yLen != texSize.y) {
+						LOG_ERROR("Node Class '{0}' lua return value of '{1}' is not the correct size.", nodeClass, var);
+					}
+
+					lua_pushnil(L); // stack = -1: nil, -2: value/table, -3: key, -4: table
+					while (lua_next(L, -2)) {
+						// stack = -1: int, -2: key, -3: table, -4: key, -5: table
+						int g = (int)lua_tointeger(L, -1);
+						lua_pop(L, 1);
+						yList.push_back(g);
+					}
+
+					greyTex.push_back(yList);
+					lua_pop(L, 1); // Remove variable
+				}
+				lua_pop(L, 1); // Remove table
+
+				luaVarData[var].greytexVar = greyTex;
+			}	break;
+			default:
+				break;
+			}
+		}
+		i++;
+	}
+
+	LOG_TRACE("Extracted c++ vars from lua in {0}ms", extractTmr.Elapsed()*1000.f);
+
+	// Render display
+	Types::colortex displayData = luaVarData[displayVar].colortexVar;
+	Types::greytex displayDataGrey = luaVarData[displayVar].greytexVar;
+	auto dataType = luaVarData[displayVar].dataType;
+
+	for (unsigned int x = 0; x < displayTexture.getSize().x; x++) {
+		for (unsigned int y = 0; y < displayTexture.getSize().y; y++) {
+			if (dataType == Types::DataType_ColorTex) {
+				displayImage.setPixel(x, y, displayData[x][y]);
+			}
+			else {
+				displayImage.setPixel(x, y, sf::Color(displayDataGrey[x][y], displayDataGrey[x][y], displayDataGrey[x][y], 255));
+			}
+		}
+	}
+	displayTexture.update(displayImage);
+
+	prevEvalTime = (float)fullTimr.Elapsed();
+	lua_close(L);
+}
+
+void GraphNode::SetTextureSize(sf::Vector2i size)
+{
+	texSize = size;
+	if (!displayTexture.create(texSize.x, texSize.y)) { LOG_ERROR("Error updating display texture"); };
+	displayImage.create(displayTexture.getSize().x, displayTexture.getSize().y, sf::Color::White);
+	displayTexture.update(displayImage);
+
+	for (auto& luaData : luaVarData) {
+		luaData.second.greytexVar = Types::greytex(texSize.x, std::vector<int>(texSize.y, 0));
+		luaData.second.colortexVar = Types::colortex(texSize.x, std::vector<sf::Color>(texSize.y, sf::Color::White));
+	}
+}
+
+GraphNode::GraphNode(const GraphNode& node) : GraphNode()
+{
+	nodeClass = node.nodeClass;
+	nodeId = node.nodeId;
+	displayName = node.displayName;
+	category = node.category;
+	displayColor = node.displayColor;
+	pins = node.pins;
+	luaVarDisplayNames = node.luaVarDisplayNames;
+	luaVars = node.luaVars;
+	pinLuaVars = node.pinLuaVars;
+	paramLuaVars = node.paramLuaVars;
+	luaVarData = node.luaVarData;
+	luaVarPins = node.luaVarPins;
+	pinPosCache = std::map<int, sf::Vector2f>();
+	displayVar = node.displayVar;
+	luaLines = node.luaLines;
+	nodePos = node.nodePos;
+	luaTempFile = node.luaTempFile;
+	prevEvalTime = 0.0f;
+	texSize = sf::Vector2i(512, 512);
+	SetTextureSize(texSize);
 }

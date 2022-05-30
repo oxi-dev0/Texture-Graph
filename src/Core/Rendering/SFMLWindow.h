@@ -13,10 +13,12 @@ protected:
 	float zoom;
 	float prevZoom;
 	sf::Vector2f vcenter; // events have to be implemented in child window
+	sf::Vector2f prevVCenter;
 
 protected:
 	virtual void InfoBarData();
 	virtual void ComponentRender();
+	virtual void IMGUIRender();
 
 	void SetBGColor(ImVec4 color);
 

@@ -35,7 +35,9 @@ class EditorColourScheme
 
 	static ImVec4 Disabled(ImVec4 c) { return Darken(c, 0.6f); }
 	static ImVec4 Hovered(ImVec4 c) { return Lighten(c, 0.2f); }
-	static ImVec4 Active(ImVec4 c) { return Lighten(ImVec4(c.x, c.y, c.z, 1.0f), 0.1f); }
+	static ImVec4 Active(ImVec4 c) { return Lighten(ImVec4(c.x, c.y, c.z, 1.0f), 0.08f); }
+	static ImVec4 ActiveD(ImVec4 c) { return Darken(ImVec4(c.x, c.y, c.z, 1.0f), 0.12f); }
+	static ImVec4 HoveredD(ImVec4 c) { return Darken(ImVec4(c.x, c.y, c.z, 1.0f), 0.14f); }
 	static ImVec4 Collapsed(ImVec4 c) { return Darken(c, 0.2f); }
 
 public:

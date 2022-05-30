@@ -13,5 +13,6 @@ namespace Utility {
 		bool includes(std::vector<std::string> checks, std::string s);
 		bool isInt(const std::string& s);
 		bool isFloat(const std::string& s);
+		std::string replace(std::string s, char target, char replace);
 	}
 }

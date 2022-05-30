@@ -1,0 +1,57 @@
+metadata
+	name "Constant Color"
+	color 0x8AE9C1FF
+	category "Core/Constants"
+
+	# varname [lua var] [display name]
+	varname Color "Color"
+	varname Invert "Invert"
+	varname InvertAlpha "Invert Alpha"
+	varname Out "Out"
+
+	# default [lua var] [value] (Only works for color, int, bool, string and float types) - optional, but required if variable is dynamically displayed
+	default Invert false
+	default InvertAlpha false
+
+	# show [lua var] [condition] (Allows vars to be displayed only if the confition is true. Var will set to default if not displayed)
+	# the condition must use the layout (LUAVAR operator VALUE). - LUAVAR must be type int or bool - operator is (==,!=,<=,<,>,>=)
+	show InvertAlpha (Invert == true)
+
+	# display [lua var] (Allows a var of type tex to be displayed as the node preview)
+	display Out
+metadata
+
+# param is a node param - not a node pin. input would be a node pin
+# output is a node pin
+# color is a lua table {r=0, g=0, b=0, a=255}
+# tex is a 2d array of colors
+
+# ENUMS WILL BE ADDED IN THE FUTURE
+
+# param [type] [var]
+param color Color
+
+param bool Invert
+param bool InvertAlpha
+
+# output [type] [var]
+output colortex Out
+
+# lua exec. all inputs, outputs, and other data are defined before this is called
+exec
+{
+	if Invert then
+		Color.r = 255-Color.r
+		Color.g = 255-Color.g
+		Color.b = 255-Color.b
+		if InvertAlpha then
+			Color.a = 255-Color.a
+		end
+	end
+	
+	for x=1, sizeX do
+		for y=1, sizeY do
+			Out[x][y] = Color
+		end
+	end
+}

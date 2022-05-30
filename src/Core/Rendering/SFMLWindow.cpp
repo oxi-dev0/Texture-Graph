@@ -4,13 +4,14 @@ SFMLWindow::SFMLWindow(sf::RenderWindow& main_, sf::RenderTexture& rt_, std::str
 	: SubWindow(main_, name_, flags_), rt(rt_), view(*(new sf::View()))
 {
 	vcenter = sf::Vector2f(0, 0);
+	prevVCenter = sf::Vector2f(0, 0);
 	zoom = 1.0f;
 	prevZoom = 1.0f;
 	bgCol = sf::Color(0, 0, 0, 255);
 
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 4;
-	if (!rt.create(sf::VideoMode::getDesktopMode().width*1.0f, sf::VideoMode::getDesktopMode().height*1.0f, settings)) {
+	if (!rt.create(sf::VideoMode::getDesktopMode().width, sf::VideoMode::getDesktopMode().height, settings)) {
 		LOG_CRITICAL("Failed to initialise the SFMLWindow render texture.");
 		std::exit(2);
 	}
@@ -38,6 +39,10 @@ void SFMLWindow::ComponentRender() {
 
 }
 
+void SFMLWindow::IMGUIRender() {
+
+}
+
 bool SFMLWindow::ProcessEvent(sf::Event& event) {
 	return false;
 }
@@ -51,14 +56,20 @@ void SFMLWindow::Render() {
 
 	rt.display();
 
-	view.setCenter(sf::Vector2f(vcenter.x * contentAvail.x, vcenter.y * contentAvail.y) + sf::Vector2f(contentAvail.x / 2.0f, contentAvail.y / 2.0f));
+	float lerpSpeed = 0.7f;
+
+	prevVCenter = sf::Vector2f(std::lerp(prevVCenter.x, vcenter.x, lerpSpeed), std::lerp(prevVCenter.y, vcenter.y, lerpSpeed));
+
+	view.setCenter(sf::Vector2f(prevVCenter.x * contentAvail.x, prevVCenter.y * contentAvail.y) + sf::Vector2f(contentAvail.x / 2.0f, contentAvail.y / 2.0f));
 	view.setSize(contentAvail.x, contentAvail.y);
 	view.setViewport(sf::FloatRect(sf::Vector2f(0, 0), sf::Vector2f(contentAvail.x / (float)rt.getSize().x, contentAvail.y / (float)rt.getSize().y)));
-	prevZoom = std::lerp(prevZoom, zoom, 0.8f);
+	prevZoom = std::lerp(prevZoom, zoom, lerpSpeed);
 	view.zoom(prevZoom);
 	rt.setView(view);
 
 	ImGui::Image(rt, sf::Vector2f((float)rt.getSize().x, (float)rt.getSize().y));
+	IMGUIRender();
+
 	InfoBar(25.0f);
 
 	prevPos = sf::Vector2i((int)pos.x, (int)pos.y);

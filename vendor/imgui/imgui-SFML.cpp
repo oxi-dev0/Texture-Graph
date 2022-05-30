@@ -703,6 +703,13 @@ void Image(const sf::Sprite& sprite, const sf::Vector2f& size, const sf::Color& 
                  toImColor(borderColor));
 }
 
+bool ImageButtonWithText(const sf::Texture& texture, const char* label, int framePadding, const sf::Vector2f imageSize, const sf::Vector2f size,
+                         const sf::Color& bgColor, const sf::Color& tintColor) {
+    ImTextureID textureID = convertGLTextureHandleToImTextureID(texture.getNativeHandle());
+
+    return ImGui::ImageButtonWithText(textureID, label, ImVec2(imageSize), ImVec2(size), ImVec2(0, 0), ImVec2(1, 1), framePadding, ImVec4(bgColor), ImVec4(tintColor));
+}
+
 /////////////// Image Button Overloads for sf::Texture
 
 bool ImageButton(const sf::Texture& texture, const int framePadding, const sf::Color& bgColor,

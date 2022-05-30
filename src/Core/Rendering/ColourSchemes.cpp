@@ -38,8 +38,8 @@ void EditorColourScheme::ApplyTheme()
     colors[ImGuiCol_ButtonHovered] = Hovered(colors[ImGuiCol_Button]);
     colors[ImGuiCol_ButtonActive] = Active(colors[ImGuiCol_Button]);
     colors[ImGuiCol_Header] = GetColor(MainAccentColor, Alpha80);
-    colors[ImGuiCol_HeaderHovered] = Hovered(colors[ImGuiCol_Header]);
-    colors[ImGuiCol_HeaderActive] = Active(colors[ImGuiCol_Header]);
+    colors[ImGuiCol_HeaderHovered] = HoveredD(colors[ImGuiCol_Header]);
+    colors[ImGuiCol_HeaderActive] = ActiveD(colors[ImGuiCol_Header]);
     colors[ImGuiCol_Separator] = colors[ImGuiCol_Border];
     colors[ImGuiCol_SeparatorHovered] = Hovered(colors[ImGuiCol_Separator]);
     colors[ImGuiCol_SeparatorActive] = Active(colors[ImGuiCol_Separator]);

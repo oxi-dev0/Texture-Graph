@@ -5,6 +5,8 @@
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
 
+#include "../Utils/Strings.h"
+
 namespace Types {
 	typedef std::vector<std::vector<sf::Color>> colortex;
 	typedef std::vector<std::vector<int>> greytex;
@@ -63,10 +65,13 @@ namespace Types {
 			intVar = 0;
 			floatVar = 0.0f;
 			colorVar = sf::Color::White;
-			colortexVar = colortex();
-			greytexVar = greytex();
+			colortexVar = colortex(256, std::vector<sf::Color>(256, sf::Color::White));
+			greytexVar = greytex(256, std::vector<int>(256, 0));
 			dataType = DataType::DataType_Bool;
 			stringVar = "";
 		}
+
+		std::string AsString();
+		void FromString(std::string s);
 	};
 }

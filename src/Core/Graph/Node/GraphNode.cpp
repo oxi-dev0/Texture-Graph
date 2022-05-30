@@ -407,7 +407,7 @@ sf::Color threeColorLerp(sf::Color a, sf::Color b, sf::Color c, float t) {
 	return r;
 }
 
-void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selected) {
+void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selected, int transparency) {
 	pinPosCache.clear();
 
 	// Calculate sizes
@@ -445,7 +445,7 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 		sf::RectangleShape selectRect;
 		selectRect.setPosition(sf::Vector2f(nodePos.x, nodePos.y + nodeHeight));
 		selectRect.setSize(sf::Vector2f(nodeWidth, 3));
-		selectRect.setFillColor(sf::Color(246, 157, 190, 255));
+		selectRect.setFillColor(sf::Color(246, 157, 190, transparency));
 		target.draw(selectRect);
 	}
 
@@ -453,21 +453,21 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 	sf::RectangleShape nodeRect;
 	nodeRect.setPosition(nodePos);
 	nodeRect.setSize(sf::Vector2f(nodeWidth, nodeHeight));
-	nodeRect.setFillColor(sf::Color(70, 70, 70));
-	nodeRect.setOutlineColor(!selected ? sf::Color(120, 120, 120) : sf::Color(246, 157, 190, 255));
+	nodeRect.setFillColor(sf::Color(70, 70, 70, transparency));
+	nodeRect.setOutlineColor(!selected ? sf::Color(120, 120, 120) : sf::Color(246, 157, 190, transparency));
 	nodeRect.setOutlineThickness(!selected ? 0.4f : 1.f);
 	target.draw(nodeRect);
 
 	sf::RectangleShape titleRect;
 	titleRect.setPosition(nodePos);
 	titleRect.setSize(sf::Vector2f(nodeWidth, NODE_TITLE_HEIGHT));
-	titleRect.setFillColor(sf::Color(50, 50, 50));
+	titleRect.setFillColor(sf::Color(50, 50, 50, transparency));
 	target.draw(titleRect);
 
 	sf::RectangleShape colorRect;
 	colorRect.setPosition(sf::Vector2f(nodePos.x, (nodePos.y + NODE_TITLE_HEIGHT) - (NODE_COLOR_THICKNESS / 2)));
 	colorRect.setSize(sf::Vector2f(nodeWidth, NODE_COLOR_THICKNESS));
-	colorRect.setFillColor(displayColor);
+	colorRect.setFillColor(sf::Color(displayColor.r, displayColor.g, displayColor.b, transparency));
 	target.draw(colorRect);
 
 	const float baseTextSize = 9.6f;
@@ -478,7 +478,7 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 
 	sf::Text titleText = CenteredText(displayName, sf::Vector2f(nodePos.x + nodeWidth / 2, nodePos.y + (NODE_TITLE_HEIGHT / 2) - 2.0f), (unsigned int)(baseTextSize*textDPIScale), RenderingGlobals::font);
 	titleText = ScaleCentered(titleText, 1/textDPIScale);
-	titleText.setFillColor(sf::Color::White);
+	titleText.setFillColor(sf::Color(255,255,255, transparency));
 	target.draw(titleText);
 
 	float tWidth = nodeWidth;
@@ -491,6 +491,7 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 	sf::Vector2u trSize = ImageCache::images["transparencyPreview"]->getSize();
 	transparentSprite.setScale(sf::Vector2f(tWidth / trSize.x, tHeight / trSize.y));
 	transparentSprite.setPosition(sf::Vector2f(nodePos.x, displayPosY));
+	transparentSprite.setColor(sf::Color(255, 255, 255, transparency));
 	target.draw(transparentSprite);
 
 	// Draw display texture
@@ -499,6 +500,7 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 	sf::Vector2u tSize = displayTexture.getSize();
 	displaySprite.setScale(sf::Vector2f(tWidth / tSize.x, tHeight / tSize.y));
 	displaySprite.setPosition(sf::Vector2f(nodePos.x, displayPosY));
+	displaySprite.setColor(sf::Color(255, 255, 255, transparency));
 	target.draw(displaySprite);
 
 	// Calculate pin spacing
@@ -517,6 +519,7 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 		float y = nodePos.y + PIN_PADDING + ((p + 1)* lPinSpace) + NODE_TITLE_HEIGHT;
 		float x = nodePos.x;
 		sf::Color color = Types::typeToColor[pins[inPinIndexes[p]].type];
+		color.a = transparency;
 
 		sf::Vector2f verts[4];
 		verts[0] = sf::Vector2f(x - PIN_RADIUS, y);
@@ -543,6 +546,7 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 		float y = nodePos.y + PIN_PADDING + (((p- pCountIn) + 1) * rPinSpace) + NODE_TITLE_HEIGHT;
 		float x = nodePos.x + nodeWidth;
 		sf::Color color = Types::typeToColor[pins[outPinIndexes[p-pCountIn]].type];
+		color.a = transparency;
 
 		sf::Vector2f verts[4];
 		verts[0] = sf::Vector2f(x - PIN_RADIUS, y);

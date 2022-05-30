@@ -92,7 +92,7 @@ public:
 
 	static GraphNode LoadFromTGNF(std::string classFile); // Load from Texture Graph Node File
 
-	void SFMLRender(sf::RenderTarget& target, float zoomLevel = 0.5f, bool selected=false);
+	void SFMLRender(sf::RenderTarget& target, float zoomLevel = 0.5f, bool selected=false, int transparency=255);
 	void Execute();
 
 	void SetTextureSize(sf::Vector2i size);

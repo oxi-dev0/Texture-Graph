@@ -23,10 +23,15 @@ public:
 	int currentLineFromNode;
 	int currentLineFromPin;
 
+	bool cyclicalError=false;
+	int cyclicalNode;
+	int cyclicalPin;
+
 	sf::Vector2i texSize;
 
 private:
 	void Grid();
+	bool CyclicalRec(int currentNode, std::vector<int> stack, int prevPin=-1, int prevNode=-1);
 protected:
 	virtual void ComponentRender();
 	virtual void IMGUIRender();
@@ -37,6 +42,8 @@ protected:
 public:
 	GraphEditorView(sf::RenderWindow& main_, sf::RenderTexture& rt_, std::string name_, ImGuiWindowFlags flags_);
 	void Clear();
+
+	bool IsCyclical();
 
 	void UpdateTexSize(sf::Vector2i size);
 	void DeleteNode(int index);

@@ -168,6 +168,7 @@ void GraphEditorView::ComponentRender() {
 	if (draggingLine) {
 		RenderLine(nodes[currentLineFromNode]->pinPosCache[currentLineFromPin], mousePos, Types::typeToColor[nodes[currentLineFromNode]->pins[currentLineFromPin].type], Types::typeToColor[nodes[currentLineFromNode]->pins[currentLineFromPin].type], 5);
 	}
+	int cn = 0;
 	for (auto* node : nodes) {
 		int p = 0;
 		for (auto& pin : node->pins) {
@@ -175,12 +176,20 @@ void GraphEditorView::ComponentRender() {
 				int n = 0;
 				for (int targetNodeID : pin.outNodeIds) {
 					if (targetNodeID > nodes.size() - 1) { pin.outNodeIds.erase(pin.outNodeIds.begin() + n); pin.outPinIndexes.erase(pin.outPinIndexes.begin() + n); n++; continue; }
-					RenderLine(node->pinPosCache[p], nodes[targetNodeID]->pinPosCache[pin.outPinIndexes[n]], Types::typeToColor[node->pins[p].type], Types::typeToColor[nodes[targetNodeID]->pins[pin.outPinIndexes[n]].type], 5);
+					sf::Color startColor = Types::typeToColor[node->pins[p].type];
+					sf::Color endColor = Types::typeToColor[nodes[targetNodeID]->pins[pin.outPinIndexes[n]].type];
+
+					if (cyclicalError && cyclicalNode == cn && cyclicalPin == p) {
+						startColor = sf::Color(255, 0, 0, 255);
+						endColor = startColor;
+					}
+					RenderLine(node->pinPosCache[p], nodes[targetNodeID]->pinPosCache[pin.outPinIndexes[n]], startColor, endColor, 5);
 					n++;
 				}
 			}
 			p++;
 		}
+		cn++;
 	}
 
 	
@@ -193,7 +202,7 @@ void GraphEditorView::ComponentRender() {
 			n++;
 			continue;
 		}
-		node->SFMLRender(rt, zoom, selectedNode==n);
+		node->SFMLRender(rt, zoom, selectedNode==n, cyclicalError ? 127 : 255);
 		n++;
 	}
 }
@@ -246,6 +255,103 @@ void GraphEditorView::UpdateTexSize(sf::Vector2i size)
 	}
 }
 
+void GraphEditorView::DeleteNode(int index)
+{
+	for (auto& pin : nodes[index]->pins) {
+		if (pin.inNodeId != -1) {
+			auto& targetOutNodeIds = nodes[pin.inNodeId]->pins[pin.inPinIndex].outNodeIds;
+			auto& targetOutPinIndexes = nodes[pin.inNodeId]->pins[pin.inPinIndex].outPinIndexes;
+			auto ref = std::find(targetOutNodeIds.begin(), targetOutNodeIds.end(), index);
+			if (ref != targetOutNodeIds.end()) {
+				int refIndex = std::distance(targetOutNodeIds.begin(), ref);
+				targetOutNodeIds.erase(targetOutNodeIds.begin() + refIndex);
+				targetOutPinIndexes.erase(targetOutPinIndexes.begin() + refIndex);
+			}
+		}
+		int n = 0;
+		for (auto outNode : pin.outNodeIds) {
+			nodes[outNode]->pins[pin.outPinIndexes[n]].inNodeId = -1;
+			nodes[outNode]->pins[pin.outPinIndexes[n]].inPinIndex = -1;
+			n++;
+		}
+	}
+
+	// update all other node references (shift any node indexes above the deleted node index down by 1)
+	for (int n = 0; n < nodes.size(); n++) {
+		auto* node = nodes[n];
+		if (n > index) {
+			for (auto& pin : nodes[n]->pins) {
+				pin.nodeId -= 1;
+				if (pin.inNodeId < 0) { continue; }
+				auto& targetOutNodeIds = nodes[pin.inNodeId]->pins[pin.inPinIndex].outNodeIds;
+				auto ref = std::find(targetOutNodeIds.begin(), targetOutNodeIds.end(), n);
+				if (ref != targetOutNodeIds.end()) {
+					int refIndex = std::distance(targetOutNodeIds.begin(), ref);
+					targetOutNodeIds[refIndex] -= 1;
+				}
+			}
+			node->nodeId -= 1;
+		}
+		else {
+			for (auto& pin : nodes[n]->pins) {
+				if (pin.inNodeId <= index) { continue; }
+				pin.inNodeId -= 1;
+			}
+		}
+	}
+
+	delete nodes[index];
+	nodes.erase(nodes.begin() + index);
+}
+
+// returns true if found cyclical reference
+bool GraphEditorView::CyclicalRec(int currentNode, std::vector<int> stack, int prevPin, int prevNode) {
+	if (std::find(stack.begin(), stack.end(), currentNode) != stack.end()) { 
+		cyclicalError = true;
+		cyclicalNode = prevNode;
+		cyclicalPin = prevPin;
+		return true; 
+	}
+	stack.push_back(currentNode);
+	bool cyclical = false;
+	int p = 0;
+	for (auto& pin : nodes[currentNode]->pins)
+	{
+		for (int outIndex : pin.outNodeIds)
+		{
+			if(outIndex >= nodes.size()) {
+				int index = std::find(pin.outNodeIds.begin(), pin.outNodeIds.end(), outIndex) - pin.outNodeIds.begin();
+				pin.outNodeIds.erase(pin.outNodeIds.begin() + index);
+				pin.outPinIndexes.erase(pin.outPinIndexes.begin() + index);
+				p++;
+				continue;
+			}
+			cyclical = cyclical || CyclicalRec(outIndex, stack, p, currentNode);
+		}
+		p++;
+	}
+	return cyclical;
+}
+
+bool GraphEditorView::IsCyclical() {
+	bool cyclical = false;
+	for (int n = 0; n < nodes.size(); n++) {
+		cyclical = cyclical || CyclicalRec(n, std::vector<int>());
+	}
+	if (!cyclical) {
+		cyclicalError = false;
+	}
+	else {
+		LOG_WARN("Cyclical graph dependancy");
+		/*sf::Vector2f windowPos = sf::Vector2f(rt.mapCoordsToPixel(nodes[cyclicalNode]->nodePos)) - sf::Vector2f(prevPos) - sf::Vector2f(prevSize.x/2, prevSize.y/2);
+		vcenter = sf::Vector2f(windowPos.x / prevSize.x, windowPos.y / prevSize.y);
+		zoom = 0.6f;*/
+		// ATTEMP TO ZOOM CAMERA ON ERROR - NEEDS WORK
+	}
+	LOG_TRACE("Graph Cyclical: {0}", cyclical ? "TRUE" : "FALSE");
+	return cyclical;
+}
+
 // SFML EVENTS FOR THIS VIEW
 bool GraphEditorView::ProcessEvent(sf::Event& event) {
 	switch (event.type) {
@@ -277,75 +383,29 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 			}
 
 			// Detect closest pin for line drag ( no node selected for now )
-			int closestNode1 = -1;
-			int closestNode2 = -1;
-			float closestDist1 = 100000;
-			float closestDist2 = 100000;
+			int closestNode = -1;
+			int closestPin = -1;
+			float closestDist = 100000;
 			int n = 0;
 			for (auto* node : nodes) {
 				float dist = (node->nodePos - mousePos).length();
-				if (dist < closestDist1) {
-					closestDist1 = dist;
-					closestNode1 = n;
-				}
-				else {
-					if (dist < closestDist2) {
-						closestDist2 = dist;
-						closestNode2 = n;
+				if (dist > 500) { n++; continue; }
+				int p = 0;
+				for (auto& pin : node->pins) {
+					float pDist = (node->pinPosCache[p] - mousePos).length();
+					if (pDist < closestDist) {
+						closestNode = n;
+						closestPin = p;
+						closestDist = pDist;
 					}
+					p++;
 				}
 				n++;
 			}
 
-			int closestPin1 = -1;
-			float closestPinDist1 = 1000;
-			int closestPin2 = -1;
-			float closestPinDist2 = 1000;
-			if (closestNode1 > -1) {
-				int p = 0;
-				for (auto& pin : nodes[closestNode1]->pins) {
-					float dist = (nodes[closestNode1]->pinPosCache[p] - mousePos).length();
-					if (dist < closestPinDist1) {
-						closestPinDist1 = dist;
-						closestPin1 = p;
-					}
-					p++;
-				}
-			}
-			if (closestNode2 > -1) {
-				int p = 0;
-				for (auto& pin : nodes[closestNode2]->pins) {
-					float dist = (nodes[closestNode2]->pinPosCache[p] - mousePos).length();
-					if (dist < closestPinDist2) {
-						closestPinDist2 = dist;
-						closestPin2 = p;
-					}
-					p++;
-				}
-			}
-
-			if (closestPinDist1 > 40)
-			{
-				closestNode1 = -1;
-				closestPin1 = -1;
-			}
-			if (closestPinDist2 > 40)
-			{
-				closestNode2 = -1;
-				closestPin2 = -1;
-			}
-
-			int targetNode = closestNode1;
-			int targetPin = closestPin1;
-			if (closestPinDist2 < closestPinDist1)
-			{
-				targetNode = closestNode2;
-				targetPin = closestPin2;
-			}
-
-			if (targetNode > -1 && targetPin > -1) {
-				currentLineFromNode = targetNode;
-				currentLineFromPin = targetPin;
+			if (closestPin > -1 && closestDist < 15) {
+				currentLineFromNode = closestNode;
+				currentLineFromPin = closestPin;
 				draggingLine = true;
 				return true; // gain handling priority
 			}
@@ -370,91 +430,61 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 				sf::Vector2f mousePos = pixelToGraph(sf::Vector2i((int)ImGui::GetMousePos().x, (int)ImGui::GetMousePos().y));
 
 				// Detect closest pin for line drag
-				int closestNode1 = -1;
-				int closestNode2 = -1;
-				float closestDist1 = 100000;
-				float closestDist2 = 100000;
+				int closestNode = -1;
+				int closestPin = -1;
+				float closestDist = 100000;
 				int n = 0;
 				for (auto* node : nodes) {
 					float dist = (node->nodePos - mousePos).length();
-					if (dist < closestDist1) {
-						closestDist1 = dist;
-						closestNode1 = n;
-					}
-					else {
-						if (dist < closestDist2) {
-							closestDist2 = dist;
-							closestNode2 = n;
+					if (dist > 200) { n++; continue; }
+					int p = 0;
+					for (auto& pin : node->pins) {
+						float pDist = (node->pinPosCache[p] - mousePos).length();
+						if (pDist < closestDist) {
+							closestNode = n;
+							closestPin = p;
+							closestDist = pDist;
 						}
+						p++;
 					}
 					n++;
 				}
 
-				if (closestDist1 > 150) {
-					closestNode1 = -1;
-				}
-				if (closestDist2 > 150) {
-					closestNode2 = -1;
-				}
-
-				int closestPin1 = -1;
-				float closestPinDist1 = 1000;
-				int closestPin2 = -1;
-				float closestPinDist2 = 1000;
-				if (closestNode1 > -1) {
-					int p = 0;
-					for (auto& pin : nodes[closestNode1]->pins) {
-						float dist = (nodes[closestNode1]->pinPosCache[p] - mousePos).length();
-						if (dist < closestPinDist1) {
-							closestPinDist1 = dist;
-							closestPin1 = p;
-						}
-						p++;
-					}
-				}
-				if (closestNode2 > -1) {
-					int p = 0;
-					for (auto& pin : nodes[closestNode2]->pins) {
-						float dist = (nodes[closestNode2]->pinPosCache[p] - mousePos).length();
-						if (dist < closestPinDist2) {
-							closestPinDist2 = dist;
-							closestPin2 = p;
-						}
-						p++;
-					}
-				}
-
-				int targetNode = closestNode1;
-				int targetPin = closestPin1;
-				if (closestPinDist2 < closestPinDist2)
-				{
-					targetNode = closestNode2;
-					targetPin = closestPin2;
-				}
-
-				if (targetNode > -1) {
+				if (closestPin > -1 && closestDist < 15) {
 					// there is a pin to connect to
+					if (closestNode == currentLineFromNode) { break; }
 					if (fromPin.dir == Direction::Out) {
-						if (nodes[targetNode]->pins[targetPin].dir == Direction::In) {
+						if (nodes[closestNode]->pins[closestPin].dir == Direction::In) {
 							// valid out -> in
-							fromPin.outNodeIds.push_back(targetNode);
-							fromPin.outPinIndexes.push_back(targetPin);
+							fromPin.outNodeIds.push_back(closestNode);
+							fromPin.outPinIndexes.push_back(closestPin);
 
-							nodes[targetNode]->pins[targetPin].inNodeId = currentLineFromNode;
-							nodes[targetNode]->pins[targetPin].inPinIndex = currentLineFromPin;
+							if (nodes[closestNode]->pins[closestPin].inNodeId != -1) {
+								// update old reference
+								auto& oldNode = nodes[nodes[closestNode]->pins[closestPin].inNodeId];
+								auto& oldPin = oldNode->pins[nodes[closestNode]->pins[closestPin].inPinIndex];
+								int index = std::find(oldPin.outNodeIds.begin(), oldPin.outNodeIds.end(), closestNode) - oldPin.outNodeIds.begin();
+								oldPin.outNodeIds.erase(oldPin.outNodeIds.begin() + index);
+								oldPin.outPinIndexes.erase(oldPin.outPinIndexes.begin() + index);
+							}
+
+							nodes[closestNode]->pins[closestPin].inNodeId = currentLineFromNode;
+							nodes[closestNode]->pins[closestPin].inPinIndex = currentLineFromPin;
 						}
 					}
 					else {
-						if (nodes[targetNode]->pins[targetPin].dir == Direction::Out) {
+						if (nodes[closestNode]->pins[closestPin].dir == Direction::Out) {
 							// valid in -> out
-							nodes[targetNode]->pins[targetPin].outNodeIds.push_back(currentLineFromNode);
-							nodes[targetNode]->pins[targetPin].outPinIndexes.push_back(currentLineFromPin);
+							nodes[closestNode]->pins[closestPin].outNodeIds.push_back(currentLineFromNode);
+							nodes[closestNode]->pins[closestPin].outPinIndexes.push_back(currentLineFromPin);
 
-							fromPin.inNodeId = targetNode;
-							fromPin.inPinIndex = targetPin;
+							fromPin.inNodeId = closestPin;
+							fromPin.inPinIndex = closestPin;
 						}
 					}
 				}
+
+				IsCyclical();
 			}
 		}
 	} break;
@@ -462,6 +492,7 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 	{
 		if (draggingNode)
 		{
+			if (selectedNode == -1) { draggingNode = false; break; }
 			sf::Vector2f mousePos = pixelToGraph(sf::Vector2i((int)ImGui::GetMousePos().x, (int)ImGui::GetMousePos().y));
 			nodes[selectedNode]->nodePos = snapPos(mousePos + dragNodeOffset);
 		}
@@ -502,15 +533,17 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 		{
 			if (!inFocus) { break; }
 			if (selectedNode == -1) { break; }
-			nodes.erase(nodes.begin() + selectedNode);
+			DeleteNode(selectedNode);
 			selectedNode = -1;
+			IsCyclical();
 		} break;
 		case sf::Keyboard::Backspace:
 		{
 			if (!inFocus) { break; }
 			if (selectedNode == -1) { break; }
-			nodes.erase(nodes.begin() + selectedNode);
+			DeleteNode(selectedNode);
 			selectedNode = -1;
+			IsCyclical();
 		} break;
 		default:
 			break;

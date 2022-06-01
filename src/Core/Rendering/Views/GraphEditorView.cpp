@@ -73,19 +73,89 @@ void GraphEditorView::Grid() {
 }
 
 void GraphEditorView::EvaluateNodes() {
-	Utility::Timer evalTmr;
+	Utility::Timer execOrderTmr;
 
-	evalThreads.clear();
-	for (auto* node : nodes) {
-		evalThreads.push_back(std::thread(&GraphNode::Execute, node));
-		//node->Execute();
+	//evalThreads.clear();
+	//for (auto* node : nodes) {
+	//	evalThreads.push_back(std::thread(&GraphNode::Execute, node));
+	//	//node->Execute();
+	//}
+
+	//for (auto& thread : evalThreads) {
+	//	thread.join();
+	//}
+
+	std::vector<int> evalOrder = TopologicalSort();
+	LOG_TRACE("--- Eval Order ---");
+	int n = 0;
+	for (int nodeI : evalOrder) {
+		auto* node = nodes[nodeI];
+		node->debugEvalIndex = n;
+		LOG_TRACE("{0} at pos ({1}, {2})", node->nodeClass, node->nodePos.x, node->nodePos.y);
+		n++;
 	}
 
-	for (auto& thread : evalThreads) {
-		thread.join();
+	LOG_INFO("Calculated execution order in {0}ms", execOrderTmr.Elapsed()*1000.f);
+
+	Utility::Timer execTmr;
+
+	for (int nodeIndex : evalOrder) {
+		auto& node = nodes[nodeIndex];
+		node->Execute();
+		
+		// Pass data to connected nodes
+		int p = 0;
+		for (auto& pin : node->pins) {
+			if (pin.dir == Direction::Out) {
+				int i = 0;
+				for (auto& outNodeId : pin.outNodeIds) {
+					auto& targetNode = nodes[outNodeId];
+					if (targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].dataType != node->luaVarData[node->pinLuaVars[p]].dataType) {
+						if (node->luaVarData[node->pinLuaVars[p]].dataType == Types::DataType_GreyTex) {
+							Types::colortex converted(texSize.x, std::vector<sf::Color>(texSize.y, sf::Color::White));
+							int x = 0;
+							for (auto& xRow : node->luaVarData[node->pinLuaVars[p]].greytexVar) {
+								int yI = 0;
+								for (auto& y : xRow) {
+									converted[x][yI] = sf::Color(y, y, y, 255);
+									yI++;
+								}
+								x++;
+							}
+
+							targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].colortexVar = converted;
+						}
+						else {
+							Types::greytex converted(texSize.x, std::vector<int>(texSize.y, 0));
+							int x = 0;
+							for (auto& xRow : node->luaVarData[node->pinLuaVars[p]].colortexVar) {
+								int yI = 0;
+								for (auto& y : xRow) {
+									converted[x][yI] = std::floor(y.r * 0.3f + y.g * 0.59f + y.b * 0.11f);
+									yI++;
+								}
+								x++;
+							}
+
+							targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].greytexVar = converted;
+						}
+					}
+					else {
+						if (node->luaVarData[node->pinLuaVars[p]].dataType == Types::DataType_ColorTex) {
+							targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].colortexVar = node->luaVarData[node->pinLuaVars[p]].colortexVar;
+						}
+						else {
+							targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].greytexVar = node->luaVarData[node->pinLuaVars[p]].greytexVar;
+						}
+					}
+					i++;
+				}
+			}
+			p++;
+		}
 	}
 
-	LOG_INFO("Evaluated graph in {0}ms", evalTmr.Elapsed()*1000.f);
+	LOG_INFO("Executed graph in {0}ms", execTmr.Elapsed()*1000.f);
 }
 
 sf::Color lerpColor(sf::Color a, sf::Color b, float t) {
@@ -231,6 +301,7 @@ void GraphEditorView::IMGUIRender() {
 			GraphNode* newNode = new GraphNode(compiledNode);
 			newNode->nodePos = snapPos(mousePos);
 			newNode->nodeId = nodes.size(); // temp id assignment
+			newNode->SetTextureSize(texSize);
 			nodes.push_back(newNode); 
 
 			selectedNode = (int)nodes.size() - 1;
@@ -277,12 +348,13 @@ void GraphEditorView::DeleteNode(int index)
 	}
 
 	// update all other node references (shift any node indexes above the deleted node index down by 1)
-	for (int n = 0; n < nodes.size(); n++) {
+	for (int n = 0; n < nodes.size(); n++) {  
 		auto* node = nodes[n];
 		if (n > index) {
 			for (auto& pin : nodes[n]->pins) {
 				pin.nodeId -= 1;
 				if (pin.inNodeId < 0) { continue; }
+				if (pin.inNodeId >= nodes.size()) { continue; }
 				auto& targetOutNodeIds = nodes[pin.inNodeId]->pins[pin.inPinIndex].outNodeIds;
 				auto ref = std::find(targetOutNodeIds.begin(), targetOutNodeIds.end(), n);
 				if (ref != targetOutNodeIds.end()) {
@@ -292,7 +364,7 @@ void GraphEditorView::DeleteNode(int index)
 			}
 			node->nodeId -= 1;
 		}
-		else {
+		else { 
 			for (auto& pin : nodes[n]->pins) {
 				if (pin.inNodeId <= index) { continue; }
 				pin.inNodeId -= 1;
@@ -310,7 +382,7 @@ bool GraphEditorView::CyclicalRec(int currentNode, std::vector<int> stack, int p
 		cyclicalError = true;
 		cyclicalNode = prevNode;
 		cyclicalPin = prevPin;
-		return true; 
+		return true;
 	}
 	stack.push_back(currentNode);
 	bool cyclical = false;
@@ -333,6 +405,19 @@ bool GraphEditorView::CyclicalRec(int currentNode, std::vector<int> stack, int p
 	return cyclical;
 }
 
+template <typename I>
+I random_element(I begin, I end)
+{
+	const unsigned long n = std::distance(begin, end);
+	const unsigned long divisor = (RAND_MAX + 1) / n;
+
+	unsigned long k;
+	do { k = std::rand() / divisor; } while (k >= n);
+
+	std::advance(begin, k);
+	return begin;
+}
+
 bool GraphEditorView::IsCyclical() {
 	bool cyclical = false;
 	for (int n = 0; n < nodes.size(); n++) {
@@ -346,10 +431,42 @@ bool GraphEditorView::IsCyclical() {
 		/*sf::Vector2f windowPos = sf::Vector2f(rt.mapCoordsToPixel(nodes[cyclicalNode]->nodePos)) - sf::Vector2f(prevPos) - sf::Vector2f(prevSize.x/2, prevSize.y/2);
 		vcenter = sf::Vector2f(windowPos.x / prevSize.x, windowPos.y / prevSize.y);
 		zoom = 0.6f;*/
-		// ATTEMP TO ZOOM CAMERA ON ERROR - NEEDS WORK
+		// ATTEMPT TO ZOOM CAMERA ON ERROR - NEEDS WORK
 	}
 	LOG_TRACE("Graph Cyclical: {0}", cyclical ? "TRUE" : "FALSE");
+
 	return cyclical;
+}
+
+void GraphEditorView::TopologicalSortRec(int currentNode, std::vector<int>& ordering) {
+	auto* cNode = nodes[currentNode];
+	for (auto& pin : cNode->pins) {
+		for (auto outNodeI : pin.outNodeIds) {
+			if (std::find(ordering.begin(), ordering.end(), outNodeI) == ordering.end()) {
+				TopologicalSortRec(outNodeI, ordering);
+			}
+		}
+	}
+
+	// no more nodes, add self to list
+	ordering.push_back(currentNode);
+}
+
+std::vector<int> GraphEditorView::TopologicalSort() {
+	if (nodes.size() == 0) { return std::vector<int>(); }
+	std::vector<int> orderingList;
+	while (orderingList.size() != nodes.size()) {
+		std::vector<int> options;
+		for (int n = 0; n < nodes.size(); n++) {
+			if (std::find(orderingList.begin(), orderingList.end(), n) == orderingList.end()) {
+				options.push_back(n);
+			}
+		}
+
+		TopologicalSortRec(*random_element(options.begin(), options.end()), orderingList);
+	}
+	std::reverse(orderingList.begin(), orderingList.end());
+	return orderingList;
 }
 
 // SFML EVENTS FOR THIS VIEW

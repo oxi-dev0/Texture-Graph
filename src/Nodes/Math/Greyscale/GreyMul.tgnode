@@ -1,0 +1,24 @@
+metadata
+    name "Multiply"
+    color 0xFA7A39FF
+    category "Core/Math/Greyscale"
+
+    varname Out "Out"
+    varname A "A"
+    varname B "B"
+
+    display Out
+metadata
+
+output greytex Out
+input greytex A
+input greytex B
+
+exec
+{
+    for x=1, sizeX do
+        for y=1, sizeY do
+            Out[x][y] = ((A[x][y]/255) * (B[x][y]/255))*255
+        end
+    end
+}

@@ -101,6 +101,7 @@ namespace Serialization
 					// Push old node
 					if (currentNode != nullptr) {
 						if (currentNode->displayName != "") {
+							currentNode->SetTextureSize(graph.texSize);
 							graph.nodes.push_back(currentNode);
 						}
 					}
@@ -142,6 +143,8 @@ namespace Serialization
 					currentNode->luaVarData[var].FromString(val);
 				}
 			}
+
+			currentNode->SetTextureSize(graph.texSize);
 
 			// Push final node
 			graph.nodes.push_back(currentNode);

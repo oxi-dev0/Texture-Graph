@@ -569,13 +569,18 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 
 	target.draw(pinVerts);
 
-	sf::Text timingText = CenteredText(std::format("{:.2f}", prevEvalTime * 1000.0f) + "ms", sf::Vector2f(nodePos.x + nodeWidth / 2, nodePos.y + NODE_TITLE_HEIGHT + nodeHeight), (unsigned int)(baseTextSize * textDPIScale), RenderingGlobals::font);
+	sf::Text timingText = CenteredText(std::format("{:.2f}", prevEvalTime * 1000.0f) + "ms", sf::Vector2f(nodePos.x + nodeWidth / 2, nodePos.y + NODE_TITLE_HEIGHT + nodeHeight), (unsigned int)(baseTextSize * textDPIScale), RenderingGlobals::font); 
 	timingText = ScaleCentered(timingText, 1 / textDPIScale); 
 	sf::Color badC = sf::Color(237, 159, 114, 255);
 	sf::Color okC = sf::Color(237, 210, 114, 255);
 	sf::Color goodC = sf::Color(178, 237, 114, 255);
 	timingText.setFillColor(threeColorLerp(badC, okC, goodC, remapRange(prevEvalTime*1000.0f, 30.f, 120.f, 1.f, 0.f)));
 	target.draw(timingText);
+
+	if (debugEvalIndex == -1) { return; }
+	sf::Text orderText = CenteredText(std::to_string(debugEvalIndex), sf::Vector2f(nodePos.x - 10, nodePos.y - 10), (unsigned int)(18.12f * textDPIScale), RenderingGlobals::font);
+	orderText = ScaleCentered(orderText, 1 / textDPIScale);
+	target.draw(orderText);
 }
 
 void GraphNode::Execute()
@@ -741,16 +746,16 @@ void GraphNode::Execute()
 					while (lua_next(L, -2)) {
 						// stack = -1: value/color table, -2: key, -3: table, -4: key, -5: table
 						lua_getfield(L, -1, "r");
-						int r = (int)lua_tointeger(L, -1); 	// stack = -1: val, -2: color table, -3: key, -4: table, -5: key, -6: table
+						int r = std::clamp((int)lua_tointeger(L, -1), 0, 255); 	// stack = -1: val, -2: color table, -3: key, -4: table, -5: key, -6: table
 						lua_pop(L, 1);
 						lua_getfield(L, -1, "g");
-						int g = (int)lua_tointeger(L, -1); 	// stack = -1: val, -2: color table, -3: key, -4: table, -5: key, -6: table
+						int g = std::clamp((int)lua_tointeger(L, -1), 0, 255); 	// stack = -1: val, -2: color table, -3: key, -4: table, -5: key, -6: table
 						lua_pop(L, 1);
 						lua_getfield(L, -1, "b");
-						int b = (int)lua_tointeger(L, -1); 	// stack = -1: val, -2: color table, -3: key, -4: table, -5: key, -6: table
+						int b = std::clamp((int)lua_tointeger(L, -1), 0, 255); 	// stack = -1: val, -2: color table, -3: key, -4: table, -5: key, -6: table
 						lua_pop(L, 1);
 						lua_getfield(L, -1, "a");
-						int a = (int)lua_tointeger(L, -1); 	// stack = -1: val, -2: color table, -3: key, -4: table, -5: key, -6: table
+						int a = std::clamp((int)lua_tointeger(L, -1), 0, 255); 	// stack = -1: val, -2: color table, -3: key, -4: table, -5: key, -6: table
 						lua_pop(L, 1);
 						// stack = -1: value/color table, -2: key, -3: table, -4: key, -5: table
 						yList.push_back(sf::Color(r, g, b, a));
@@ -785,7 +790,7 @@ void GraphNode::Execute()
 					lua_pushnil(L); // stack = -1: nil, -2: value/table, -3: key, -4: table
 					while (lua_next(L, -2)) {
 						// stack = -1: int, -2: key, -3: table, -4: key, -5: table
-						int g = (int)lua_tointeger(L, -1);
+						int g = std::clamp((int)lua_tointeger(L, -1), 0, 255);
 						lua_pop(L, 1);
 						yList.push_back(g);
 					}

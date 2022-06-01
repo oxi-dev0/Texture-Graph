@@ -32,6 +32,7 @@ public:
 private:
 	void Grid();
 	bool CyclicalRec(int currentNode, std::vector<int> stack, int prevPin=-1, int prevNode=-1);
+	void TopologicalSortRec(int currentNode, std::vector<int>& ordering);
 protected:
 	virtual void ComponentRender();
 	virtual void IMGUIRender();
@@ -44,6 +45,7 @@ public:
 	void Clear();
 
 	bool IsCyclical();
+	std::vector<int> TopologicalSort();
 
 	void UpdateTexSize(sf::Vector2i size);
 	void DeleteNode(int index);

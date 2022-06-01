@@ -117,7 +117,7 @@ void MainWindow::InfoBar(float height) {
     sf::Vector2f mousePos = Utility::Mapping::pixelToWindowLoc(sf::Mouse::getPosition(), window);
     mouseStream << "Mouse: (" << mousePos.x << ", " << mousePos.y << ")";
     ImGui::Text(mouseStream.str().c_str());
-
+     
     ImGui::SameLine(0.0f, 25.0f);
 
     std::stringstream fpsStream;

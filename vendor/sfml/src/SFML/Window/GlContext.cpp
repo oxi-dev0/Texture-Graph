@@ -749,7 +749,7 @@ void GlContext::cleanupUnsharedResources()
 
     // Call the registered destruction callbacks
     for (auto& [callback, ptr] : contextDestroyCallbacks)
-        callback(ptr);
+        callback(ptr); 
 
     // Make the originally active context active again
     if (contextToRestore)

@@ -1,0 +1,41 @@
+metadata
+    name "Bricks"
+    color 0x9934EBFF
+    category "Core/Patterns"
+
+    varname bricksPerRow "Bricks per row"
+    varname gap "Gap"
+    varname Out "Out"
+    varname ratio "Ratio"
+
+    default bricksPerRow 5
+    default gap 5
+    default ratio 2.0
+
+    display Out
+metadata
+
+param int bricksPerRow
+param int gap
+param float ratio
+output greytex Out
+
+exec
+{
+    local brickX = (sizeX - (gap*(bricksPerRow-1)))/bricksPerRow
+    local brickY = brickX / ratio
+
+    for x=1, sizeX do
+        for y=1, sizeY do
+            local yOffset = (brickX*0.5)*(math.floor(y/(brickY+gap))%2)
+            local posX = ((x+yOffset)%(brickX+gap))
+            local posY = ((y)%(brickY+gap))
+            local valid = (posX <= brickX) and (posY <= brickY)
+            local val = 255
+            if not valid then
+                val = 0
+            end
+            Out[x][y] = val
+        end
+    end
+}

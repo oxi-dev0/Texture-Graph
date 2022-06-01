@@ -60,6 +60,8 @@ public:
 	sf::Image& displayImage;
 	float prevEvalTime;
 
+	int debugEvalIndex;
+
 	sf::Vector2f nodePos;
 	sf::Vector2i texSize;
 
@@ -83,6 +85,7 @@ public:
 		nodePos = sf::Vector2f(0, 0);
 		prevEvalTime = 0.0f;
 		texSize = sf::Vector2i(512, 512);
+		debugEvalIndex = -1;
 	}
 	GraphNode(const GraphNode& node);
 	~GraphNode() {

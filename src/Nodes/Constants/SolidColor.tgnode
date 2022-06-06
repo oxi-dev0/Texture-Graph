@@ -40,6 +40,10 @@ output colortex Out
 # lua exec. all inputs, outputs, and other data are defined before this is called
 exec
 {
+	local outCopy = Out
+	local sizeXCopy = sizeX
+	local sizeYCopy = sizeY
+
 	if Invert then
 		Color.r = 255-Color.r
 		Color.g = 255-Color.g
@@ -48,10 +52,14 @@ exec
 			Color.a = 255-Color.a
 		end
 	end
+
+	local colorCopy = Color
 	
-	for x=1, sizeX do
-		for y=1, sizeY do
-			Out[x][y] = Color
+	for x=1, sizeXCopy do
+		for y=1, sizeYCopy do
+			outCopy[x][y] = colorCopy
 		end
 	end
+
+	Out = outCopy
 }

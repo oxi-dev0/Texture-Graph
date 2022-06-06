@@ -599,6 +599,7 @@ void GraphNode::Execute()
 	Utility::Timer varTmr;
 
 	for (auto& var : luaVars) {
+		Utility::Timer specVarTmr;
 		auto& varName = var.first;
 		auto& data = luaVarData[varName];
 
@@ -617,6 +618,7 @@ void GraphNode::Execute()
 			break;
 		case Types::DataType_Color:
 		{
+			Utility::Timer colorTmr;
 			lua_createtable(L, 0, 4);
 			lua_pushnumber(L, data.colorVar.r);
 			lua_setfield(L, -2, "r");
@@ -705,6 +707,7 @@ void GraphNode::Execute()
 		if (!ranSet) {
 			lua_setglobal(L, varName.c_str());
 		}
+		LOG_TRACE("Var '{0}' took {1}ms to convert to lua", varName, specVarTmr.Elapsed() * 1000.f);
 	}
 
 	LOG_TRACE("Converted c++ vars to lua in {0}ms", varTmr.Elapsed()*1000.f);

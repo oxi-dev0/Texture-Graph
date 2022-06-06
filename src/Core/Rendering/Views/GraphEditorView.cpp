@@ -104,6 +104,7 @@ void GraphEditorView::EvaluateNodes() {
 		node->Execute();
 		
 		// Pass data to connected nodes
+		Utility::Timer convTmr;
 		int p = 0;
 		for (auto& pin : node->pins) {
 			if (pin.dir == Direction::Out) {
@@ -153,6 +154,7 @@ void GraphEditorView::EvaluateNodes() {
 			}
 			p++;
 		}
+		LOG_TRACE("Conversion and transfer for node class '{1}' took {0}ms", convTmr.Elapsed() * 1000.f, node->nodeClass);
 	}
 
 	LOG_INFO("Executed graph in {0}ms", execTmr.Elapsed()*1000.f);

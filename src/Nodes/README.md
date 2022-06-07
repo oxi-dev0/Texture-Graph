@@ -88,7 +88,7 @@ TGNL types are converted to lua types to allow them to be processed
 | `float` | `float` | |
 | `int` | `int` | |
 | `bool` | `bool` | |
-| `color` | `table` | Colors are formatted like this: `{r=255, g=0, b=0, a=255}`. These vars also get [metamethod overrides](http://lua-users.org/wiki/MetamethodsTutorial) for math operations. |
+| `color` | `table` | Colors are formatted like this: `{r=255, g=0, b=0, a=255}`. |
 | `colortex` | `2D Table of Color(table)` | An example of getting the red channel of the pixel color at (25,25) would be `Texture[25][25].r`. |
 | `greytex` | `2D Table of int(table)` | An example of getting the pixel value at (25,25) would be `Texture[25][25]`. |
 
@@ -116,7 +116,7 @@ metadata
 metadata
 
 param color Colour
-output tex Out
+output colortex Out
 
 exec
 {
@@ -133,7 +133,7 @@ exec
 This metadata sets the Node's name to be 'Simple Colour', and gives it the colour 0x8AE9C1FF, which is RGBA(138, 233, 193, 255). It then defines two display names for the variables `Colour` and `Out`. It sets `Colour`'s default value to 0xFF0000FF, which is RGBA(255, 0, 0, 255), and then specifies the variable `Out` to be the display variable for the Node. (It will show up on the Node in the graph).
 
 #### Example variables
-It then defines a variable called `Colour` with the type `color` and a variable called `Out` with the type `tex`.
+It then defines a variable called `Colour` with the type `color` and a variable called `Out` with the type `colortex`, which is an RGBA texture.
 
 #### Example execution
-This lua loops through every pixel in the texture, setting the pixel in the out pin variable `Out`, which is of type `tex`, to be the parameter variable `Colour`, which is of type `color`. This will result in a texture with a solid color, that can be changed in the inspector.
+This lua loops through every pixel in the texture, setting the pixel in the out pin variable `Out`, which is of type `colortex`, to be the parameter variable `Colour`, which is of type `color`. This will result in a texture with a solid color, that can be changed in the inspector.

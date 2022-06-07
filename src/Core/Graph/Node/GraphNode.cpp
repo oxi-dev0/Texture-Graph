@@ -60,7 +60,7 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 
 	std::vector<std::string> luaLines;
 
-	std::map<std::string, std::string> pendingDefaults;
+	std::map<std::string, std::string> pendingDefaults; // defaults are defined at the start of the file, but have to be processed after variables are specified.
 
 	std::string line;
 	while (std::getline(f, line)) {
@@ -94,7 +94,7 @@ GraphNode GraphNode::LoadFromTGNF(std::string classFile) {
 			if (keyword == "category") { TGNL_LINE_ASSERT("category", 1, data.size() - 1, classFile) TGNL_STRING_ASSERT("category", data[1], classFile) newNode.category = RemoveStringIndicators(data[1]); setCategory = true; continue; }
 			if (keyword == "varname") { TGNL_LINE_ASSERT("varname", 2, data.size() - 1, classFile) TGNL_STRING_ASSERT("varname", data[2], classFile) newNode.luaVarDisplayNames.insert({data[1], RemoveStringIndicators(data[2])}); continue; }
 			if (keyword == "display") { TGNL_LINE_ASSERT("color", 1, data.size() - 1, classFile) newNode.displayVar = data[1]; continue; }
-			if (keyword == "default") { TGNL_LINE_ASSERT("default", 2, data.size() - 1, classFile) pendingDefaults.insert({ data[1], data[2] }); continue; } // defaults have to be offset until all vars are loaded
+			if (keyword == "default") { TGNL_LINE_ASSERT("default", 2, data.size() - 1, classFile) pendingDefaults.insert({ data[1], data[2] }); continue; } // defaults have to be cached until all vars are loaded
 
 			if (keyword == "show") { /* IMPLEMENT */ }
 			continue;
@@ -577,10 +577,16 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 	timingText.setFillColor(threeColorLerp(badC, okC, goodC, remapRange(prevEvalTime*1000.0f, 30.f, 120.f, 1.f, 0.f)));
 	target.draw(timingText);
 
-	if (debugEvalIndex == -1) { return; }
-	sf::Text orderText = CenteredText(std::to_string(debugEvalIndex), sf::Vector2f(nodePos.x - 10, nodePos.y - 10), (unsigned int)(18.12f * textDPIScale), RenderingGlobals::font);
-	orderText = ScaleCentered(orderText, 1 / textDPIScale);
-	target.draw(orderText);
+	// DEBUG: DRAW DISPLAY ORDER
+	//if (debugEvalIndex == -1) { return; }
+	//sf::Text orderText = CenteredText(std::to_string(debugEvalIndex), sf::Vector2f(nodePos.x - 10, nodePos.y - 10), (unsigned int)(18.12f * textDPIScale), RenderingGlobals::font);
+	//orderText = ScaleCentered(orderText, 1 / textDPIScale);
+	//target.draw(orderText);
+}
+
+void GraphNode::SetDirty()
+{
+	evaluated = false;
 }
 
 void GraphNode::Execute()
@@ -833,6 +839,7 @@ void GraphNode::Execute()
 
 	prevEvalTime = (float)fullTimr.Elapsed();
 	lua_close(L);
+	evaluated = true;
 }
 
 void GraphNode::SetTextureSize(sf::Vector2i size)

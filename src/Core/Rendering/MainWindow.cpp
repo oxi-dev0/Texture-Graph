@@ -88,7 +88,8 @@ void MainWindow::MenuBar() {
             ImGui::Separator();
 
             if (ImGui::MenuItem("Evaluate Nodes")) {
-                selectedGraph->EvaluateNodes();
+                auto evalThread = std::thread(&GraphEditorView::EvaluateNodes, selectedGraph);
+                evalThread.detach();
             }
             
             ImGui::EndMenu();

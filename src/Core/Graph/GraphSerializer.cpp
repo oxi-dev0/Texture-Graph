@@ -150,6 +150,9 @@ namespace Serialization
 			graph.nodes.push_back(currentNode);
 
 			LOG_INFO("Successfully loaded graph from '{0}' in {1}s", file, tmr.Elapsed());
+			if (graph.CheckCyclical()) {
+				LOG_ERROR("Loaded graph contains cyclical dependancy, the file may have corrupted.");
+			}
 			return SerializationStatus::Successful;
 		}
 	}

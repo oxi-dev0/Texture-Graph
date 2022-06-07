@@ -43,5 +43,5 @@ namespace Utility {
 	#define LOG_WARN
 	#define LOG_INFO
 	#define LOG_TRACE
-	#define LOG_CRITICAL	std::cin.get(); std::exit(134);
+	#define LOG_CRITICAL	std::exit(134);
 #endif

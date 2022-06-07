@@ -72,8 +72,145 @@ void GraphEditorView::Grid() {
 	rt.draw(lines);
 }
 
+void GraphEditorView::EvalNodeThread(int nodeIndex) {
+	std::vector<std::thread> threadList;
+	Utility::Timer traceTmr;
+
+	auto& node = nodes[nodeIndex];
+	for (auto& pin : node->pins) {
+		if (pin.dir == Direction::In) {
+			if (pin.inNodeId == -1) { continue; }
+
+			auto& inNode = nodes[pin.inNodeId];
+			if (inNode->evaluated) { continue; }
+
+			// Run this function the in node
+			threadList.push_back(std::thread(&GraphEditorView::EvalNodeThread, this, pin.inNodeId));
+
+			// Convert and transfer the in node's output
+			Utility::Timer convTmr;
+			int p = 0;
+			for (auto& pin : inNode->pins) {
+				if (pin.dir == Direction::Out) {
+					int i = 0;
+					for (auto& outinNodeId : pin.outNodeIds) {
+						auto& targetinNode = nodes[outinNodeId];
+						if (targetinNode->luaVarData[targetinNode->pinLuaVars[pin.outPinIndexes[i]]].dataType != inNode->luaVarData[inNode->pinLuaVars[p]].dataType) {
+							if (inNode->luaVarData[inNode->pinLuaVars[p]].dataType == Types::DataType_GreyTex) {
+								Types::colortex converted(texSize.x, std::vector<sf::Color>(texSize.y, sf::Color::White));
+								int x = 0;
+								for (auto& xRow : inNode->luaVarData[inNode->pinLuaVars[p]].greytexVar) {
+									int yI = 0;
+									for (auto& y : xRow) {
+										converted[x][yI] = sf::Color(y, y, y, 255);
+										yI++;
+									}
+									x++;
+								}
+
+								targetinNode->luaVarData[targetinNode->pinLuaVars[pin.outPinIndexes[i]]].colortexVar = converted;
+							}
+							else {
+								Types::greytex converted(texSize.x, std::vector<int>(texSize.y, 0));
+								int x = 0;
+								for (auto& xRow : inNode->luaVarData[inNode->pinLuaVars[p]].colortexVar) {
+									int yI = 0;
+									for (auto& y : xRow) {
+										converted[x][yI] = std::floor(y.r * 0.3f + y.g * 0.59f + y.b * 0.11f);
+										yI++;
+									}
+									x++;
+								}
+
+								targetinNode->luaVarData[targetinNode->pinLuaVars[pin.outPinIndexes[i]]].greytexVar = converted;
+							}
+						}
+						else {
+							if (inNode->luaVarData[inNode->pinLuaVars[p]].dataType == Types::DataType_ColorTex) {
+								targetinNode->luaVarData[targetinNode->pinLuaVars[pin.outPinIndexes[i]]].colortexVar = inNode->luaVarData[inNode->pinLuaVars[p]].colortexVar;
+							}
+							else {
+								targetinNode->luaVarData[targetinNode->pinLuaVars[pin.outPinIndexes[i]]].greytexVar = inNode->luaVarData[inNode->pinLuaVars[p]].greytexVar;
+							}
+						}
+						i++;
+					}
+				}
+				p++;
+			}
+			LOG_TRACE("Conversion and transfer for inNode class '{1}' took {0}ms", convTmr.Elapsed() * 1000.f, inNode->nodeClass);
+		}
+	}
+
+	for (auto& thread : threadList) {
+		thread.join();
+	}
+
+	threadList.clear();
+	// Execute the main node this function is evaluating
+	auto mainEvalThread = std::thread(&GraphNode::Execute, node);
+	mainEvalThread.join();
+
+	// Convert and transfer the main node's output
+	int p = 0;
+	for (auto& pin : node->pins) {
+		if (pin.dir == Direction::Out) {
+			int i = 0;
+			for (auto& outNodeId : pin.outNodeIds) {
+				auto& targetNode = nodes[outNodeId];
+				if (targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].dataType != node->luaVarData[node->pinLuaVars[p]].dataType) {
+					if (node->luaVarData[node->pinLuaVars[p]].dataType == Types::DataType_GreyTex) {
+						Types::colortex converted(texSize.x, std::vector<sf::Color>(texSize.y, sf::Color::White));
+						int x = 0;
+						for (auto& xRow : node->luaVarData[node->pinLuaVars[p]].greytexVar) {
+							int yI = 0;
+							for (auto& y : xRow) {
+								converted[x][yI] = sf::Color(y, y, y, 255);
+								yI++;
+							}
+							x++;
+						}
+
+						targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].colortexVar = converted;
+					}
+					else {
+						Types::greytex converted(texSize.x, std::vector<int>(texSize.y, 0));
+						int x = 0;
+						for (auto& xRow : node->luaVarData[node->pinLuaVars[p]].colortexVar) {
+							int yI = 0;
+							for (auto& y : xRow) {
+								converted[x][yI] = std::floor(y.r * 0.3f + y.g * 0.59f + y.b * 0.11f);
+								yI++;
+							}
+							x++;
+						}
+
+						targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].greytexVar = converted;
+					}
+				}
+				else {
+					if (node->luaVarData[node->pinLuaVars[p]].dataType == Types::DataType_ColorTex) {
+						targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].colortexVar = node->luaVarData[node->pinLuaVars[p]].colortexVar;
+					}
+					else {
+						targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].greytexVar = node->luaVarData[node->pinLuaVars[p]].greytexVar;
+					}
+				}
+				i++;
+			}
+		}
+		p++;
+	}
+	LOG_TRACE("Reverse split-threaded evaluation for node class '{1}' took{0}ms", traceTmr.Elapsed() * 1000.f, node->nodeClass);
+}
+
 void GraphEditorView::EvaluateNodes() {
 	Utility::Timer execOrderTmr;
+
+	if (CheckCyclical()) {
+		LOG_ERROR("The graph cannot be evaluated when it contains cyclical dependencies.");
+		return;
+	}
 
 	//evalThreads.clear();
 	//for (auto* node : nodes) {
@@ -92,6 +229,8 @@ void GraphEditorView::EvaluateNodes() {
 		auto* node = nodes[nodeI];
 		node->debugEvalIndex = n;
 		LOG_TRACE("{0} at pos ({1}, {2})", node->nodeClass, node->nodePos.x, node->nodePos.y);
+
+		node->SetDirty();
 		n++;
 	}
 
@@ -99,63 +238,68 @@ void GraphEditorView::EvaluateNodes() {
 
 	Utility::Timer execTmr;
 
-	for (int nodeIndex : evalOrder) {
-		auto& node = nodes[nodeIndex];
-		node->Execute();
-		
-		// Pass data to connected nodes
-		Utility::Timer convTmr;
-		int p = 0;
-		for (auto& pin : node->pins) {
-			if (pin.dir == Direction::Out) {
-				int i = 0;
-				for (auto& outNodeId : pin.outNodeIds) {
-					auto& targetNode = nodes[outNodeId];
-					if (targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].dataType != node->luaVarData[node->pinLuaVars[p]].dataType) {
-						if (node->luaVarData[node->pinLuaVars[p]].dataType == Types::DataType_GreyTex) {
-							Types::colortex converted(texSize.x, std::vector<sf::Color>(texSize.y, sf::Color::White));
-							int x = 0;
-							for (auto& xRow : node->luaVarData[node->pinLuaVars[p]].greytexVar) {
-								int yI = 0;
-								for (auto& y : xRow) {
-									converted[x][yI] = sf::Color(y, y, y, 255);
-									yI++;
-								}
-								x++;
-							}
+	// NEW METHOD: USE IN PINS TO SEPERATE EVAL INTO THREADS WORKING BACKWARDS FROM END NODE (POTENTIAL MEMORY ISSUE IF SAVED GRAPH HAS MUTATED CYCLICAL DEPENDANCY (serialised incorrectly))
+	int endNode = evalOrder[evalOrder.size() - 1];
+	EvalNodeThread(endNode);
 
-							targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].colortexVar = converted;
-						}
-						else {
-							Types::greytex converted(texSize.x, std::vector<int>(texSize.y, 0));
-							int x = 0;
-							for (auto& xRow : node->luaVarData[node->pinLuaVars[p]].colortexVar) {
-								int yI = 0;
-								for (auto& y : xRow) {
-									converted[x][yI] = std::floor(y.r * 0.3f + y.g * 0.59f + y.b * 0.11f);
-									yI++;
-								}
-								x++;
-							}
+	// OLD METHOD: EVALUATE ALL NODES CONSECUTIVELY USING TOPOLOGICAL SORT
+	//for (int nodeIndex : evalOrder) {
+	//	auto& node = nodes[nodeIndex];
+	//	node->Execute();
+	//	
+	//	// Pass data to connected nodes
+	//	Utility::Timer convTmr;
+	//	int p = 0;
+	//	for (auto& pin : node->pins) {
+	//		if (pin.dir == Direction::Out) {
+	//			int i = 0;
+	//			for (auto& outNodeId : pin.outNodeIds) {
+	//				auto& targetNode = nodes[outNodeId];
+	//				if (targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].dataType != node->luaVarData[node->pinLuaVars[p]].dataType) {
+	//					if (node->luaVarData[node->pinLuaVars[p]].dataType == Types::DataType_GreyTex) {
+	//						Types::colortex converted(texSize.x, std::vector<sf::Color>(texSize.y, sf::Color::White));
+	//						int x = 0;
+	//						for (auto& xRow : node->luaVarData[node->pinLuaVars[p]].greytexVar) {
+	//							int yI = 0;
+	//							for (auto& y : xRow) {
+	//								converted[x][yI] = sf::Color(y, y, y, 255);
+	//								yI++;
+	//							}
+	//							x++;
+	//						}
 
-							targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].greytexVar = converted;
-						}
-					}
-					else {
-						if (node->luaVarData[node->pinLuaVars[p]].dataType == Types::DataType_ColorTex) {
-							targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].colortexVar = node->luaVarData[node->pinLuaVars[p]].colortexVar;
-						}
-						else {
-							targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].greytexVar = node->luaVarData[node->pinLuaVars[p]].greytexVar;
-						}
-					}
-					i++;
-				}
-			}
-			p++;
-		}
-		LOG_TRACE("Conversion and transfer for node class '{1}' took {0}ms", convTmr.Elapsed() * 1000.f, node->nodeClass);
-	}
+	//						targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].colortexVar = converted;
+	//					}
+	//					else {
+	//						Types::greytex converted(texSize.x, std::vector<int>(texSize.y, 0));
+	//						int x = 0;
+	//						for (auto& xRow : node->luaVarData[node->pinLuaVars[p]].colortexVar) {
+	//							int yI = 0;
+	//							for (auto& y : xRow) {
+	//								converted[x][yI] = std::floor(y.r * 0.3f + y.g * 0.59f + y.b * 0.11f);
+	//								yI++;
+	//							}
+	//							x++;
+	//						}
+
+	//						targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].greytexVar = converted;
+	//					}
+	//				}
+	//				else {
+	//					if (node->luaVarData[node->pinLuaVars[p]].dataType == Types::DataType_ColorTex) {
+	//						targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].colortexVar = node->luaVarData[node->pinLuaVars[p]].colortexVar;
+	//					}
+	//					else {
+	//						targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].greytexVar = node->luaVarData[node->pinLuaVars[p]].greytexVar;
+	//					}
+	//				}
+	//				i++;
+	//			}
+	//		}
+	//		p++;
+	//	}
+	//	LOG_TRACE("Conversion and transfer for node class '{1}' took {0}ms", convTmr.Elapsed() * 1000.f, node->nodeClass);
+	//}
 
 	LOG_INFO("Executed graph in {0}ms", execTmr.Elapsed()*1000.f);
 }
@@ -420,7 +564,7 @@ I random_element(I begin, I end)
 	return begin;
 }
 
-bool GraphEditorView::IsCyclical() {
+bool GraphEditorView::CheckCyclical() {
 	bool cyclical = false;
 	for (int n = 0; n < nodes.size(); n++) {
 		cyclical = cyclical || CyclicalRec(n, std::vector<int>());
@@ -501,7 +645,7 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 				return true; // gain handling priority
 			}
 
-			// Detect closest pin for line drag ( no node selected for now )
+			// Detect closest pin for line drag
 			int closestNode = -1;
 			int closestPin = -1;
 			float closestDist = 100000;
@@ -603,7 +747,8 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 					}
 				}
 
-				IsCyclical();
+				CheckCyclical();
+				return true; // lose handling priority
 			}
 		}
 	} break;
@@ -654,7 +799,7 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 			if (selectedNode == -1) { break; }
 			DeleteNode(selectedNode);
 			selectedNode = -1;
-			IsCyclical();
+			CheckCyclical();
 		} break;
 		case sf::Keyboard::Backspace:
 		{
@@ -662,7 +807,7 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 			if (selectedNode == -1) { break; }
 			DeleteNode(selectedNode);
 			selectedNode = -1;
-			IsCyclical();
+			CheckCyclical();
 		} break;
 		default:
 			break;

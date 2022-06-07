@@ -65,6 +65,8 @@ public:
 	sf::Vector2f nodePos;
 	sf::Vector2i texSize;
 
+	bool evaluated;
+
 public:
 	GraphNode() : displayTexture(*(new sf::Texture)), displayImage(*(new sf::Image)) {
 		nodeClass = "";
@@ -86,6 +88,7 @@ public:
 		prevEvalTime = 0.0f;
 		texSize = sf::Vector2i(512, 512);
 		debugEvalIndex = -1;
+		evaluated = false;
 	}
 	GraphNode(const GraphNode& node);
 	~GraphNode() {
@@ -97,6 +100,8 @@ public:
 
 	void SFMLRender(sf::RenderTarget& target, float zoomLevel = 0.5f, bool selected=false, int transparency=255);
 	void Execute();
+
+	void SetDirty();
 
 	void SetTextureSize(sf::Vector2i size);
 

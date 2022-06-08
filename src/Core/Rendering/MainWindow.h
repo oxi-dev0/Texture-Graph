@@ -21,6 +21,8 @@
 #include <sstream>
 #include <thread>
 
+#include <clip.h>
+
 class MainWindow
 {
 private:

@@ -10,15 +10,22 @@ private:
 	sf::Vector2f oldPos;
 	bool moving = false;
 	bool draggingNode = false;
+	bool draggingNodeMultiple = false;
 	bool inFocus = false;
 	bool draggingLine = false;
 	sf::Vector2f dragNodeOffset;
 	sf::VertexArray lines;
 	sf::FloatRect initialRect;
+	
+	sf::Vector2f selectBoxStart;
+	sf::Vector2f selectBoxEnd;
+
 public:
 	std::vector<GraphNode*> nodes;
 	std::vector<std::thread> evalThreads;
 	int selectedNode;
+	int dragNodeRef;
+	std::vector<int> multiSelectNodes;
 
 	int currentLineFromNode;
 	int currentLineFromPin;
@@ -37,8 +44,12 @@ private:
 protected:
 	virtual void ComponentRender();
 	virtual void IMGUIRender();
+
+	virtual void ToolBarButtons();
+
 	virtual void RenderLine(sf::Vector2f start, sf::Vector2f end, sf::Color startCol, sf::Color endCol, float width);
 
+public:
 	virtual sf::Vector2f snapPos(sf::Vector2f pos);
 	virtual sf::Vector2f pixelToGraph(sf::Vector2i pixel);
 public:

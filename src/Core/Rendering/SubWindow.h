@@ -34,6 +34,8 @@ protected:
 protected:
 	virtual void InfoBarData();
 	virtual void InfoBar(float height);
+	virtual void ToolBarButtons();
+	virtual void ToolBar(float height);
 	virtual void ComponentRender();
 
 public:

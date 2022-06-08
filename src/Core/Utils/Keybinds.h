@@ -16,6 +16,8 @@ public:
 		KeybindEvent_FullscreenToggle,
 		KeybindEvent_Exit,
 		KeybindEvent_RecompileNodes,
+		KeybindEvent_Copy,
+		KeybindEvent_Paste,
 		KeybindEvent_COUNT
 	};
 
@@ -58,7 +60,9 @@ public:
 	static inline std::unordered_map<KeyEvent, KeybindEvent, hash_fn> KeybindMap = {
 		{KeyEvent(false,false,false,false,sf::Keyboard::Key::F11), KeybindEvent_FullscreenToggle},
 		{KeyEvent(false,false,true,false,sf::Keyboard::Key::Q), KeybindEvent_Exit},
-		{KeyEvent(false,false,true,false,sf::Keyboard::Key::R), KeybindEvent_RecompileNodes}
+		{KeyEvent(false,false,true,false,sf::Keyboard::Key::R), KeybindEvent_RecompileNodes},
+		{KeyEvent(false,false,true,false,sf::Keyboard::Key::C), KeybindEvent_Copy},
+		{KeyEvent(false,false,true,false,sf::Keyboard::Key::V), KeybindEvent_Paste},
 	};
 
 	static KeybindEvent ProcessEvent(sf::Event& event);

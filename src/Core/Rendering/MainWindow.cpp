@@ -242,6 +242,41 @@ int MainWindow::Update() {
             case Keybinds::KeybindEvent_RecompileNodes:
                 LibraryManager::LoadNodeLibrary();
                 break;
+            case Keybinds::KeybindEvent_Copy:
+            {
+                if (selectedGraph->multiSelectNodes.size() == 0) { break; }
+
+                std::string data;
+                Serialization::Graph::SaveNodesToData(*selectedGraph, selectedGraph->multiSelectNodes, data);
+                data = "TEXTUREGRAPH!" + data;
+                clip::set_text(data);
+                LOG_INFO("Copied nodes to clipboard");
+            }   break;
+            case Keybinds::KeybindEvent_Paste:
+            {
+                std::string pasteData;
+                clip::get_text(pasteData);
+                auto data = Utility::String::split(pasteData, '!');
+                if (data[0] != "TEXTUREGRAPH") { break; }
+
+                int oldLastIndex = selectedGraph->nodes.size();
+                sf::Vector2f offset;
+                if (selectedGraph->nodes.size() > 0) {
+                    for (auto& node : selectedGraph->nodes) {
+                        offset.x = std::max(offset.x, node->calcBounds().left + node->calcBounds().width);
+                    }
+                    offset.x + 100;
+                }
+                Serialization::Graph::AppendNodesFromData(*selectedGraph, data[1]);
+                selectedGraph->multiSelectNodes.clear();
+
+                for (int x = oldLastIndex; x < selectedGraph->nodes.size(); x++) {
+                    selectedGraph->nodes[x]->nodePos = selectedGraph->snapPos(selectedGraph->nodes[x]->nodePos + offset);
+                    selectedGraph->multiSelectNodes.push_back(x);
+                }
+
+                LOG_INFO("Appended nodes from clipboard");
+            }   break;
             default:
                 break;
             }

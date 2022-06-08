@@ -10,6 +10,7 @@ namespace Utility {
         Timer();
         void Reset();
         double Elapsed();
+        double Current();
 
     private:
         typedef std::chrono::high_resolution_clock clock_;

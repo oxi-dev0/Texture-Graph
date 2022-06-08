@@ -19,6 +19,37 @@ void SubWindow::ComponentRender() {
 
 }
 
+void SubWindow::ToolBarButtons() {
+
+}
+
+void SubWindow::ToolBar(float height) {
+	ImGui::SetNextWindowPos(ImVec2(prevPos.x, prevPos.y));
+	ImGuiWindowFlags window_flags = 0
+		| ImGuiWindowFlags_NoDocking
+		| ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse
+		| ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
+		| ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus
+		| ImGuiWindowFlags_AlwaysUseWindowPadding;
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 5.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+
+	ImVec4 bgColor = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
+	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(bgColor.x * 1.0f, bgColor.y * 1.0f, bgColor.z * 1.0f, 1.0f));
+
+	std::stringstream idStream;
+	idStream << name << "TOOLBAR";
+	ImGui::BeginChild(idStream.str().c_str(), ImVec2(prevSize.x, height), false, window_flags);
+
+	ImGui::PopStyleColor();
+
+	ToolBarButtons();
+
+	ImGui::EndChild();
+	ImGui::PopStyleVar(2);
+}
+
 void SubWindow::InfoBarData() {
 
 }

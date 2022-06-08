@@ -28,6 +28,7 @@
 #include "Core/Rendering/Views/GraphEditorView.h"
 #include "Core/Rendering/Views/LibraryView.h"
 #include "Core/Rendering/Views/InspectorView.h"
+#include "Core/Rendering/Views/Texture2DView.h"
 
 #include "Core/Graph/Node/GraphNode.h"
 #include "Core/Graph/GraphSerializer.h"
@@ -43,6 +44,7 @@ enum WindowType {
     Base,
     GraphEditor,
     LibraryView,
+    TextureView,
     Inspector
 };
 
@@ -50,7 +52,8 @@ typedef std::tuple<std::string, WindowType, ImGuiWindowFlags> optionalWindow;
 std::vector<optionalWindow> optionalViews = {
     optionalWindow("Graph Editor", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
     optionalWindow("Library", WindowType::LibraryView, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
-    optionalWindow("Inspector", WindowType::Inspector, 0)
+    optionalWindow("Inspector", WindowType::Inspector, 0),
+    optionalWindow("Texture View", WindowType::TextureView, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)
     //optionalWindow("Graph Editor 2", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
 };
 
@@ -133,7 +136,15 @@ int main(int argc, char** argv)
             auto* newView = new InspectorView(primaryWindow.window, name, flags);
             newView->SetGraph(primaryWindow.selectedGraph);
             windows.push_back(newView);
-        } break;
+        }   break;
+        case WindowType::TextureView:
+        {
+            sf::RenderTexture* tex = new sf::RenderTexture();
+            textures.push_back(tex);
+            auto* newView = new Texture2DView(primaryWindow.window, *tex, name, flags);
+            windows.push_back(newView);
+            newView->focusedGraph = primaryWindow.selectedGraph;
+        }   break;
         default:
             break;
         }

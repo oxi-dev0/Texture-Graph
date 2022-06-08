@@ -8,6 +8,7 @@
 #include <map>
 #include <fstream>
 #include <iostream>
+#include <chrono>
 
 #include "Pin/NodePin.h"
 
@@ -40,6 +41,8 @@ public:
 	std::string displayName;
 	sf::Color displayColor;
 	std::string category;
+
+	Utility::Timer lifeTmr;
 
 	std::vector<NodePin> pins; // Pin Definitions
 
@@ -89,6 +92,7 @@ public:
 		texSize = sf::Vector2i(512, 512);
 		debugEvalIndex = -1;
 		evaluated = false;
+		lifeTmr = Utility::Timer();
 	}
 	GraphNode(const GraphNode& node);
 	~GraphNode() {

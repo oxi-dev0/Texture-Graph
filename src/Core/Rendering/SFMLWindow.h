@@ -17,6 +17,8 @@ protected:
 
 protected:
 	virtual void InfoBarData();
+	virtual void ToolBarButtons();
+
 	virtual void ComponentRender();
 	virtual void IMGUIRender();
 

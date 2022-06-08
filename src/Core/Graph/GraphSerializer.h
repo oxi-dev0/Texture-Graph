@@ -22,11 +22,15 @@ namespace Serialization
 
 	namespace Graph
 	{	
+		SerializationStatus SaveNodesToData(GraphEditorView& graph, std::vector<int> nodesList, std::string& lines);
+
 		SerializationStatus AskSaveGraphToFile(GraphEditorView& graph);
 		SerializationStatus SaveGraphToFile(GraphEditorView& graph, std::string file);
 
 		SerializationStatus AskLoadGraphFromFile(GraphEditorView& graph);
 		SerializationStatus LoadGraphFromFile(GraphEditorView& graph, std::string file);
+
+		SerializationStatus AppendNodesFromData(GraphEditorView& graph, std::string data);
 	}
 }
 

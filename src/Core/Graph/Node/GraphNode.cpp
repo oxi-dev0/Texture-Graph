@@ -494,14 +494,29 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 	transparentSprite.setColor(sf::Color(255, 255, 255, transparency));
 	target.draw(transparentSprite);
 
-	// Draw display texture
-	sf::Sprite displaySprite;
-	displaySprite.setTexture(displayTexture);
-	sf::Vector2u tSize = displayTexture.getSize();
-	displaySprite.setScale(sf::Vector2f(tWidth / tSize.x, tHeight / tSize.y));
-	displaySprite.setPosition(sf::Vector2f(nodePos.x, displayPosY));
-	displaySprite.setColor(sf::Color(255, 255, 255, transparency));
-	target.draw(displaySprite);
+	if (!evaluated) {
+		// Draw unevaluated texture
+		float ms = lifeTmr.Elapsed();
+
+		sf::Sprite transparentSprite;
+		transparentSprite.setTexture(*ImageCache::images["unevaluated"]);
+		sf::Vector2u trSize = ImageCache::images["unevaluated"]->getSize();
+		transparentSprite.setTextureRect(sf::IntRect(sf::Vector2i(0.f, 0.f), sf::Vector2i(trSize.x, trSize.y)));
+		transparentSprite.setScale(sf::Vector2f(tWidth / trSize.x, tHeight / trSize.y));
+		transparentSprite.setPosition(sf::Vector2f(nodePos.x, displayPosY));
+		transparentSprite.setColor(sf::Color(255, 255, 255, transparency));
+		target.draw(transparentSprite);
+	}
+	else {
+		// Draw display texture
+		sf::Sprite displaySprite;
+		displaySprite.setTexture(displayTexture);
+		sf::Vector2u tSize = displayTexture.getSize();
+		displaySprite.setScale(sf::Vector2f(tWidth / tSize.x, tHeight / tSize.y));
+		displaySprite.setPosition(sf::Vector2f(nodePos.x, displayPosY));
+		displaySprite.setColor(sf::Color(255, 255, 255, transparency));
+		target.draw(displaySprite);
+	}
 
 	// Calculate pin spacing
 	float lPinSpace = 0;
@@ -577,7 +592,7 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 	timingText.setFillColor(threeColorLerp(badC, okC, goodC, remapRange(prevEvalTime*1000.0f, 30.f, 120.f, 1.f, 0.f)));
 	target.draw(timingText);
 
-	// DEBUG: DRAW DISPLAY ORDER
+	// DEBUG: DRAW TOPOLOGICAL SORT ORDER
 	//if (debugEvalIndex == -1) { return; }
 	//sf::Text orderText = CenteredText(std::to_string(debugEvalIndex), sf::Vector2f(nodePos.x - 10, nodePos.y - 10), (unsigned int)(18.12f * textDPIScale), RenderingGlobals::font);
 	//orderText = ScaleCentered(orderText, 1 / textDPIScale);

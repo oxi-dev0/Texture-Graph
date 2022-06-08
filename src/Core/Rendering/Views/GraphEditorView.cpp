@@ -212,17 +212,7 @@ void GraphEditorView::EvaluateNodes() {
 		return;
 	}
 
-	//evalThreads.clear();
-	//for (auto* node : nodes) {
-	//	evalThreads.push_back(std::thread(&GraphNode::Execute, node));
-	//	//node->Execute();
-	//}
-
-	//for (auto& thread : evalThreads) {
-	//	thread.join();
-	//}
-
-	std::vector<int> evalOrder = TopologicalSort();
+	/*std::vector<int> evalOrder = TopologicalSort();
 	LOG_TRACE("--- Eval Order ---");
 	int n = 0;
 	for (int nodeI : evalOrder) {
@@ -234,13 +224,34 @@ void GraphEditorView::EvaluateNodes() {
 		n++;
 	}
 
-	LOG_INFO("Calculated execution order in {0}ms", execOrderTmr.Elapsed()*1000.f);
+	LOG_INFO("Calculated execution order in {0}ms", execOrderTmr.Elapsed()*1000.f);*/
 
 	Utility::Timer execTmr;
 
 	// NEW METHOD: USE IN PINS TO SEPERATE EVAL INTO THREADS WORKING BACKWARDS FROM END NODE (POTENTIAL MEMORY ISSUE IF SAVED GRAPH HAS MUTATED CYCLICAL DEPENDANCY (serialised incorrectly))
-	int endNode = evalOrder[evalOrder.size() - 1];
-	EvalNodeThread(endNode);
+	std::vector<int> endNodes;
+	int n = 0;
+	for (auto* node : nodes) {
+		// Set all nodes to be unevaluated. In future, trace forwards from changed nodes to find nodes that need to be reevaluated so that the whole graph isnt processed when unneeded
+		node->SetDirty();
+
+		bool end = true;
+		for (auto& pin : node->pins) {
+			if (pin.outNodeIds.size() > 0) { end = false; }
+		}
+		if (end) {
+			endNodes.push_back(n);
+		}
+		n++;
+	}
+	
+	std::vector<std::thread> evalThreads;
+	for (int endNode : endNodes) {
+		evalThreads.push_back(std::thread(&GraphEditorView::EvalNodeThread, this, endNode));
+	}
+	for (auto& thread : evalThreads) {
+		thread.join();
+	}
 
 	// OLD METHOD: EVALUATE ALL NODES CONSECUTIVELY USING TOPOLOGICAL SORT
 	//for (int nodeIndex : evalOrder) {
@@ -370,6 +381,13 @@ void GraphEditorView::RenderLine(sf::Vector2f start, sf::Vector2f end, sf::Color
 	}
 }
 
+void GraphEditorView::ToolBarButtons() {
+	if (ImGui::Button("Evaluate", ImVec2(100,40))) {
+		auto evalThread = std::thread(&GraphEditorView::EvaluateNodes, this);
+		evalThread.detach();
+	};
+}
+
 // RENDER STEP FOR THIS VIEW
 void GraphEditorView::ComponentRender() {
 	sf::Vector2f mousePos = pixelToGraph(sf::Vector2i((int)ImGui::GetMousePos().x, (int)ImGui::GetMousePos().y));
@@ -418,8 +436,22 @@ void GraphEditorView::ComponentRender() {
 			n++;
 			continue;
 		}
-		node->SFMLRender(rt, zoom, selectedNode==n, cyclicalError ? 127 : 255);
+		node->SFMLRender(rt, zoom, selectedNode==n || std::find(multiSelectNodes.begin(), multiSelectNodes.end(), n) != multiSelectNodes.end(), cyclicalError ? 127 : 255);
 		n++;
+	}
+
+	if (selectBoxStart != sf::Vector2f(0, 0)) {
+		sf::Vector2f pos = sf::Vector2f(std::min(selectBoxStart.x, selectBoxEnd.x), std::min(selectBoxStart.y, selectBoxEnd.y));
+		sf::Vector2f posMax = sf::Vector2f(std::max(selectBoxStart.x, selectBoxEnd.x), std::max(selectBoxStart.y, selectBoxEnd.y));
+		sf::Vector2f size = posMax - pos;
+		sf::FloatRect selectRect = sf::FloatRect(pos, size);
+
+		sf::RectangleShape selectBox(size);
+		selectBox.setPosition(pos);
+		selectBox.setFillColor(sf::Color(122, 193, 255, 90));
+		selectBox.setOutlineColor(sf::Color(122, 193, 255, 200));
+		selectBox.setOutlineThickness(2.f);
+		rt.draw(selectBox);
 	}
 }
 
@@ -639,9 +671,17 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 				n1++;
 			}
 
-			if (selectedNode != -1) {
+			if (selectedNode != -1 && multiSelectNodes.size() == 0) {
 				draggingNode = true;
 				dragNodeOffset = nodes[selectedNode]->nodePos - mousePos;
+				return true; // gain handling priority
+			}
+
+			if (multiSelectNodes.size() > 0 && selectedNode != -1) {
+				draggingNodeMultiple = true;
+				dragNodeOffset = nodes[selectedNode]->nodePos - mousePos;
+				dragNodeRef = selectedNode;
+				selectedNode = -1;
 				return true; // gain handling priority
 			}
 
@@ -672,6 +712,10 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 				draggingLine = true;
 				return true; // gain handling priority
 			}
+
+			selectBoxStart = mousePos;
+			selectBoxEnd = mousePos;
+			return true; // gain handling priority
 		}
 	} break;
 	case  sf::Event::MouseButtonReleased:
@@ -683,6 +727,10 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 		else if (event.mouseButton.button == sf::Mouse::Button::Left) {
 			if (draggingNode) {
 				draggingNode = false;
+				return true; // lose handling priority
+			}
+			if (draggingNodeMultiple) {
+				draggingNodeMultiple = false;
 				return true; // lose handling priority
 			}
 			if (draggingLine) {
@@ -750,6 +798,28 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 				CheckCyclical();
 				return true; // lose handling priority
 			}
+
+			if (selectBoxStart != sf::Vector2f(0, 0))
+			{
+				multiSelectNodes.clear();
+
+				sf::Vector2f pos = sf::Vector2f(std::min(selectBoxStart.x, selectBoxEnd.x), std::min(selectBoxStart.y, selectBoxEnd.y));
+				sf::Vector2f posMax = sf::Vector2f(std::max(selectBoxStart.x, selectBoxEnd.x), std::max(selectBoxStart.y, selectBoxEnd.y));
+				sf::Vector2f size = posMax - pos;
+				sf::FloatRect selectRect = sf::FloatRect(pos, size);
+
+				for (int n = 0; n < nodes.size(); n++) {
+					auto* node = nodes[n];
+					auto rect = node->calcBounds();
+					if (rect.findIntersection(selectRect)) {
+						multiSelectNodes.push_back(n);
+					}
+				}
+
+				selectBoxStart = sf::Vector2f(0, 0);
+				selectBoxEnd = selectBoxStart;
+				return true; // lose handling priority
+			}
 		}
 	} break;
 	case sf::Event::MouseMoved:
@@ -759,6 +829,16 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 			if (selectedNode == -1) { draggingNode = false; break; }
 			sf::Vector2f mousePos = pixelToGraph(sf::Vector2i((int)ImGui::GetMousePos().x, (int)ImGui::GetMousePos().y));
 			nodes[selectedNode]->nodePos = snapPos(mousePos + dragNodeOffset);
+		}
+		if (draggingNodeMultiple)
+		{
+			if (multiSelectNodes.size() == 0) { draggingNodeMultiple = false; break; }
+			sf::Vector2f mousePos = pixelToGraph(sf::Vector2i((int)ImGui::GetMousePos().x, (int)ImGui::GetMousePos().y));
+			auto oldPos = nodes[dragNodeRef]->nodePos;
+			auto dif = (mousePos + dragNodeOffset) - oldPos;
+			for (int nodeIndex : multiSelectNodes) {
+				nodes[nodeIndex]->nodePos = snapPos(nodes[nodeIndex]->nodePos + dif);
+			}
 		}
 
 		if (moving)
@@ -771,6 +851,12 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 
 			oldPos = sf::Vector2f((float)pos.x, (float)pos.y);
 			
+		}
+
+		if (selectBoxStart != sf::Vector2f(0, 0))
+		{
+			sf::Vector2f mousePos = pixelToGraph(sf::Vector2i((int)ImGui::GetMousePos().x, (int)ImGui::GetMousePos().y));
+			selectBoxEnd = mousePos;
 		}
 	} break;
 	case sf::Event::MouseWheelScrolled:

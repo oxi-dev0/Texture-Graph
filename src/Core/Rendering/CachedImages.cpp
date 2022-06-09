@@ -6,7 +6,12 @@ namespace ImageCache
 
 	std::unordered_map<std::string, std::string> imageDefs({
 		{"transparencyPreview", "resources/Images/transparency.png"},
-		{"unevaluated", "resources/Images/unevaluated.png"}
+		{"unevaluated", "resources/Images/unevaluated.png"},
+		// ICONS
+		{"icon-new", "resources/Images/Icons/New.png"},
+		{"icon-save", "resources/Images/Icons/Save.png"},
+		{"icon-eval", "resources/Images/Icons/Evaluate.png"},
+		{"detail-separator", "resources/Images/Separator.png"}
 		});
 
 	void Init() {

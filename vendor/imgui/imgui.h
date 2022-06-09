@@ -273,6 +273,9 @@ struct ImVec4
     float                                           x, y, z, w;
     ImVec4()                                        { x = y = z = w = 0.0f; }
     ImVec4(float _x, float _y, float _z, float _w)  { x = _x; y = _y; z = _z; w = _w; }
+    ImVec4 operator*(float& b)             { return ImVec4(x * b, y * b, z * b, w * b); }
+    
+    sf::Color toSF() { return sf::Color((sf::Uint8)x*255, (sf::Uint8)y * 255, (sf::Uint8)z * 255, (sf::Uint8)w * 255); }
 #ifdef IM_VEC4_CLASS_EXTRA
     IM_VEC4_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec4.
 #endif

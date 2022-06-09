@@ -31,7 +31,7 @@ void Texture2DView::InfoBarData() {
 }
 
 void Texture2DView::ToolBarButtons() {
-	if (ImGui::Button("Save", ImVec2(70, 40))) {
+	if (ImGui::ImageButton(*ImageCache::images["icon-save"], sf::Vector2f(25, 25), 5)) {
 		if (focusedGraph == nullptr) { return; }
 		if (selectedNode == -1) { return; }
 		if (focusedGraph->nodes[selectedNode]->evaluated == false) { return; }

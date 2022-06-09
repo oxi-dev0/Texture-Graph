@@ -381,11 +381,23 @@ void GraphEditorView::RenderLine(sf::Vector2f start, sf::Vector2f end, sf::Color
 	}
 }
 
+void ToolBarSeparator() {
+	ImGui::Image(*ImageCache::images["detail-separator"], sf::Vector2f(15, 35));
+}
+
 void GraphEditorView::ToolBarButtons() {
-	if (ImGui::Button("Evaluate", ImVec2(100,40))) {
+	if (ImGui::ImageButton(*ImageCache::images["icon-eval"], sf::Vector2f(25, 25), 5)) {
 		auto evalThread = std::thread(&GraphEditorView::EvaluateNodes, this);
 		evalThread.detach();
 	};
+
+	ImGui::SameLine();
+
+	ToolBarSeparator();
+
+	ImGui::SameLine();
+
+
 }
 
 // RENDER STEP FOR THIS VIEW

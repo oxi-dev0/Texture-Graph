@@ -75,7 +75,7 @@ void SFMLWindow::Render() {
 	IMGUIRender();
 
 	InfoBar(25.0f);
-	ToolBar(50.0f);
+	ToolBar(45.0f);
 
 	prevPos = sf::Vector2i((int)pos.x, (int)pos.y);
 	prevSize = sf::Vector2u((unsigned int)contentAvail.x, (unsigned int)contentAvail.y);

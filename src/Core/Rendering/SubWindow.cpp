@@ -30,8 +30,8 @@ void SubWindow::ToolBar(float height) {
 		| ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse
 		| ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
 		| ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus
-		| ImGuiWindowFlags_AlwaysUseWindowPadding;
-
+		| ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+	
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 5.0f));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 

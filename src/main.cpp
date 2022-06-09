@@ -29,6 +29,7 @@
 #include "Core/Rendering/Views/LibraryView.h"
 #include "Core/Rendering/Views/InspectorView.h"
 #include "Core/Rendering/Views/Texture2DView.h"
+#include "Core/Rendering/Views/BrowserView.h"
 
 #include "Core/Graph/Node/GraphNode.h"
 #include "Core/Graph/GraphSerializer.h"
@@ -45,6 +46,7 @@ enum WindowType {
     GraphEditor,
     LibraryView,
     TextureView,
+    Browser,
     Inspector
 };
 
@@ -53,6 +55,7 @@ std::vector<optionalWindow> optionalViews = {
     optionalWindow("Graph Editor", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
     optionalWindow("Library", WindowType::LibraryView, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
     optionalWindow("Inspector", WindowType::Inspector, 0),
+    optionalWindow("Browser", WindowType::Browser, 0),
     optionalWindow("Texture View", WindowType::TextureView, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)
     //optionalWindow("Graph Editor 2", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
 };
@@ -142,6 +145,12 @@ int main(int argc, char** argv)
             sf::RenderTexture* tex = new sf::RenderTexture();
             textures.push_back(tex);
             auto* newView = new Texture2DView(primaryWindow.window, *tex, name, flags);
+            windows.push_back(newView);
+            newView->focusedGraph = primaryWindow.selectedGraph;
+        }   break;
+        case WindowType::Browser:
+        {
+            auto* newView = new BrowserView(primaryWindow.window, name, flags);
             windows.push_back(newView);
             newView->focusedGraph = primaryWindow.selectedGraph;
         }   break;

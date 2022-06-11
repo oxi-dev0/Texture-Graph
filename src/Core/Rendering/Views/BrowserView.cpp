@@ -8,7 +8,11 @@ BrowserView::BrowserView(sf::RenderWindow& main_, std::string name_, ImGuiWindow
 
 void BrowserView::ToolBarButtons() {
 	if (ImGui::ImageButton(*ImageCache::images["icon-new"], sf::Vector2f(25, 25), 5)) {
-
+		openPopup("New Graph");
+	}
+	ImGui::SameLine();
+	if (ImGui::ImageButton(*ImageCache::images["icon-refresh"], sf::Vector2f(25, 25), 5)) {
+		LoadGraphs();
 	}
 }
 

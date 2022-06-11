@@ -27,6 +27,8 @@ public:
 	int dragNodeRef;
 	std::vector<int> multiSelectNodes;
 
+	std::atomic<int> currentThreadCount;
+
 	int currentLineFromNode;
 	int currentLineFromPin;
 
@@ -44,6 +46,7 @@ private:
 protected:
 	virtual void ComponentRender();
 	virtual void IMGUIRender();
+	virtual void InfoBarData();
 
 	virtual void ToolBarButtons();
 

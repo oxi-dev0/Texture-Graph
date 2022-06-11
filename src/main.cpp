@@ -153,6 +153,13 @@ int main(int argc, char** argv)
             auto* newView = new BrowserView(primaryWindow.window, name, flags);
             windows.push_back(newView);
             newView->focusedGraph = primaryWindow.selectedGraph;
+
+            std::function<void(std::string)> f = [&primaryWindow](std::string id) {
+                return primaryWindow.OpenPopup(id);
+            };
+            newView->RegisterPopupCallback(f);
+            primaryWindow.mainBrowserView = newView;
+
         }   break;
         default:
             break;

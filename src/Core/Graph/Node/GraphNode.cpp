@@ -604,8 +604,14 @@ void GraphNode::SetDirty()
 	evaluated = false;
 }
 
-void GraphNode::Execute()
+void GraphNode::Execute(std::atomic<int>* threadCount)
 {
+	if (threadCount != nullptr) {
+		// Limit to only 15 nodes executing at one time
+		while (*threadCount > 15) { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
+		(*threadCount)++;
+	}
+
 	lua_State* L;
 	L = luaL_newstate();
 	luaL_openlibs(L);
@@ -855,6 +861,9 @@ void GraphNode::Execute()
 	prevEvalTime = (float)fullTimr.Elapsed();
 	lua_close(L);
 	evaluated = true;
+
+	if(threadCount != nullptr)
+		(*threadCount)--;
 }
 
 void GraphNode::SetTextureSize(sf::Vector2i size)

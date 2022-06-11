@@ -16,6 +16,7 @@
 
 #include "../Library/LibraryManager.h"
 #include "../Graph/GraphSerializer.h"
+#include "Views/BrowserView.h"
 
 #include <string>
 #include <sstream>
@@ -30,6 +31,10 @@ private:
 	bool fullscreen;
 	bool demoOpen;
 
+	char buf[32] = "";
+	std::string nextOpenId;
+	bool openPopup;
+
 	sf::Time prevDeltaTime;
 	sf::Clock deltaClock;
 
@@ -43,6 +48,7 @@ public:
 	std::vector<SubWindow*>* views;
 
 	GraphEditorView* selectedGraph;
+	BrowserView* mainBrowserView;
 
 	bool exit;
 
@@ -53,14 +59,17 @@ private:
 
 public:
 	MainWindow();
+	~MainWindow();
 	MainWindow(std::string windowTitle);
 
 	void Init(std::string windowTitle);
 
 	void SetFullscreen(bool newFullscreen);
+	void OpenPopup(std::string id);
 
 	int Update(); // 0: Fine, 1: Exit
 	void BeginRender();
+	void Popups();
 	void EndRender();
 };
 

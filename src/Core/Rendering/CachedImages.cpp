@@ -11,6 +11,7 @@ namespace ImageCache
 		{"icon-new", "resources/Images/Icons/New.png"},
 		{"icon-save", "resources/Images/Icons/Save.png"},
 		{"icon-eval", "resources/Images/Icons/Evaluate.png"},
+		{"icon-refresh", "resources/Images/Icons/Refresh.png"},
 		{"detail-separator", "resources/Images/Separator.png"}
 		});
 

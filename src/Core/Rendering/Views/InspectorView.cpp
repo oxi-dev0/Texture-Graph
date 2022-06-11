@@ -30,6 +30,12 @@ void InspectorView::ComponentRender()
 
 	if (graph->selectedNode >= 0) {
 		if (ImGui::CollapsingHeader("Node Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
+			std::stringstream classStream;
+			classStream << "Class: " << graph->nodes[graph->selectedNode]->nodeClass;
+			ImGui::Text(classStream.str().c_str());
+			std::stringstream idStream;
+			idStream << "ID: " << graph->nodes[graph->selectedNode]->nodeId;
+			ImGui::Text(idStream.str().c_str());
 			for (auto& var : graph->nodes[graph->selectedNode]->paramLuaVars)
 			{
 				auto& luaVarData = graph->nodes[graph->selectedNode]->luaVarData[var.second];

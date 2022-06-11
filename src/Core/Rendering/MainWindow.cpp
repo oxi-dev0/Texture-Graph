@@ -167,6 +167,10 @@ MainWindow::MainWindow() {
     views = nullptr;
 }
 
+MainWindow::~MainWindow() {
+    //delete[] buf;
+}
+
 MainWindow::MainWindow(std::string windowTitle) {
     exit = false;
     Init(windowTitle);
@@ -311,6 +315,51 @@ int MainWindow::Update() {
     return 0;
 }
 
+void MainWindow::OpenPopup(std::string id) {
+    nextOpenId = id;
+    openPopup = true;
+    buf[0] = '\0';
+}
+
+void MainWindow::Popups() {
+    if (openPopup) {
+        ImGui::OpenPopup(nextOpenId.c_str());
+        openPopup = false;
+    }
+
+    if (ImGui::BeginPopup("New Graph", NULL)) {
+        if (ImGui::InputText("Name", buf, IM_ARRAYSIZE(buf), ImGuiInputTextFlags_EnterReturnsTrue)) {
+            if (buf[0] != '\0') {
+                ImGui::CloseCurrentPopup();
+                selectedGraph->Clear();
+                std::stringstream fileStream;
+                fileStream << "graphs/" << buf << ".tgraph";
+                Serialization::Graph::SaveGraphToFile(*selectedGraph, fileStream.str());
+                mainBrowserView->LoadGraphs();
+            }
+        }
+        if (ImGui::Button("Cancel")) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        //ImGui::PushStyleColor(ImGuiCol_Text, buf[0] == '\0' ? ImVec4(1.f, 0.f, 0.f, 1.f) : ImVec4(1.f, 1.f, 1.f, 1.f));
+        if (buf[0] == '\0') { ImGui::BeginDisabled(); }
+        if (ImGui::Button("Ok")) {
+            if (buf[0] != '\0') {
+                ImGui::CloseCurrentPopup();
+                selectedGraph->Clear();
+                std::stringstream fileStream;
+                fileStream << "graphs/" << buf << ".tgraph";
+                Serialization::Graph::SaveGraphToFile(*selectedGraph, fileStream.str());
+                mainBrowserView->LoadGraphs();
+            }
+        }
+        if (buf[0] == '\0') { ImGui::EndDisabled(); }
+        //ImGui::PopStyleColor();
+        ImGui::EndPopup();
+    }
+}
+
 void MainWindow::BeginRender() {
     prevDeltaTime = deltaClock.restart();
     ImGui::SFML::Update(window, prevDeltaTime);
@@ -318,6 +367,7 @@ void MainWindow::BeginRender() {
     window.clear(sf::Color((sf::Uint8)(bgColor.x * 100.0f), (sf::Uint8)(bgColor.y * 100.0f), (sf::Uint8)(bgColor.z * 100.0f), (sf::Uint8)255));
 
     Dockspace();
+    Popups();
 
     if (demoOpen) {
         ImGui::ShowDemoWindow(&demoOpen);

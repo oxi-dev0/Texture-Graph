@@ -72,6 +72,24 @@ void GraphEditorView::Grid() {
 	rt.draw(lines);
 }
 
+void GraphEditorView::InfoBarData() {
+	std::stringstream posStream;
+	posStream << "View: (" << round(vcenter.x * 100.0f) / 100.0f << ", " << round(vcenter.y * 100.0f) / 100.0f << ")";
+	ImGui::Text(posStream.str().c_str());
+
+	ImGui::SameLine(0.0f, 25.0f);
+
+	std::stringstream zoomStream;
+	zoomStream << "Zoom: " << round(zoom * 100.0f) / 100.0f;
+	ImGui::Text(zoomStream.str().c_str());
+
+	ImGui::SameLine(0.0f, 25.f);
+
+	std::stringstream threadCStream;
+	threadCStream << "Node Thread N#: " << currentThreadCount;
+	ImGui::Text(threadCStream.str().c_str());
+}
+
 void GraphEditorView::EvalNodeThread(int nodeIndex) {
 	std::vector<std::thread> threadList;
 	Utility::Timer traceTmr;
@@ -148,7 +166,7 @@ void GraphEditorView::EvalNodeThread(int nodeIndex) {
 
 	threadList.clear();
 	// Execute the main node this function is evaluating
-	auto mainEvalThread = std::thread(&GraphNode::Execute, node);
+	auto mainEvalThread = std::thread(&GraphNode::Execute, node, &currentThreadCount);
 	mainEvalThread.join();
 
 	// Convert and transfer the main node's output
@@ -232,9 +250,10 @@ void GraphEditorView::EvaluateNodes() {
 	std::vector<int> endNodes;
 	int n = 0;
 	for (auto* node : nodes) {
-		// Set all nodes to be unevaluated. In future, trace forwards from changed nodes to find nodes that need to be reevaluated so that the whole graph isnt processed when unneeded
+		// Set all nodes to be unevaluated. In future, trace forwards from changed nodes to find nodes that need to be reevaluated so that the whole graph isnt processed for no reason
 		node->SetDirty();
 
+		// determine if this is an "end" node (any nodes with 0 connected output pins)
 		bool end = true;
 		for (auto& pin : node->pins) {
 			if (pin.outNodeIds.size() > 0) { end = false; }
@@ -278,7 +297,6 @@ void GraphEditorView::EvaluateNodes() {
 	//							}
 	//							x++;
 	//						}
-
 	//						targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].colortexVar = converted;
 	//					}
 	//					else {
@@ -292,7 +310,6 @@ void GraphEditorView::EvaluateNodes() {
 	//							}
 	//							x++;
 	//						}
-
 	//						targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].greytexVar = converted;
 	//					}
 	//				}

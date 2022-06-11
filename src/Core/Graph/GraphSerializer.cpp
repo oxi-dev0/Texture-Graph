@@ -170,10 +170,11 @@ namespace Serialization
 				}
 			}
 
-			currentNode->SetTextureSize(graph.texSize);
-
-			// Push final node
-			graph.nodes.push_back(currentNode);
+			if (currentNode != nullptr) {
+				currentNode->SetTextureSize(graph.texSize);
+				// Push final node
+				graph.nodes.push_back(currentNode);
+			}
 
 			for (auto newNodeIndex : newNodes)
 			{

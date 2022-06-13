@@ -27,7 +27,7 @@ void BrowserView::RenderGraphListing(std::string graph, std::string graphFile) {
 				Serialization::Graph::LoadGraphFromFile(*focusedGraph, graphFile);
 			}
 	}
-	ImGui::PopStyleVar(2);
+	ImGui::PopStyleVar(2); 
 	ImGui::PopStyleColor(2);
 }
 

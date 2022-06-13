@@ -29,8 +29,8 @@ PARAM>angle|0.000000
 PARAM>posX|0.000000
 PARAM>posY|0.000000
 PARAM>rep|0
-PARAM>scaleX|10.000000
-PARAM>scaleY|1.500000
+PARAM>scaleX|7.500000
+PARAM>scaleY|2.500000
 NODE>5|library/Nodes/Math/Greyscale/GreyTransform.tgnode|208,1024
 PIN>0|0~0||In
 PIN>1|-1~-1|6~1,7~2|Out
@@ -189,12 +189,12 @@ PARAM>Invert|0
 PARAM>InvertAlpha|0
 NODE>29|library/Nodes/Constants/SolidColor.tgnode|1152,256
 PIN>0|-1~-1|39~1|Out
-PARAM>Color|161,154,73,255
+PARAM>Color|171,164,86,255
 PARAM>Invert|0
 PARAM>InvertAlpha|0
 NODE>30|library/Nodes/Constants/SolidColor.tgnode|1152,80
 PIN>0|-1~-1|31~2,33~1|Out
-PARAM>Color|150,141,59,255
+PARAM>Color|155,146,71,255
 PARAM>Invert|0
 PARAM>InvertAlpha|0
 NODE>31|library/Nodes/Math/Color/ColorMul.tgnode|1504,-208

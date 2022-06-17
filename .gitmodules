@@ -1,9 +1,3 @@
-[submodule "vendor/sfml"]
-	path = vendor/sfml
-	url = https://github.com/oxi-dev0/sfml
-[submodule "vendor/spdlog"]
-	path = vendor/spdlog
-	url = https://github.com/oxi-dev0/spdlog
 [submodule "vendor/nfd"]
 	path = vendor/nfd
 	url = https://github.com/oxi-dev0/nativefiledialog-extended
@@ -13,3 +7,6 @@
 [submodule "vendor/clip"]
 	path = vendor/clip
 	url = https://github.com/oxi-dev0/clip
+[submodule "vendor/sfml"]
+	path = vendor/sfml
+	url = https://github.com/oxi-dev0/SFML

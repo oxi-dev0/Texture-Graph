@@ -10,3 +10,6 @@
 [submodule "vendor/fpacker"]
 	path = vendor/fpacker
 	url = https://github.com/oxi-dev0/fpacker
+[submodule "vendor/clip"]
+	path = vendor/clip
+	url = https://github.com/oxi-dev0/clip

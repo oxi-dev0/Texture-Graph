@@ -7,6 +7,6 @@
 [submodule "vendor/nfd"]
 	path = vendor/nfd
 	url = https://github.com/oxi-dev0/nativefiledialog-extended
-[submodule "vendor/clip"]
-	path = vendor/clip
-	url = https://github.com/oxi-dev0/clip.git
+[submodule "vendor/fpacker"]
+	path = vendor/fpacker
+	url = https://github.com/oxi-dev0/fpacker

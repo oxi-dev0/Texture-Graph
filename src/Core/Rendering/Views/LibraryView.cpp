@@ -75,7 +75,7 @@ void LibraryEditorView::RenderThumbnails()
 		auto& className = node->nodeClass;
 		node->SetTextureSize(sf::Vector2i(100, 100));
 		node->Execute(nullptr);
-		auto& tex = node->displayTexture;
+		auto* tex = node->displayTexture;
 		thumbnails.insert({ className, tex });
 		LOG_TRACE("Generated thumbnail for Node Class '{0}' in {1}ms", className, nodeTmr.Elapsed() * 1000.f);
 	}
@@ -160,7 +160,7 @@ void LibraryEditorView::RenderNodeListing(GraphNode* node, int index) {
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 0));
 	ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5));
 
-	sf::Texture& tex = thumbnails[node->nodeClass];
+	sf::Texture& tex = *thumbnails[node->nodeClass];
 		
 	ImGui::ImageButtonWithText(tex, node->displayName.c_str(), 5, ImVec2(40,40), ImVec2(ImGui::GetContentRegionAvail().x, 50));
 	if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))

@@ -6,7 +6,7 @@
 class ImageNode : public GraphNode
 {
 public:
-	int resourceIndex;
+	std::string resourceName;
 
 public:
 	ImageNode() : GraphNode()
@@ -24,7 +24,7 @@ public:
 
 		displayVar = "Out";
 
-		resourceIndex = -1;
+		resourceName = "";
 
 		NodePin newPin(0, &nodeId, Types::DataType_ColorTex, Direction::Out, "Out");
 		pins.push_back(newPin);

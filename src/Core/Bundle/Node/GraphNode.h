@@ -22,7 +22,7 @@
 #include "../../Rendering/RenderingGlobals.h"
 #include "../../Rendering/CachedImages.h"
 
-#include "../../Lua/LuaManager.h"
+#include <lua.hpp>
 
 class GraphNode
 {
@@ -44,6 +44,8 @@ public:
 
 	Utility::Timer lifeTmr;
 
+	bool renderedPins;
+
 	std::vector<NodePin> pins; // Pin Definitions
 
 	std::map<std::string, std::string> luaVarDisplayNames; // Lua Var Name -> Display Name
@@ -59,8 +61,8 @@ public:
 	std::vector<std::string> luaLines;
 	std::string luaTempFile;
 
-	sf::Texture& displayTexture;
-	sf::Image& displayImage;
+	sf::Texture* displayTexture;
+	sf::Image* displayImage;
 	float prevEvalTime;
 
 	int debugEvalIndex;
@@ -71,7 +73,7 @@ public:
 	bool evaluated;
 
 public:
-	GraphNode() : displayTexture(*(new sf::Texture)), displayImage(*(new sf::Image)) {
+	GraphNode() : displayTexture((new sf::Texture)), displayImage((new sf::Image)) {
 		nodeClass = "";
 		nodeId = 0;
 		displayName = "";
@@ -93,12 +95,13 @@ public:
 		debugEvalIndex = -1;
 		evaluated = false;
 		lifeTmr = Utility::Timer();
+		renderedPins = false;
 	}
 	GraphNode(const GraphNode& node);
 	GraphNode(GraphNode* node);
 	~GraphNode() {
-		displayImage.~Image();
-		displayTexture.~Texture();
+		delete displayImage;
+		delete displayTexture;
 	}
 
 	static GraphNode* LoadFromTGNF(std::string classFile); // Load from Texture Graph Node File

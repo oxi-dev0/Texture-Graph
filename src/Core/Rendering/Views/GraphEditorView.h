@@ -29,8 +29,6 @@ public:
 	int dragNodeRef;
 	std::vector<int> multiSelectNodes;
 
-	std::string currentGraph;
-
 	std::atomic<int> currentThreadCount;
 
 	int currentLineFromNode;
@@ -39,6 +37,8 @@ public:
 	bool cyclicalError=false;
 	int cyclicalNode;
 	int cyclicalPin;
+
+	bool dirty;
 
 	sf::Vector2i texSize;
 

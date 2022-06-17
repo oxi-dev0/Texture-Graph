@@ -41,7 +41,7 @@ void Texture2DView::ToolBarButtons() {
 		nfdfilteritem_t filterItem[1] = { { "Portable Network Graphics file", "png" } };
 		nfdresult_t result = NFD_SaveDialog(&outPath, filterItem, 1, "", "");
 		if (result == NFD_OKAY) {
-			if (focusedGraph->nodes[selectedNode]->displayTexture.copyToImage().saveToFile(outPath)) {
+			if (focusedGraph->nodes[selectedNode]->displayTexture->copyToImage().saveToFile(outPath)) {
 				LOG_INFO("Successfully saved image to '{0}'", outPath);
 			}
 			else {
@@ -90,8 +90,8 @@ void Texture2DView::ComponentRender() {
 		rt.draw(transparentSprite);
 
 		sf::Sprite displaySprite;
-		displaySprite.setTexture(displayTexture);
-		sf::Vector2u tSize = displayTexture.getSize();
+		displaySprite.setTexture(*displayTexture);
+		sf::Vector2u tSize = displayTexture->getSize();
 		auto displayScale = sf::Vector2f(prevSize.y / tSize.y, prevSize.y / tSize.y);
 		displaySprite.setOrigin(sf::Vector2f(tSize.x/2, tSize.y/2));
 		displaySprite.setScale(displayScale);

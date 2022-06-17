@@ -33,11 +33,10 @@
 
 #include "Core/Bundle/Node/GraphNode.h"
 #include "Core/Bundle/GraphSerializer.h"
+#include "Core/Bundle/BundleSerializer.h"
 #include "Core/Bundle/ResourceManager.h"
 
 #include "Core/Library/LibraryManager.h"
-
-#include "Core/Lua/LuaManager.h"
 
 #define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
@@ -61,13 +60,22 @@ std::vector<optionalWindow> optionalViews = {
     //optionalWindow("Graph Editor 2", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
 };
 
+MainWindow* primaryWindow = nullptr;
+
 std::vector<sf::RenderTexture*> textures;
 void OnExit() {
     LOG_INFO("Stopping Engine");
     ImGui::SFML::Shutdown();
     NFD_Quit();
-    LuaManager::Exit();
     ImageCache::Exit();
+
+    LibraryManager::Clear();
+    Bundle::Resources::ClearPreviews();
+    primaryWindow->graphView->Clear();
+
+    std::filesystem::remove_all("temp");
+
+    delete primaryWindow;
 
     RenderingGlobals::font.~Font();
     for (auto* tex : textures) {
@@ -75,7 +83,6 @@ void OnExit() {
         delete tex;
     }
 }
-
 
 int main(int argc, char** argv)
 {
@@ -96,11 +103,11 @@ int main(int argc, char** argv)
 
     RenderingGlobals::Init();
     NFD_Init();
-    LuaManager::Init();
     ImageCache::Init();
-    Graph::Resources::Init();
+    Bundle::Resources::Init();
+    Bundle::Serialization::NewBundle();
 
-    MainWindow primaryWindow("Texture Graph");
+    primaryWindow = new MainWindow("Texture Graph");
 
     ImGuiIO& io = ImGui::GetIO();
     io.IniFilename = "resources/imgui.ini";
@@ -109,6 +116,13 @@ int main(int argc, char** argv)
     LOG_INFO("Successfully loaded layout from 'resources/defaultlayout.ini'");
       
     //sf::RenderTexture newT; // trying to fix unique ptrs being deleted
+
+    MainWindow& mC = *primaryWindow;
+    std::function<void(std::string)> f = [&mC](std::string id) {
+        return mC.OpenPopup(id);
+    };
+    Graph::Serialization::openPopup = f;
+    Bundle::Serialization::openPopup = f;
 
     std::vector<SubWindow*> windows;
     for (auto& view : optionalViews) {
@@ -119,48 +133,45 @@ int main(int argc, char** argv)
         switch (type) {
         case WindowType::Base:
         {
-            windows.push_back(new SubWindow(primaryWindow.window, name, flags));
+            windows.push_back(new SubWindow(primaryWindow->window, name, flags));
         }   break;
         case WindowType::GraphEditor:
         {
             sf::RenderTexture* tex = new sf::RenderTexture();
             textures.push_back(tex);
-            auto* newView = new GraphEditorView(primaryWindow.window, *tex, name, flags);
+            auto* newView = new GraphEditorView(primaryWindow->window, *tex, name, flags);
             windows.push_back(newView);
-            primaryWindow.focusedGraphView = newView;
+            primaryWindow->graphView = newView;
 
         }   break;
         case WindowType::LibraryView:
         {
-            auto* newView = new LibraryEditorView(primaryWindow.window, name, flags);
+            auto* newView = new LibraryEditorView(primaryWindow->window, name, flags);
             windows.push_back(newView);
             LibraryManager::RegisterLoadCallback(std::bind(&LibraryEditorView::LoadNodes, newView));
         }   break;
         case WindowType::Inspector:
         {
-            auto* newView = new InspectorView(primaryWindow.window, name, flags);
-            newView->SetGraph(primaryWindow.focusedGraphView);
+            auto* newView = new InspectorView(primaryWindow->window, name, flags);
+            newView->SetGraph(primaryWindow->graphView);
             windows.push_back(newView);
         }   break;
         case WindowType::TextureView:
         {
             sf::RenderTexture* tex = new sf::RenderTexture();
             textures.push_back(tex);
-            auto* newView = new Texture2DView(primaryWindow.window, *tex, name, flags);
+            auto* newView = new Texture2DView(primaryWindow->window, *tex, name, flags);
             windows.push_back(newView);
-            newView->focusedGraph = primaryWindow.focusedGraphView;
+            newView->focusedGraph = primaryWindow->graphView;
         }   break;
         case WindowType::Browser:
         {
-            auto* newView = new BrowserView(primaryWindow.window, name, flags);
+            auto* newView = new BrowserView(primaryWindow->window, name, flags);
             windows.push_back(newView);
-            newView->focusedGraphView = primaryWindow.focusedGraphView;
+            newView->focusedGraphView = primaryWindow->graphView;
 
-            std::function<void(std::string)> f = [&primaryWindow](std::string id) {
-                return primaryWindow.OpenPopup(id);
-            };
             newView->RegisterPopupCallback(f);
-            primaryWindow.mainBrowserView = newView;
+            primaryWindow->mainBrowserView = newView;
 
         }   break;
         default:
@@ -168,21 +179,23 @@ int main(int argc, char** argv)
         }
     } // Generates the toggle windows, such as the graph editor and inspector
 
+
+
     LOG_INFO("Successfully generated optional views");
 
     LOG_INFO("");
     LibraryManager::LoadNodeLibrary();
     LOG_INFO("");
 
-    primaryWindow.views = &windows;
+    primaryWindow->views = &windows;
     
-    while (primaryWindow.window.isOpen())
+    while (primaryWindow->window.isOpen())
     {
-        if (primaryWindow.Update() == 1) {
+        if (primaryWindow->Update() == 1) {
             break; // Exit app
         };
 
-        primaryWindow.BeginRender();
+        primaryWindow->BeginRender();
 
         for (SubWindow* window : windows) {
             if (window->enabled) {
@@ -196,7 +209,7 @@ int main(int argc, char** argv)
             }
         }
 
-        primaryWindow.EndRender();
+        primaryWindow->EndRender();
     }
 
     return 0;

@@ -284,7 +284,7 @@ GraphNode* GraphNode::LoadFromTGNF(std::string classFile) {
 	auto classNameLast = splitClass[splitClass.size() - 1];
 
 	classNameLast = Utility::String::split(classNameLast, '.')[0];
-	fileName << "temp/" << classNameLast << ".lua";
+	fileName << "temp/node-exec/" << classNameLast << ".lua";
 	tempFile.open(fileName.str());
 	for (auto line : newNode.luaLines) {
 		tempFile << line << "\n";
@@ -510,8 +510,8 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 	else {
 		// Draw display texture
 		sf::Sprite displaySprite;
-		displaySprite.setTexture(displayTexture);
-		sf::Vector2u tSize = displayTexture.getSize();
+		displaySprite.setTexture(*displayTexture);
+		sf::Vector2u tSize = displayTexture->getSize();
 		displaySprite.setScale(sf::Vector2f(tWidth / tSize.x, tHeight / tSize.y));
 		displaySprite.setPosition(sf::Vector2f(nodePos.x, displayPosY));
 		displaySprite.setColor(sf::Color(255, 255, 255, transparency));
@@ -582,6 +582,8 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 		pinPosCache.insert({ pins[outPinIndexes[p - pCountIn]].pinIndex, sf::Vector2f(x,y) });
 	}
 
+	renderedPins = true;
+
 	target.draw(pinVerts);
 
 	sf::Text timingText = CenteredText(std::format("{:.2f}", prevEvalTime * 1000.0f) + "ms", sf::Vector2f(nodePos.x + nodeWidth / 2, nodePos.y + NODE_TITLE_HEIGHT + nodeHeight), (unsigned int)(baseTextSize * textDPIScale), RenderingGlobals::font); 
@@ -602,6 +604,15 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 void GraphNode::SetDirty()
 {
 	evaluated = false;
+}
+
+
+bool CheckLua(lua_State* L2, int r, std::string owner) {
+	if (r != LUA_OK) {
+		LOG_ERROR("{0}'s lua code did not execute successfully. Error: '{1}'", owner, lua_tostring(L2, -1));
+		return false;
+	}
+	return true;
 }
 
 void GraphNode::Execute(std::atomic<int>* threadCount)
@@ -740,7 +751,7 @@ void GraphNode::Execute(std::atomic<int>* threadCount)
 	LOG_TRACE("Converted c++ vars to lua in {0}ms", varTmr.Elapsed()*1000.f);
 	Utility::Timer execTmr; 
 	 
-	LuaManager::CheckLua(L, luaL_dofile(L, luaTempFile.c_str()), nodeClass);
+	CheckLua(L, luaL_dofile(L, luaTempFile.c_str()), nodeClass);
 
 	LOG_TRACE("Executed node lua in {0}ms", execTmr.Elapsed()*1000.f);
 	Utility::Timer extractTmr;
@@ -846,17 +857,17 @@ void GraphNode::Execute(std::atomic<int>* threadCount)
 	Types::greytex displayDataGrey = luaVarData[displayVar].greytexVar;
 	auto dataType = luaVarData[displayVar].dataType;
 
-	for (unsigned int x = 0; x < displayTexture.getSize().x; x++) {
-		for (unsigned int y = 0; y < displayTexture.getSize().y; y++) {
+	for (unsigned int x = 0; x < displayTexture->getSize().x; x++) {
+		for (unsigned int y = 0; y < displayTexture->getSize().y; y++) {
 			if (dataType == Types::DataType_ColorTex) {
-				displayImage.setPixel(x, y, displayData[x][y]);
+				displayImage->setPixel(x, y, displayData[x][y]);
 			}
 			else {
-				displayImage.setPixel(x, y, sf::Color(displayDataGrey[x][y], displayDataGrey[x][y], displayDataGrey[x][y], 255));
+				displayImage->setPixel(x, y, sf::Color(displayDataGrey[x][y], displayDataGrey[x][y], displayDataGrey[x][y], 255));
 			}
 		}
 	}
-	displayTexture.update(displayImage);
+	displayTexture->update(*displayImage);
 
 	prevEvalTime = (float)fullTimr.Elapsed();
 	lua_close(L);
@@ -869,9 +880,9 @@ void GraphNode::Execute(std::atomic<int>* threadCount)
 void GraphNode::SetTextureSize(sf::Vector2i size)
 {
 	texSize = size;
-	if (!displayTexture.create(texSize.x, texSize.y)) { LOG_ERROR("Error updating display texture"); };
-	displayImage.create(displayTexture.getSize().x, displayTexture.getSize().y, sf::Color::White);
-	displayTexture.update(displayImage);
+	if (!displayTexture->create(texSize.x, texSize.y)) { LOG_ERROR("Error updating display texture"); };
+	displayImage->create(displayTexture->getSize().x, displayTexture->getSize().y, sf::Color::White);
+	displayTexture->update(*displayImage);
 
 	for (auto& luaData : luaVarData) {
 		if (luaData.second.dataType == Types::DataType_ColorTex) {
@@ -906,6 +917,7 @@ GraphNode::GraphNode(const GraphNode& node) : GraphNode()
 	luaTempFile = node.luaTempFile;
 	prevEvalTime = 0.0f;
 	texSize = sf::Vector2i(512, 512);
+	renderedPins = false;
 	SetTextureSize(texSize);
 }
 
@@ -929,5 +941,6 @@ GraphNode::GraphNode(GraphNode* node) : GraphNode() {
 	luaTempFile = node->luaTempFile;
 	prevEvalTime = 0.0f;
 	texSize = sf::Vector2i(512, 512);
+	renderedPins = false;
 	SetTextureSize(texSize);
 }

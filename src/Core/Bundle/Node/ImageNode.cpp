@@ -11,20 +11,25 @@ void ImageNode::Execute(std::atomic<int>* threadCount)
 	Utility::Timer fullTimr;
 
 	sf::Image loaded;
-	if (Graph::Resources::resourceList.size() <= resourceIndex) {
-		LOG_ERROR("Invalid resource index {0}", resourceIndex);
+	if (std::find(Bundle::Resources::resourceList.begin(), Bundle::Resources::resourceList.end(), resourceName) == Bundle::Resources::resourceList.end()) {
+		LOG_ERROR("Invalid resource name {0}", resourceName);
 		return;
 	}
-	if (!loaded.loadFromFile(Graph::Resources::resourceList[resourceIndex])) {
-		LOG_ERROR("Could not load the image file '{0}'", Graph::Resources::resourceList[resourceIndex]);
+	if (!loaded.loadFromFile(resourceName)) {
+		LOG_ERROR("Could not load the image file '{0}'", resourceName);
 		return;
 	}
 
+	float scaleFactor = (float)texSize.x / (float)loaded.getSize().x;
+	float offsetY = (texSize.y - ((float)loaded.getSize().y*scaleFactor))/2.f;
+		
 	// Fill var with loaded image (currently just crops)
 	for (int x = 0; x < luaVarData["Out"].colortexVar.size(); x++) {
 		for (int y = 0; y < luaVarData["Out"].colortexVar[0].size(); y++) {
-			if (x >= loaded.getSize().x || y >= loaded.getSize().y) { luaVarData["Out"].colortexVar[x][y] = sf::Color::Black; continue; }
-			luaVarData["Out"].colortexVar[x][y] = loaded.getPixel(x, y);
+			int xS = std::floor(x / scaleFactor);
+			int yS = std::floor((y-offsetY) / scaleFactor);
+			if (xS >= loaded.getSize().x || yS >= loaded.getSize().y) { luaVarData["Out"].colortexVar[x][y] = sf::Color::Black; continue; }
+			luaVarData["Out"].colortexVar[x][y] = loaded.getPixel(xS, yS);
 		}
 	}
 
@@ -33,17 +38,17 @@ void ImageNode::Execute(std::atomic<int>* threadCount)
 	Types::greytex displayDataGrey = luaVarData[displayVar].greytexVar;
 	auto dataType = luaVarData[displayVar].dataType;
 
-	for (unsigned int x = 0; x < displayTexture.getSize().x; x++) {
-		for (unsigned int y = 0; y < displayTexture.getSize().y; y++) {
+	for (unsigned int x = 0; x < displayTexture->getSize().x; x++) {
+		for (unsigned int y = 0; y < displayTexture->getSize().y; y++) {
 			if (dataType == Types::DataType_ColorTex) {
-				displayImage.setPixel(x, y, displayData[x][y]);
+				displayImage->setPixel(x, y, displayData[x][y]);
 			}
 			else {
-				displayImage.setPixel(x, y, sf::Color(displayDataGrey[x][y], displayDataGrey[x][y], displayDataGrey[x][y], 255));
+				displayImage->setPixel(x, y, sf::Color(displayDataGrey[x][y], displayDataGrey[x][y], displayDataGrey[x][y], 255));
 			}
 		}
 	}
-	displayTexture.update(displayImage);
+	displayTexture->update(*displayImage);
 
 	prevEvalTime = (float)fullTimr.Elapsed();
 	evaluated = true;
@@ -75,7 +80,7 @@ ImageNode::ImageNode(const ImageNode& node) : ImageNode()
 	luaTempFile = node.luaTempFile;
 	prevEvalTime = 0.0f;
 	texSize = sf::Vector2i(512, 512);
-	resourceIndex = node.resourceIndex;
+	resourceName = node.resourceName;
 	SetTextureSize(texSize);
 }
 
@@ -100,6 +105,6 @@ ImageNode::ImageNode(GraphNode* node) {
 	luaTempFile = other->luaTempFile;
 	prevEvalTime = 0.0f;
 	texSize = sf::Vector2i(512, 512);
-	resourceIndex = other->resourceIndex;
+	resourceName = other->resourceName;
 	SetTextureSize(texSize);
 }

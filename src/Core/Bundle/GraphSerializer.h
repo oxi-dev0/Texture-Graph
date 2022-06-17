@@ -23,12 +23,21 @@ namespace Graph
 
 	namespace Serialization
 	{	
+		extern std::string currentGraph;
+		extern std::function<void(void)> clearPromptCallback;
+		extern std::function<void(std::string)> openPopup;
+
 		SerializationStatus SaveNodesToData(GraphEditorView& graph, std::vector<int> nodesList, std::string& lines);
 
-		SerializationStatus AskSaveGraphToFile(GraphEditorView& graph);
-		SerializationStatus SaveGraphToFile(GraphEditorView& graph, std::string file);
+		void NewGraph(GraphEditorView& graph, std::string name);
+		void GraphNewPopup(GraphEditorView& graph, char* nameBuf);
 
-		SerializationStatus AskLoadGraphFromFile(GraphEditorView& graph);
+		void SafeClear(std::function<void(void)> callback);
+		void ClearPromptPopup(GraphEditorView& graph);
+
+		std::vector<std::string> GetGraphsInBundle();
+
+		SerializationStatus SaveGraphToFile(GraphEditorView& graph, std::string file);
 		SerializationStatus LoadGraphFromFile(GraphEditorView& graph, std::string file);
 
 		SerializationStatus AppendNodesFromData(GraphEditorView& graph, std::string data);

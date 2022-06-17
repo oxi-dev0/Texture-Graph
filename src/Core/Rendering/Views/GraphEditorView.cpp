@@ -9,6 +9,7 @@ GraphEditorView::GraphEditorView(sf::RenderWindow& main_, sf::RenderTexture& rt_
 	initialRect = sf::FloatRect(view.getCenter() - view.getSize() / 2.f, view.getSize());
 	selectedNode = -1;
 	texSize = sf::Vector2i(512, 512);
+	dirty = false;
 } // JUST CALLS CONSTRUCTOR FOR SUBWINDOW
 
 void GraphEditorView::Clear() {
@@ -17,9 +18,9 @@ void GraphEditorView::Clear() {
 		delete node;
 	}
 	nodes.clear();
+	dirty = false;
 	zoom = 1.0f;
 	view.reset(initialRect);
-	Graph::Resources::Clear();
 	vcenter = sf::Vector2f(0, 0);
 }
 
@@ -462,7 +463,7 @@ void GraphEditorView::ComponentRender() {
 	for (auto* node : nodes) {
 		sf::FloatRect bounds = node->calcBounds();
 		sf::FloatRect viewRect(view.getCenter() - view.getSize() / 2.f, view.getSize());
-		if (viewRect.findIntersection(bounds) == std::nullopt) {
+		if (viewRect.findIntersection(bounds) == std::nullopt && node->renderedPins) {
 			n++;
 			continue;
 		}
@@ -516,6 +517,23 @@ void GraphEditorView::IMGUIRender() {
 
 			LOG_TRACE("Instantiated Node (Node Class '{0}')", newNode->nodeClass);
 			LOG_TRACE("Position: ({0}, {1})", newNode->nodePos.x, newNode->nodePos.y);
+		}
+
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("IMAGE_RESOURCE_INSTANCE"))
+		{
+			IM_ASSERT(payload->DataSize == sizeof(std::string));
+			std::string payload_resource = *(const std::string*)payload->Data;
+
+			ImageNode* newNode = new ImageNode();
+			sf::Vector2f mousePos = pixelToGraph(sf::Vector2i((int)ImGui::GetMousePos().x, (int)ImGui::GetMousePos().y));
+
+			newNode->nodePos = snapPos(mousePos);
+			newNode->nodeId = nodes.size(); // temp id assignment
+			newNode->SetTextureSize(texSize);
+			newNode->resourceName = payload_resource;
+			nodes.push_back(newNode);
+
+			selectedNode = (int)nodes.size() - 1;
 		}
 
 		ImGui::EndDragDropTarget();
@@ -582,6 +600,7 @@ void GraphEditorView::DeleteNode(int index)
 
 	delete nodes[index];
 	nodes.erase(nodes.begin() + index);
+	dirty = true;
 }
 
 // returns true if found cyclical reference
@@ -689,6 +708,7 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 			return true; // gain handling priority
 		}
 		else if (event.mouseButton.button == sf::Mouse::Button::Left) {
+			dirty = true;
 			sf::Vector2f mousePos = pixelToGraph(sf::Vector2i((int)ImGui::GetMousePos().x, (int)ImGui::GetMousePos().y));
 
 			selectedNode = -1;

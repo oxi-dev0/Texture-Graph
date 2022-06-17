@@ -28,7 +28,7 @@ void InspectorView::ComponentRender()
 		}
 	}
 
-	if (graph->selectedNode >= 0) {
+	if (graph->selectedNode >= 0 && graph->selectedNode < graph->nodes.size()) {
 		if (ImGui::CollapsingHeader("Node Info", ImGuiTreeNodeFlags_DefaultOpen)) {
 			std::stringstream classStream;
 			classStream << "Class: " << graph->nodes[graph->selectedNode]->nodeClass;
@@ -39,8 +39,8 @@ void InspectorView::ComponentRender()
 		}
 		if (ImGui::CollapsingHeader("Node Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
 			if (dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode]) != nullptr) {
-				if (dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode])->resourceIndex > -1) {
-					ImGui::InputText("##imagepath", const_cast<char*>(Graph::Resources::resourceList[dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode])->resourceIndex].c_str()), IM_ARRAYSIZE(Graph::Resources::resourceList[dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode])->resourceIndex].c_str()), ImGuiInputTextFlags_ReadOnly);
+				if (dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode])->resourceName != "") {
+					ImGui::InputText("##imagepath", const_cast<char*>(std::filesystem::path(dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode])->resourceName).filename().replace_extension("").string().c_str()), IM_ARRAYSIZE(dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode])->resourceName.c_str()), ImGuiInputTextFlags_ReadOnly);
 				}
 				else {
 					ImGui::InputText("##imagepath", const_cast<char*>(""), 0, ImGuiInputTextFlags_ReadOnly);
@@ -49,9 +49,9 @@ void InspectorView::ComponentRender()
 				if (ImGui::Button("...")) {
 					ImGui::OpenPopup("##ResourceSelector");
 				}
-				int selector = Graph::Resources::ResourceSelector(dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode])->resourceIndex);
-				if (selector > -1) {
-					dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode])->resourceIndex = selector;
+				std::string selector = Bundle::Resources::ResourceSelector(dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode])->resourceName);
+				if (selector != "") {
+					dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode])->resourceName = selector;
 				}
 				ImGui::SameLine();
 				ImGui::Text("Image Resource");

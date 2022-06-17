@@ -5,7 +5,15 @@ namespace LibraryManager {
 	std::map<std::string, int> classToNode;
 	std::function<void(void)> LoadedCallback;
 
+	void Clear() {
+		for (auto* node : compiledNodes) {
+			if (node == nullptr) { continue; }
+			delete node;
+		}
+	}
+
 	void LoadNodeLibrary(bool justRedraw) {
+		Clear();
 		if(justRedraw) {
 			if (LoadedCallback) {
 				LoadedCallback();
@@ -15,12 +23,12 @@ namespace LibraryManager {
 		  
 		compiledNodes.clear();
 		 
-		if (!std::filesystem::is_directory("temp") || !std::filesystem::exists("temp")) {
-			std::filesystem::create_directory("temp");
+		if (!std::filesystem::is_directory("temp/node-exec") || !std::filesystem::exists("temp/node-exec")) {
+			std::filesystem::create_directory("temp/node-exec");
 		}
 		else {
-			std::filesystem::remove_all("temp");
-			std::filesystem::create_directory("temp");
+			std::filesystem::remove_all("temp/node-exec");
+			std::filesystem::create_directory("temp/node-exec");
 		}
 
 		LOG_INFO("Scanning library folder for node definitions...");

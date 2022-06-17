@@ -5,6 +5,7 @@
 #include "GraphEditorView.h"
 #include "../../Utils/Strings.h"
 #include "../../Bundle/GraphSerializer.h"
+#include "../../Bundle/BundleSerializer.h"
 #include "../../Bundle/ResourceManager.h"
 
 #include <map>
@@ -21,8 +22,6 @@ private:
 public:
 	GraphEditorView* focusedGraphView;
 	std::function<void(std::string id)> openPopup;
-
-	std::string* currentBundle;
 
 protected:
 	virtual void ToolBarButtons();

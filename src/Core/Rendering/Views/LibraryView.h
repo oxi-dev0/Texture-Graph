@@ -18,7 +18,7 @@ public:
 	std::map<std::vector<std::string>, Utility::ImGuiExtra::CollapsableSelectorData> categorySelector; // full category section list -> selector data
 	std::vector<std::string> selectedCategory; // full category section list
 
-	std::map<std::string, sf::Texture> thumbnails; // node class -> thumbnail image
+	std::map<std::string, sf::Texture*> thumbnails; // node class -> thumbnail image
 
 	void LoadNodes();
 

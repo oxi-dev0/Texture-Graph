@@ -16,6 +16,7 @@
 
 #include "../Library/LibraryManager.h"
 #include "../Bundle/GraphSerializer.h"
+#include "../Bundle/BundleSerializer.h"
 #include "Views/BrowserView.h"
 
 #include <string>
@@ -47,11 +48,9 @@ public:
 	sf::RenderWindow window;
 	std::vector<SubWindow*>* views;
 
-	GraphEditorView* focusedGraphView;
-	BrowserView* mainBrowserView;
+	GraphEditorView* graphView;
 
-	std::string* currentBundle;
-	std::string* currentGraph;
+	BrowserView* mainBrowserView;
 
 	bool exit;
 

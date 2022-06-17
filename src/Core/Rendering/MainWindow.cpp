@@ -5,19 +5,48 @@ void MainWindow::MenuBar() {
     {
         if (ImGui::BeginMenu("File"))
         {
-            if (ImGui::MenuItem("New"))
+            if (ImGui::MenuItem("New Bundle"))
             {
-                focusedGraphView->Clear();
+                GraphEditorView& c = *graphView;
+                std::function<void(void)> f = [&c]() {
+                    Bundle::Serialization::NewBundle();
+                    Graph::Serialization::currentGraph = "";
+                    c.Clear();
+                };
+                if (Bundle::Serialization::dirty && Bundle::Serialization::currentBundle != "") {
+                    Bundle::Serialization::SafeNew(f);
+                }
+                else {
+                    f();
+                }
             }
 
             ImGui::Separator();
 
-            if (ImGui::MenuItem("Open Graph")) {
-                Graph::Serialization::AskLoadGraphFromFile(*focusedGraphView);
+            if (ImGui::MenuItem("Open Bundle")) {
+                GraphEditorView& c = *graphView;
+                std::function<void(void)> f = [&c]() {
+                    if (Bundle::Serialization::AskLoadBundleFromFile()) {
+                        c.Clear();
+                        Graph::Serialization::currentGraph = "";
+                    }
+                };
+                if (Bundle::Serialization::dirty && Bundle::Serialization::currentBundle != "") {
+                    Bundle::Serialization::SafeNew(f);
+                }
+                else {
+                    f();
+                }
             }
 
-            if (ImGui::MenuItem("Save Graph As..")) {
-                Graph::Serialization::AskSaveGraphToFile(*focusedGraphView);
+            if (ImGui::MenuItem("Save Bundle As..")) {
+                Bundle::Serialization::AskSaveBundleToFile();
+            }
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Save Graph")) {
+                Graph::Serialization::SaveGraphToFile(*graphView, "temp/bundle/" + Graph::Serialization::currentGraph + ".graph");
             }
 
             ImGui::Separator();
@@ -88,7 +117,7 @@ void MainWindow::MenuBar() {
             ImGui::Separator();
 
             if (ImGui::MenuItem("Evaluate Nodes")) {
-                auto evalThread = std::thread(&GraphEditorView::EvaluateNodes, focusedGraphView);
+                auto evalThread = std::thread(&GraphEditorView::EvaluateNodes, graphView);
                 evalThread.detach();
             }
             
@@ -165,12 +194,10 @@ MainWindow::MainWindow() {
     exit = false;
     handlingView = nullptr;
     views = nullptr;
-    currentBundle = new std::string("");
 }
 
 MainWindow::~MainWindow() {
     //delete[] buf;
-    delete currentBundle;
 }
 
 MainWindow::MainWindow(std::string windowTitle) {
@@ -252,10 +279,10 @@ int MainWindow::Update() {
                 break;
             case Keybinds::KeybindEvent_Copy:
             {
-                if (focusedGraphView->multiSelectNodes.size() == 0) { break; }
+                if (graphView->multiSelectNodes.size() == 0) { break; }
 
                 std::string data;
-                Graph::Serialization::SaveNodesToData(*focusedGraphView, focusedGraphView->multiSelectNodes, data);
+                Graph::Serialization::SaveNodesToData(*graphView, graphView->multiSelectNodes, data);
                 data = "TEXTUREGRAPH!" + data;
                 clip::set_text(data);
                 LOG_INFO("Copied nodes to clipboard");
@@ -267,20 +294,20 @@ int MainWindow::Update() {
                 auto data = Utility::String::split(pasteData, '!');
                 if (data[0] != "TEXTUREGRAPH") { break; }
 
-                int oldLastIndex = focusedGraphView->nodes.size();
+                int oldLastIndex = graphView->nodes.size();
                 sf::Vector2f offset;
-                if (focusedGraphView->nodes.size() > 0) {
-                    for (auto& node : focusedGraphView->nodes) {
+                if (graphView->nodes.size() > 0) {
+                    for (auto& node : graphView->nodes) {
                         offset.x = std::max(offset.x, node->calcBounds().left + node->calcBounds().width);
                     }
                     offset.x + 100;
                 }
-                Graph::Serialization::AppendNodesFromData(*focusedGraphView, data[1]);
-                focusedGraphView->multiSelectNodes.clear();
+                Graph::Serialization::AppendNodesFromData(*graphView, data[1]);
+                graphView->multiSelectNodes.clear();
 
-                for (int x = oldLastIndex; x < focusedGraphView->nodes.size(); x++) {
-                    focusedGraphView->nodes[x]->nodePos = focusedGraphView->snapPos(focusedGraphView->nodes[x]->nodePos + offset);
-                    focusedGraphView->multiSelectNodes.push_back(x);
+                for (int x = oldLastIndex; x < graphView->nodes.size(); x++) {
+                    graphView->nodes[x]->nodePos = graphView->snapPos(graphView->nodes[x]->nodePos + offset);
+                    graphView->multiSelectNodes.push_back(x);
                 }
 
                 LOG_INFO("Appended nodes from clipboard");
@@ -331,35 +358,29 @@ void MainWindow::Popups() {
         openPopup = false;
     }
 
-    if (ImGui::BeginPopup("New Graph", NULL)) {
-        if (ImGui::InputText("Name", buf, IM_ARRAYSIZE(buf), ImGuiInputTextFlags_EnterReturnsTrue)) {
-            if (buf[0] != '\0') {
-                ImGui::CloseCurrentPopup();
-                focusedGraphView->Clear();
-                std::stringstream fileStream;
-                fileStream << "graphs/" << buf << ".tgraph";
-                Graph::Serialization::SaveGraphToFile(*focusedGraphView, fileStream.str());
+    if (ImGui::BeginPopup("##BrowserNew")) {
+        if (ImGui::Selectable("Bundle...", false, 0, ImVec2(70,30))) {
+            GraphEditorView& c = *graphView;
+            std::function<void(void)> f = [&c]() {
+                Bundle::Serialization::NewBundle();
+                c.Clear();
+
+            };
+            if (Bundle::Serialization::dirty && Bundle::Serialization::currentBundle != "") {
+                Bundle::Serialization::SafeNew(f);
             }
-        }
-        if (ImGui::Button("Cancel")) {
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::SameLine();
-        //ImGui::PushStyleColor(ImGuiCol_Text, buf[0] == '\0' ? ImVec4(1.f, 0.f, 0.f, 1.f) : ImVec4(1.f, 1.f, 1.f, 1.f));
-        if (buf[0] == '\0') { ImGui::BeginDisabled(); }
-        if (ImGui::Button("Ok")) {
-            if (buf[0] != '\0') {
-                ImGui::CloseCurrentPopup();
-                focusedGraphView->Clear();
-                std::stringstream fileStream;
-                fileStream << "graphs/" << buf << ".tgraph";
-                Graph::Serialization::SaveGraphToFile(*focusedGraphView, fileStream.str());
+            else {
+                f();
             }
+            ImGui::CloseCurrentPopup(); 
         }
-        if (buf[0] == '\0') { ImGui::EndDisabled(); }
-        //ImGui::PopStyleColor();
+        if (ImGui::Selectable("Graph...", false, 0, ImVec2(70,30))) { OpenPopup("New Graph"); ImGui::CloseCurrentPopup(); }
         ImGui::EndPopup();
     }
+
+    Graph::Serialization::GraphNewPopup(*graphView, buf);
+    Graph::Serialization::ClearPromptPopup(*graphView);
+    Bundle::Serialization::BundlePromptPopup();
 }
 
 void MainWindow::BeginRender() {

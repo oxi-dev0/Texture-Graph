@@ -21,5 +21,7 @@ namespace LibraryManager {
 		LoadedCallback = callback;
 	};
 
+	void Clear();
+
 	extern void LoadNodeLibrary(bool justRedraw = false);
 }

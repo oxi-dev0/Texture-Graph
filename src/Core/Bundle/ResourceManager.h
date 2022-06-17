@@ -15,20 +15,23 @@
 #include <unordered_map>
 #include <nfd.h>
 
-namespace Graph
+namespace Bundle
 {
 	namespace Resources
 	{
 		extern std::vector<std::string> resourceList; // list of resource paths
-		extern std::unordered_map<int, sf::Texture> resourcePreviews;
+		extern std::unordered_map<int, sf::Texture*> resourcePreviews;
 
 		void Init();
 		void Clear();
 
 		void GeneratePreviews();
+		void LoadFromBundle();
 
-		int ImportResourceFromAsk();
+		void ClearPreviews();
 
-		int ResourceSelector(int currentResource = -1);
+		std::string ImportResourceFromAsk();
+
+		std::string ResourceSelector(std::string currentResource = "");
 	}
 }

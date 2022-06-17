@@ -4,24 +4,9 @@ namespace Graph
 {
 	namespace Serialization
 	{
-		SerializationStatus AskSaveGraphToFile(GraphEditorView& graph) {
-			nfdchar_t* outPath;
-			nfdfilteritem_t filterItem[1] = { { "Texture Graph", "tgraph" } };
-			nfdresult_t result = NFD_SaveDialog(&outPath, filterItem, 1, "graphs/", "");
-			if (result == NFD_OKAY) {
-				return SaveGraphToFile(graph, std::string(outPath));
-			}
-			else {
-				if (result == NFD_CANCEL) {
-					LOG_WARN("User canceled saving graph");
-					return SerializationStatus::Failed;
-				}
-				else {
-					LOG_ERROR("Error saving graph");
-					return SerializationStatus::Failed;
-				}
-			}
-		}
+		std::string currentGraph;
+		std::function<void(void)> clearPromptCallback;
+		std::function<void(std::string)> openPopup;
 
 		SerializationStatus SaveGraphToFile(GraphEditorView& graph, std::string file) {
 			auto& nodes = graph.nodes;
@@ -40,12 +25,6 @@ namespace Graph
 			SaveNodesToData(graph, nodesList, newData);
 			lines = Utility::String::split(newData, '\n');
 
-			lines.push_back("RESOURCES>");
-			for (auto& resourceFile : Graph::Resources::resourceList) {
-				lines.push_back(resourceFile);
-			}
-			lines.push_back(">RESOURCES");
-
 			std::ofstream graphFile;
 			graphFile.open(file);
 			for (auto line : lines) {
@@ -53,8 +32,53 @@ namespace Graph
 			}
 			graphFile.close();
 
+			graph.dirty = false;
+
 			LOG_INFO("Successfully saved graph to '{0}' in {1}s", file, tmr.Elapsed());
+			currentGraph = std::filesystem::path(file).filename().replace_extension("").string();
 			return SerializationStatus::Successful;
+		}
+
+		void NewGraph(GraphEditorView& graph, std::string name) {
+			std::function<void(void)> f = [&graph, name]() {
+				graph.Clear();
+				currentGraph = name;
+				SaveGraphToFile(graph, "temp/bundle/" + name + ".graph");
+			};
+			if (graph.dirty && currentGraph != "") {
+				SafeClear(f);
+			}
+			else {
+				f();
+			}
+		}
+
+		std::vector<std::string> GetGraphsInBundle() {
+			std::vector<std::string> p;
+			for (std::filesystem::directory_iterator i("temp/bundle"), end; i != end; ++i) {
+				if (!is_directory(i->path())) {
+					p.push_back(i->path().string());
+				}
+			}
+			return p;
+		}
+
+		void GraphNewPopup(GraphEditorView& graph, char* nameBuf) {
+			if (ImGui::BeginPopup("New Graph")) {
+				if (ImGui::InputText("Name", nameBuf, IM_ARRAYSIZE(nameBuf), ImGuiInputTextFlags_EnterReturnsTrue)) {
+					NewGraph(graph, nameBuf);
+					ImGui::CloseCurrentPopup();
+				}
+				if (ImGui::Button("Cancel")) {
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Ok")) {
+					NewGraph(graph, nameBuf);
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::EndPopup();
+			}
 		}
 
 		SerializationStatus SaveNodesToData(GraphEditorView& graph, std::vector<int> nodesList, std::string& lines) {
@@ -88,32 +112,13 @@ namespace Graph
 				if (dynamic_cast<ImageNode*>(node) != nullptr) {
 					auto* casted = dynamic_cast<ImageNode*>(node);
 					dataStream.str("");
-					dataStream << "RI>" << casted->resourceIndex;
+					dataStream << "RI>" << casted->resourceName;
 					lines += dataStream.str() + "\n";
 				}
 				n++;
 			}
 
 			return SerializationStatus::Successful;
-		}
-
-		SerializationStatus AskLoadGraphFromFile(GraphEditorView& graph) {
-			nfdchar_t* outPath;
-			nfdfilteritem_t filterItem[1] = { { "Texture Graph", "tgraph" } };
-			nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, "graphs/");
-			if (result == NFD_OKAY) {
-				return LoadGraphFromFile(graph, std::string(outPath));
-			}
-			else {
-				if (result == NFD_CANCEL) {
-					LOG_WARN("User canceled loading graph");
-					return SerializationStatus::Failed;
-				}
-				else {
-					LOG_ERROR("Error loading graph");
-					return SerializationStatus::Failed;
-				}
-			}
 		}
 
 		SerializationStatus AppendNodesFromData(GraphEditorView& graph, std::string data) {
@@ -186,7 +191,7 @@ namespace Graph
 					currentNode->luaVarData[var].FromString(val);
 				}
 				if (type == "RI") {
-					dynamic_cast<ImageNode*>(currentNode)->resourceIndex = std::stoi(data[0]);
+					dynamic_cast<ImageNode*>(currentNode)->resourceName = data[0];
 				}
 			}
 
@@ -215,39 +220,67 @@ namespace Graph
 			return SerializationStatus::Successful;
 		}
 
+		void SafeClear(std::function<void(void)> callback) {
+			clearPromptCallback = callback;
+			
+			openPopup("##ClearPrompt");
+		}
+
+		void ClearPromptPopup(GraphEditorView& graph) {
+			if (ImGui::BeginPopup("##ClearPrompt")) {
+				ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5, 0.5));
+				ImGui::Selectable("You have unsaved graph changes.", false, 0, ImVec2(270, 25), false, nullptr, false, true);
+				ImGui::PopStyleVar();
+				if (ImGui::Button("Cancel", ImVec2(80, 30))) {
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Don't Save", ImVec2(80, 30))) {
+					ImGui::CloseCurrentPopup();
+					clearPromptCallback();
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Save", ImVec2(80, 30))) {
+					SaveGraphToFile(graph, "temp/bundle/" + currentGraph + ".graph");
+					ImGui::CloseCurrentPopup();
+					clearPromptCallback();
+				}
+				ImGui::EndPopup();
+			}
+		}
+
 		SerializationStatus LoadGraphFromFile(GraphEditorView& graph, std::string file) {
 			if (!std::filesystem::exists(file)) { LOG_CRITICAL("Graph File '{0}' could not be found.", file); }
-			std::ifstream f(file);
-			graph.Clear();
 
-			Utility::Timer tmr;
+			std::function<void(void)> la = [&graph, file]() {
+				std::ifstream f(file);
+				graph.Clear();
 
-			std::string nodeLines;
-			std::vector<std::string> resources;
-			std::string line;
-			bool resourceDefs = false;
-			while (std::getline(f, line)) {
-				if (line == "RESOURCES>") { resourceDefs = true; continue; }
-				if (line == ">RESOURCES") { resourceDefs = false; continue; }
+				Utility::Timer tmr;
 
-				if (!resourceDefs) {
+				std::string nodeLines;
+				std::vector<std::string> resources;
+				std::string line;
+				while (std::getline(f, line)) {
 					nodeLines += line + "\n";
 				}
-				else {
-					resources.push_back(line);
+				SerializationStatus status = AppendNodesFromData(graph, nodeLines);
+
+				LOG_INFO("Successfully loaded graph from '{0}' in {1}s", file, tmr.Elapsed());
+				if (graph.CheckCyclical()) {
+					LOG_ERROR("Loaded graph contains cyclical dependancy, the file may have corrupted.");
 				}
-			}
-			SerializationStatus status = AppendNodesFromData(graph, nodeLines);
 
-			Graph::Resources::Clear();
-			Graph::Resources::resourceList = resources;
-			Graph::Resources::GeneratePreviews();
-
-			LOG_INFO("Successfully loaded graph from '{0}' in {1}s", file, tmr.Elapsed());
-			if (graph.CheckCyclical()) {
-				LOG_ERROR("Loaded graph contains cyclical dependancy, the file may have corrupted.");
+				currentGraph = std::filesystem::path(file).filename().replace_extension("").string();
+				return status;
+			};
+			if (graph.dirty && currentGraph != "") {
+				SafeClear(la);
 			}
-			return status;
+			else {
+				la();
+			}
+			return SerializationStatus::Successful;
 		}
 	}
 }

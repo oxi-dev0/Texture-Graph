@@ -18,7 +18,19 @@
 <h6 align="center"> Please Note: Currently the app is quite slow compaired to Substance Designer. I am working on a branch that uses gpu frag shaders to generate the textures rather than lua running on the cpu. </h6>
 <br>
 
+Documentation is wip.
+
 <h2> Program Documentation </h2>
+<h3> Download </h3>
+
+1. When available, download the latest release from the [Releases](https://github.com/oxi-dev0/Texture-Graph/releases) page.  
+2. Extract the zip, and run `TextureGraph.exe`.
+
+<h3> Getting Started </h3>
+
+For some quick examples, in the browser view, click on the open bundle button, and then open `examples/basicgraphs.tgbundle`. In the explorer view, all of the graphs inside the bundle will be listed. If you click on a graph, it will be loaded into the graph editor. You can then press the evaluate button in the graph editor to generate the textures. You can select individual nodes by clicking on them, and to download their texture, in the texture viewer you can click the save button.
+
+> More detailed documentation coming soon.
 
 
 <h2> Source Documentation </h2>

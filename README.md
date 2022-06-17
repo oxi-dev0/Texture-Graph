@@ -3,11 +3,14 @@
     <a href="#">
         <img src="https://img.shields.io/github/repo-size/oxi-dev0/Texture-Graph" alt="Repo Size">
     </a>
-    <a href="https://github.com/oxi-dev0/Texture-Graph/releases/tag/v1.0">
-        <img src="https://img.shields.io/github/downloads/oxi-dev0/Texture-Graph/total" alt="Downloads">
-    </a>
     <a href="#">
         <img src="https://img.shields.io/github/stars/oxi-dev0/Texture-Graph" alt="Stars">
+    </a>
+    <a href="#">
+        <img src="https://img.shields.io/github/forks/oxi-dev0/Texture-Graph" alt="Forks">
+    </a>
+    <a href="#">
+        <img src="https://img.shields.io/github/watchers/oxi-dev0/Texture-Graph" alt="Watchers">
     </a>
 </p>
 

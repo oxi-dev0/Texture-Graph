@@ -78,7 +78,7 @@ namespace Utility {
 			ImVec2 min = ImGui::GetItemRectMin();
 			ImVec2 max = ImGui::GetItemRectMax();
 			float height = max.y - min.y;
-			ImGui::PopStyleVar();
+			ImGui::PopStyleVar(1);
 			ImGui::SameLine();
 			float width = ImGui::GetContentRegionAvail().x;
 			//ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, ImVec2(0, 0));

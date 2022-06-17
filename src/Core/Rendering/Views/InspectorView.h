@@ -2,6 +2,9 @@
 
 #include "../SubWindow.h"
 #include "../../Utils/ImGuiExtra.h"
+#include "../../Bundle/Node/ImageNode.h"
+#include "../../Bundle/ResourceManager.h"
+#include <nfd.h>
 #include "GraphEditorView.h"
 #include <vector>
 #include <map>

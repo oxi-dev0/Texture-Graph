@@ -12,8 +12,8 @@ void LibraryEditorView::LoadNodes() {
 	categorySelector.clear();
 
 	int i = 0;
-	for (auto& node : LibraryManager::compiledNodes) {
-		std::vector<std::string> categorySections = Utility::String::split(node.category, '/');
+	for (auto* node : LibraryManager::compiledNodes) {
+		std::vector<std::string> categorySections = Utility::String::split(node->category, '/');
 
 		// Insert node index into node index list
 		if (categoryIndexList.find(categorySections) == categoryIndexList.end()) {
@@ -72,10 +72,10 @@ void LibraryEditorView::RenderThumbnails()
 	for (auto& node : LibraryManager::compiledNodes)
 	{
 		Utility::Timer nodeTmr;
-		auto& className = node.nodeClass;
-		node.SetTextureSize(sf::Vector2i(100, 100));
-		node.Execute(nullptr);
-		auto& tex = node.displayTexture;
+		auto& className = node->nodeClass;
+		node->SetTextureSize(sf::Vector2i(100, 100));
+		node->Execute(nullptr);
+		auto& tex = node->displayTexture;
 		thumbnails.insert({ className, tex });
 		LOG_TRACE("Generated thumbnail for Node Class '{0}' in {1}ms", className, nodeTmr.Elapsed() * 1000.f);
 	}
@@ -154,21 +154,21 @@ void LibraryEditorView::RenderCategories(std::vector<std::string> categorySectio
 	ImGui::PopStyleColor();
 }
 
-void LibraryEditorView::RenderNodeListing(GraphNode& node, int index) {
+void LibraryEditorView::RenderNodeListing(GraphNode* node, int index) {
 	ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_ChildBg));
 	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_Header));
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 0));
 	ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5));
 
-	sf::Texture& tex = thumbnails[node.nodeClass];
+	sf::Texture& tex = thumbnails[node->nodeClass];
 		
-	ImGui::ImageButtonWithText(tex, node.displayName.c_str(), 5, ImVec2(40,40), ImVec2(ImGui::GetContentRegionAvail().x, 50));
+	ImGui::ImageButtonWithText(tex, node->displayName.c_str(), 5, ImVec2(40,40), ImVec2(ImGui::GetContentRegionAvail().x, 50));
 	if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
 	{
 		// Set payload to carry the index of node
 		ImGui::SetDragDropPayload("NODE_CLASS_INSTANCE", &index, sizeof(int));
 
-		ImGui::Text(node.displayName.c_str());
+		ImGui::Text(node->displayName.c_str());
 
 		ImGui::EndDragDropSource();
 	}
@@ -179,7 +179,7 @@ void LibraryEditorView::RenderNodeListing(GraphNode& node, int index) {
 void LibraryEditorView::RenderNodes() {
 	for (auto nodeIndex : categoryIndexList[selectedCategory])
 	{
-		auto& node = LibraryManager::compiledNodes[nodeIndex];
+		auto* node = LibraryManager::compiledNodes[nodeIndex];
 		RenderNodeListing(node, nodeIndex);
 	}
 }

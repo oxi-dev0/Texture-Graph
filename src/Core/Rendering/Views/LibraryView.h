@@ -3,6 +3,7 @@
 #include "../SubWindow.h"
 #include "../../Utils/ImGuiExtra.h"
 #include "../../Library/LibraryManager.h"
+#include "../../Bundle/Node/ImageNode.h"
 
 #include <map>
 #include <sstream>
@@ -26,7 +27,7 @@ public:
 private:
 	void RenderCategories(std::vector<std::string> categories, std::string parentCategory="");
 	void RenderNodes();
-	void RenderNodeListing(GraphNode& node, int index);
+	void RenderNodeListing(GraphNode* node, int index);
 
 protected:
 	virtual void ComponentRender();

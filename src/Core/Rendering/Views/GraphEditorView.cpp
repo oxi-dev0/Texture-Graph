@@ -19,6 +19,7 @@ void GraphEditorView::Clear() {
 	nodes.clear();
 	zoom = 1.0f;
 	view.reset(initialRect);
+	Graph::Resources::Clear();
 	vcenter = sf::Vector2f(0, 0);
 }
 
@@ -502,10 +503,10 @@ void GraphEditorView::IMGUIRender() {
 			IM_ASSERT(payload->DataSize == sizeof(int));
 			int payload_nodeIndex = *(const int*)payload->Data;
 
-			GraphNode& compiledNode = LibraryManager::compiledNodes[payload_nodeIndex];
+			GraphNode* compiledNode = LibraryManager::compiledNodes[payload_nodeIndex];
 			sf::Vector2f mousePos = pixelToGraph(sf::Vector2i((int)ImGui::GetMousePos().x, (int)ImGui::GetMousePos().y));
 
-			GraphNode* newNode = new GraphNode(compiledNode);
+			GraphNode* newNode = copyNode(compiledNode); // copy function makes sure that if its a subclass it doesnt get converted down
 			newNode->nodePos = snapPos(mousePos);
 			newNode->nodeId = nodes.size(); // temp id assignment
 			newNode->SetTextureSize(texSize);

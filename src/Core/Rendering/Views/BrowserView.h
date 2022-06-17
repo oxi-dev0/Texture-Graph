@@ -4,7 +4,8 @@
 #include "../../Utils/ImGuiExtra.h"
 #include "GraphEditorView.h"
 #include "../../Utils/Strings.h"
-#include "../../Graph/GraphSerializer.h"
+#include "../../Bundle/GraphSerializer.h"
+#include "../../Bundle/ResourceManager.h"
 
 #include <map>
 #include <sstream>
@@ -14,23 +15,20 @@
 
 class BrowserView : public SubWindow
 {
+private:
+	Utility::ImGuiExtra::CollapsableSelectorData oldTitleData;
+	Utility::ImGuiExtra::CollapsableSelectorData oldResourcesData;
 public:
-	std::string currentGraph;
-	GraphEditorView* focusedGraph;
+	GraphEditorView* focusedGraphView;
 	std::function<void(std::string id)> openPopup;
 
-	std::map<std::string, std::string> foundGraphs; // name -> file
-
-private:
-	void RenderGraphListing(std::string graph, std::string graphFile);
+	std::string* currentBundle;
 
 protected:
 	virtual void ToolBarButtons();
 	virtual void ComponentRender();
 
 public:
-	void LoadGraphs();
-
 	inline void RegisterPopupCallback(std::function<void (std::string id)> callback)
 	{
 		openPopup = callback;

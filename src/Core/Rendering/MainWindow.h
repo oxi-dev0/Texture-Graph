@@ -15,7 +15,7 @@
 #include "../Utils/Keybinds.h"
 
 #include "../Library/LibraryManager.h"
-#include "../Graph/GraphSerializer.h"
+#include "../Bundle/GraphSerializer.h"
 #include "Views/BrowserView.h"
 
 #include <string>
@@ -47,8 +47,11 @@ public:
 	sf::RenderWindow window;
 	std::vector<SubWindow*>* views;
 
-	GraphEditorView* selectedGraph;
+	GraphEditorView* focusedGraphView;
 	BrowserView* mainBrowserView;
+
+	std::string* currentBundle;
+	std::string* currentGraph;
 
 	bool exit;
 

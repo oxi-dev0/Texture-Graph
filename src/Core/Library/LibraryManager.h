@@ -5,13 +5,14 @@
 #include <filesystem>
 #include <thread>
 
-#include "../Graph/Node/GraphNode.h"
+#include "../Bundle/Node/GraphNode.h"
+#include "../Bundle/Node/ImageNode.h"
 #include "../Utils/Log.h"
 #include "../Utils/Timer.h"
 #include "../Utils/Strings.h"
 
 namespace LibraryManager {
-	extern std::vector<GraphNode> compiledNodes;
+	extern std::vector<GraphNode*> compiledNodes;
 	extern std::map<std::string, int> classToNode;
 	extern std::function<void(void)> LoadedCallback;
 

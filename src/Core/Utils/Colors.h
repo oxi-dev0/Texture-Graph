@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Data/Types.h"
+#include "../Types.h"
 #include <string>
 
 namespace Utility {

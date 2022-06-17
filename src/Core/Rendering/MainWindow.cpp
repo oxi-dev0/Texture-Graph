@@ -7,17 +7,17 @@ void MainWindow::MenuBar() {
         {
             if (ImGui::MenuItem("New"))
             {
-                selectedGraph->Clear();
+                focusedGraphView->Clear();
             }
 
             ImGui::Separator();
 
             if (ImGui::MenuItem("Open Graph")) {
-                Serialization::Graph::AskLoadGraphFromFile(*selectedGraph);
+                Graph::Serialization::AskLoadGraphFromFile(*focusedGraphView);
             }
 
             if (ImGui::MenuItem("Save Graph As..")) {
-                Serialization::Graph::AskSaveGraphToFile(*selectedGraph);
+                Graph::Serialization::AskSaveGraphToFile(*focusedGraphView);
             }
 
             ImGui::Separator();
@@ -88,7 +88,7 @@ void MainWindow::MenuBar() {
             ImGui::Separator();
 
             if (ImGui::MenuItem("Evaluate Nodes")) {
-                auto evalThread = std::thread(&GraphEditorView::EvaluateNodes, selectedGraph);
+                auto evalThread = std::thread(&GraphEditorView::EvaluateNodes, focusedGraphView);
                 evalThread.detach();
             }
             
@@ -165,10 +165,12 @@ MainWindow::MainWindow() {
     exit = false;
     handlingView = nullptr;
     views = nullptr;
+    currentBundle = new std::string("");
 }
 
 MainWindow::~MainWindow() {
     //delete[] buf;
+    delete currentBundle;
 }
 
 MainWindow::MainWindow(std::string windowTitle) {
@@ -188,6 +190,8 @@ void MainWindow::Init(std::string windowTitle) {
     ImGui::SFML::Init(window, false); // Init IMGUI with main window
 
     LOG_INFO("Initialised Window");
+
+
 
     // IMGUI FLAGS
     ImGuiIO& io = ImGui::GetIO();
@@ -248,10 +252,10 @@ int MainWindow::Update() {
                 break;
             case Keybinds::KeybindEvent_Copy:
             {
-                if (selectedGraph->multiSelectNodes.size() == 0) { break; }
+                if (focusedGraphView->multiSelectNodes.size() == 0) { break; }
 
                 std::string data;
-                Serialization::Graph::SaveNodesToData(*selectedGraph, selectedGraph->multiSelectNodes, data);
+                Graph::Serialization::SaveNodesToData(*focusedGraphView, focusedGraphView->multiSelectNodes, data);
                 data = "TEXTUREGRAPH!" + data;
                 clip::set_text(data);
                 LOG_INFO("Copied nodes to clipboard");
@@ -263,20 +267,20 @@ int MainWindow::Update() {
                 auto data = Utility::String::split(pasteData, '!');
                 if (data[0] != "TEXTUREGRAPH") { break; }
 
-                int oldLastIndex = selectedGraph->nodes.size();
+                int oldLastIndex = focusedGraphView->nodes.size();
                 sf::Vector2f offset;
-                if (selectedGraph->nodes.size() > 0) {
-                    for (auto& node : selectedGraph->nodes) {
+                if (focusedGraphView->nodes.size() > 0) {
+                    for (auto& node : focusedGraphView->nodes) {
                         offset.x = std::max(offset.x, node->calcBounds().left + node->calcBounds().width);
                     }
                     offset.x + 100;
                 }
-                Serialization::Graph::AppendNodesFromData(*selectedGraph, data[1]);
-                selectedGraph->multiSelectNodes.clear();
+                Graph::Serialization::AppendNodesFromData(*focusedGraphView, data[1]);
+                focusedGraphView->multiSelectNodes.clear();
 
-                for (int x = oldLastIndex; x < selectedGraph->nodes.size(); x++) {
-                    selectedGraph->nodes[x]->nodePos = selectedGraph->snapPos(selectedGraph->nodes[x]->nodePos + offset);
-                    selectedGraph->multiSelectNodes.push_back(x);
+                for (int x = oldLastIndex; x < focusedGraphView->nodes.size(); x++) {
+                    focusedGraphView->nodes[x]->nodePos = focusedGraphView->snapPos(focusedGraphView->nodes[x]->nodePos + offset);
+                    focusedGraphView->multiSelectNodes.push_back(x);
                 }
 
                 LOG_INFO("Appended nodes from clipboard");
@@ -331,11 +335,10 @@ void MainWindow::Popups() {
         if (ImGui::InputText("Name", buf, IM_ARRAYSIZE(buf), ImGuiInputTextFlags_EnterReturnsTrue)) {
             if (buf[0] != '\0') {
                 ImGui::CloseCurrentPopup();
-                selectedGraph->Clear();
+                focusedGraphView->Clear();
                 std::stringstream fileStream;
                 fileStream << "graphs/" << buf << ".tgraph";
-                Serialization::Graph::SaveGraphToFile(*selectedGraph, fileStream.str());
-                mainBrowserView->LoadGraphs();
+                Graph::Serialization::SaveGraphToFile(*focusedGraphView, fileStream.str());
             }
         }
         if (ImGui::Button("Cancel")) {
@@ -347,11 +350,10 @@ void MainWindow::Popups() {
         if (ImGui::Button("Ok")) {
             if (buf[0] != '\0') {
                 ImGui::CloseCurrentPopup();
-                selectedGraph->Clear();
+                focusedGraphView->Clear();
                 std::stringstream fileStream;
                 fileStream << "graphs/" << buf << ".tgraph";
-                Serialization::Graph::SaveGraphToFile(*selectedGraph, fileStream.str());
-                mainBrowserView->LoadGraphs();
+                Graph::Serialization::SaveGraphToFile(*focusedGraphView, fileStream.str());
             }
         }
         if (buf[0] == '\0') { ImGui::EndDisabled(); }

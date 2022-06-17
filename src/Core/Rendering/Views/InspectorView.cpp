@@ -29,13 +29,34 @@ void InspectorView::ComponentRender()
 	}
 
 	if (graph->selectedNode >= 0) {
-		if (ImGui::CollapsingHeader("Node Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
+		if (ImGui::CollapsingHeader("Node Info", ImGuiTreeNodeFlags_DefaultOpen)) {
 			std::stringstream classStream;
 			classStream << "Class: " << graph->nodes[graph->selectedNode]->nodeClass;
 			ImGui::Text(classStream.str().c_str());
 			std::stringstream idStream;
 			idStream << "ID: " << graph->nodes[graph->selectedNode]->nodeId;
 			ImGui::Text(idStream.str().c_str());
+		}
+		if (ImGui::CollapsingHeader("Node Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
+			if (dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode]) != nullptr) {
+				if (dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode])->resourceIndex > -1) {
+					ImGui::InputText("##imagepath", const_cast<char*>(Graph::Resources::resourceList[dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode])->resourceIndex].c_str()), IM_ARRAYSIZE(Graph::Resources::resourceList[dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode])->resourceIndex].c_str()), ImGuiInputTextFlags_ReadOnly);
+				}
+				else {
+					ImGui::InputText("##imagepath", const_cast<char*>(""), 0, ImGuiInputTextFlags_ReadOnly);
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("...")) {
+					ImGui::OpenPopup("##ResourceSelector");
+				}
+				int selector = Graph::Resources::ResourceSelector(dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode])->resourceIndex);
+				if (selector > -1) {
+					dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode])->resourceIndex = selector;
+				}
+				ImGui::SameLine();
+				ImGui::Text("Image Resource");
+			}
+
 			for (auto& var : graph->nodes[graph->selectedNode]->paramLuaVars)
 			{
 				auto& luaVarData = graph->nodes[graph->selectedNode]->luaVarData[var.second];

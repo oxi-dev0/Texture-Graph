@@ -1,8 +1,10 @@
 #pragma once
 
 #include "../SFMLWindow.h"
-#include "../../Graph/Node/GraphNode.h"
+#include "../../Bundle/Node/GraphNode.h"
+#include "../../Bundle/Node/ImageNode.h"
 #include "../../Library/LibraryManager.h"
+#include "../../Bundle/ResourceManager.h"
 
 class GraphEditorView : public SFMLWindow
 {
@@ -26,6 +28,8 @@ public:
 	int selectedNode;
 	int dragNodeRef;
 	std::vector<int> multiSelectNodes;
+
+	std::string currentGraph;
 
 	std::atomic<int> currentThreadCount;
 
@@ -58,6 +62,16 @@ public:
 public:
 	GraphEditorView(sf::RenderWindow& main_, sf::RenderTexture& rt_, std::string name_, ImGuiWindowFlags flags_);
 	void Clear();
+
+	template <class T>
+	inline static T* copyNode(T* node) {
+		if (dynamic_cast<ImageNode*>(node) != nullptr) {
+			return new ImageNode(node);
+		}
+		else {
+			return new GraphNode(node);
+		}
+	}
 
 	bool CheckCyclical();
 	std::vector<int> TopologicalSort();

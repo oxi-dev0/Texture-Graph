@@ -31,8 +31,9 @@
 #include "Core/Rendering/Views/Texture2DView.h"
 #include "Core/Rendering/Views/BrowserView.h"
 
-#include "Core/Graph/Node/GraphNode.h"
-#include "Core/Graph/GraphSerializer.h"
+#include "Core/Bundle/Node/GraphNode.h"
+#include "Core/Bundle/GraphSerializer.h"
+#include "Core/Bundle/ResourceManager.h"
 
 #include "Core/Library/LibraryManager.h"
 
@@ -97,6 +98,7 @@ int main(int argc, char** argv)
     NFD_Init();
     LuaManager::Init();
     ImageCache::Init();
+    Graph::Resources::Init();
 
     MainWindow primaryWindow("Texture Graph");
 
@@ -125,7 +127,7 @@ int main(int argc, char** argv)
             textures.push_back(tex);
             auto* newView = new GraphEditorView(primaryWindow.window, *tex, name, flags);
             windows.push_back(newView);
-            primaryWindow.selectedGraph = newView;
+            primaryWindow.focusedGraphView = newView;
 
         }   break;
         case WindowType::LibraryView:
@@ -137,7 +139,7 @@ int main(int argc, char** argv)
         case WindowType::Inspector:
         {
             auto* newView = new InspectorView(primaryWindow.window, name, flags);
-            newView->SetGraph(primaryWindow.selectedGraph);
+            newView->SetGraph(primaryWindow.focusedGraphView);
             windows.push_back(newView);
         }   break;
         case WindowType::TextureView:
@@ -146,13 +148,13 @@ int main(int argc, char** argv)
             textures.push_back(tex);
             auto* newView = new Texture2DView(primaryWindow.window, *tex, name, flags);
             windows.push_back(newView);
-            newView->focusedGraph = primaryWindow.selectedGraph;
+            newView->focusedGraph = primaryWindow.focusedGraphView;
         }   break;
         case WindowType::Browser:
         {
             auto* newView = new BrowserView(primaryWindow.window, name, flags);
             windows.push_back(newView);
-            newView->focusedGraph = primaryWindow.selectedGraph;
+            newView->focusedGraphView = primaryWindow.focusedGraphView;
 
             std::function<void(std::string)> f = [&primaryWindow](std::string id) {
                 return primaryWindow.OpenPopup(id);

@@ -1,7 +1,7 @@
 #include "LibraryManager.h"
 
 namespace LibraryManager {
-	std::vector<GraphNode> compiledNodes;
+	std::vector<GraphNode*> compiledNodes;
 	std::map<std::string, int> classToNode;
 	std::function<void(void)> LoadedCallback;
 
@@ -40,10 +40,12 @@ namespace LibraryManager {
 		for (auto& nodeFile : foundNodes) {
 			compiledNodes.push_back(GraphNode::LoadFromTGNF(nodeFile));
 			auto& newNode = compiledNodes[compiledNodes.size() - 1];
-			classToNode.insert({ newNode.nodeClass, (int)compiledNodes.size() - 1 });
+			classToNode.insert({ newNode->nodeClass, (int)compiledNodes.size() - 1 });
 			LOG_TRACE("Successfully compiled Node Class '{0}'", nodeFile);
 		}
 		LOG_INFO("Finished compiling Node library in {0}s", tmr.Elapsed());
+
+		compiledNodes.push_back(new ImageNode());
 
 		if (LoadedCallback) {
 			LoadedCallback();

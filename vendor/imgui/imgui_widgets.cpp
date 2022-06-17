@@ -6234,6 +6234,9 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
     ImVec2 size(size_arg.x != 0.0f ? size_arg.x : label_size.x, size_arg.y != 0.0f ? size_arg.y : label_size.y);
     ImVec2 pos = window->DC.CursorPos;
     pos.y += ignoreLineTextBaseOffset ? 0.0f : window->DC.CurrLineTextBaseOffset;
+    if (ignoreLineTextBaseOffset) {
+        window->DC.CurrLineTextBaseOffset = 0.f;
+    }
     ItemSize(size, 0.0f);
 
     // Fill horizontal space 

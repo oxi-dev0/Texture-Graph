@@ -15,6 +15,10 @@ namespace Bundle
 			currentBundle = file;
 			if (res) {
 				Bundle::Resources::LoadFromBundle();
+				LOG_INFO("Successfully saved bundle '{0}'", file);
+			}
+			else {
+				LOG_ERROR("Error saving bundle '{0}'. (Bundle may be empty)", file);
 			}
 			dirty = false;
 			return res;
@@ -27,6 +31,10 @@ namespace Bundle
 			currentBundle = file;
 			if (res) {
 				Bundle::Resources::LoadFromBundle();
+				LOG_INFO("Successfully loaded bundle '{0}'", file);
+			}
+			else {
+				LOG_ERROR("Error loading bundle '{0}'", file);
 			}
 			dirty = false;
 			return res;

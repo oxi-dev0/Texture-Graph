@@ -408,7 +408,9 @@ void GraphEditorView::ToolBarButtons() {
 	if (ImGui::ImageButton(*ImageCache::images["icon-eval"], sf::Vector2f(25, 25), 5)) {
 		auto evalThread = std::thread(&GraphEditorView::EvaluateNodes, this);
 		evalThread.detach();
-	};
+	}
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("Evaluate Graph");
 
 	ImGui::SameLine();
 
@@ -416,6 +418,11 @@ void GraphEditorView::ToolBarButtons() {
 
 	ImGui::SameLine();
 
+	if (ImGui::ImageButton(*ImageCache::images["icon-save-1"], sf::Vector2f(25, 25), 5)) {
+		saveCallback();
+	}
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("Save Graph");
 
 }
 

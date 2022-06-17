@@ -15,6 +15,8 @@ namespace ImageCache
 		{"icon-eval", "resources/Images/Icons/Evaluate.png"},
 		{"icon-refresh", "resources/Images/Icons/Refresh.png"},
 		{"icon-graph", "resources/Images/Icons/Graph.png"},
+		{"icon-save-1", "resources/Images/Icons/Save-1.png"},
+		{"icon-open", "resources/Images/Icons/Open.png"},
 		// DETAIL
 		{"detail-separator", "resources/Images/Separator.png"}
 		});

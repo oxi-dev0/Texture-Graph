@@ -19,9 +19,11 @@ class BrowserView : public SubWindow
 private:
 	Utility::ImGuiExtra::CollapsableSelectorData oldTitleData;
 	Utility::ImGuiExtra::CollapsableSelectorData oldResourcesData;
+
 public:
 	GraphEditorView* focusedGraphView;
 	std::function<void(std::string id)> openPopup;
+	char inputBuf[100] = "";
 
 protected:
 	virtual void ToolBarButtons();

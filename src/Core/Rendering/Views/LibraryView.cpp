@@ -130,7 +130,13 @@ void LibraryEditorView::RenderCategories(std::vector<std::string> categorySectio
 				auto categoryFull = parentCategory + (parentCategory.size() > 0 ? "/" : "") + section;
 				auto split = Utility::String::split(categoryFull, '/');
 				categorySelector[split].selected = selectedCategory == split;
+				if (section == "Core") {
+					categorySelector[split].open = true;
+				}
 				Utility::ImGuiExtra::CollapsableSelectorData data = Utility::ImGuiExtra::CollapsingSelectable(section.c_str(), categoryFull.c_str(), categorySelector[split]);
+				if (section == "Core") {
+					data.open = true;
+				}
 				if (data.selected) {
 					if (selectedCategory != split) {
 						std::stringstream nameStream;

@@ -56,7 +56,9 @@ void Texture2DView::ToolBarButtons() {
 				LOG_ERROR("Error saving image");
 			}
 		}
-	};
+	}
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("Save Image");
 }
 
 // RENDER STEP FOR THIS VIEW

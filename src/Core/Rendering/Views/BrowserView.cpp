@@ -9,7 +9,43 @@ void BrowserView::ToolBarButtons() {
 	if (ImGui::ImageButton(*ImageCache::images["icon-new-drop"], sf::Vector2f(25, 25), 5)) {
 		openPopup("##BrowserNew");
 	}
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("New");
+
 	ImGui::SameLine();
+	ImGui::Image(*ImageCache::images["detail-separator"], sf::Vector2f(15, 35));
+	ImGui::SameLine();
+
+	if (ImGui::ImageButton(*ImageCache::images["icon-save-1"], sf::Vector2f(25, 25), 5)) {
+		if (Bundle::Serialization::currentBundle == "") {
+			Bundle::Serialization::AskSaveBundleToFile();
+		}
+		else {
+			Bundle::Serialization::SaveBundleToFile(Bundle::Serialization::currentBundle);
+		}
+	}
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("Save Bundle");
+
+	ImGui::SameLine();
+
+	if (ImGui::ImageButton(*ImageCache::images["icon-open"], sf::Vector2f(25, 25), 5)) {
+		GraphEditorView& c = *focusedGraphView;
+		std::function<void(void)> f = [&c]() {
+			if (Bundle::Serialization::AskLoadBundleFromFile()) {
+				c.Clear();
+				Graph::Serialization::currentGraph = "";
+			}
+		};
+		if (Bundle::Serialization::dirty && Bundle::Serialization::currentBundle != "") {
+			Bundle::Serialization::SafeNew(f);
+		}
+		else {
+			f();
+		}
+	}
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("Open Bundle");
 }
 
 void BrowserView::ComponentRender() {
@@ -39,6 +75,50 @@ void BrowserView::ComponentRender() {
 		ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(selected ? ImGuiCol_Button : ImGuiCol_Header));
 		if (ImGui::ImageButtonWithText(*ImageCache::images["icon-graph"], (std::filesystem::path(graphFile).filename().replace_extension("").string() + (selected && focusedGraphView->dirty ? "*" : "")).c_str(), 5, ImVec2(40, 40), ImVec2(ImGui::GetContentRegionAvail().x, 50))) {
 			Graph::Serialization::LoadGraphFromFile(*focusedGraphView, "temp/bundle/" + std::filesystem::path(graphFile).filename().replace_extension("").string() + ".graph");
+		}
+		if (ImGui::IsItemHovered() && ImGui::GetIO().MouseClicked[1])
+		{
+			ImGui::OpenPopup(("##GraphListingRightClick" + graphFile).c_str());
+		}
+		bool openRename = false;
+		if (ImGui::BeginPopup(("##GraphListingRightClick" + graphFile).c_str())) {
+			ImGui::Selectable("##WidthSetter", false, 0, ImVec2(100, 1), false, nullptr, false, true);
+			if (ImGui::Selectable("Rename...", false, 0, ImVec2(ImGui::GetContentRegionAvail().x, 30))) {
+				openRename = true;
+			}
+			if (ImGui::Selectable("Delete", false, 0, ImVec2(ImGui::GetContentRegionAvail().x, 30))) {
+				std::filesystem::remove(graphFile);
+				if (Graph::Serialization::currentGraph == std::filesystem::path(graphFile).filename().replace_extension("").string())
+				{
+					focusedGraphView->Clear();
+					Graph::Serialization::currentGraph = name;
+				}
+				Bundle::Serialization::dirty = true;
+			}
+			ImGui::EndPopup();
+		}
+		if (openRename) {
+			ImGui::OpenPopup(("##GraphListingRename" + graphFile).c_str());
+		}
+		if (ImGui::BeginPopup(("##GraphListingRename" + graphFile).c_str())) {
+			std::function<void(void)> f = [this, graphFile]() {
+				std::filesystem::copy(graphFile, std::filesystem::path(graphFile).remove_filename().string() + std::string(inputBuf) + ".graph");
+				std::filesystem::remove(graphFile);
+				Graph::Serialization::LoadGraphFromFile(*focusedGraphView, std::filesystem::path(graphFile).remove_filename().string() + std::string(inputBuf) + ".graph");
+			};
+			if (ImGui::InputText("Name", inputBuf, IM_ARRAYSIZE(inputBuf), ImGuiInputTextFlags_EnterReturnsTrue)) {
+				f();
+				ImGui::CloseCurrentPopup();
+			}
+			if (ImGui::Button("Cancel")) {
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Ok")) {
+				f();
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::EndPopup();
 		}
 		ImGui::PopStyleColor();
 	}

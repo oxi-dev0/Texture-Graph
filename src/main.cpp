@@ -84,6 +84,11 @@ void OnExit() {
     }
 }
 
+void SaveGraph() {
+    if (Graph::Serialization::currentGraph == "") { return; }
+    Graph::Serialization::SaveGraphToFile(*primaryWindow->graphView, "temp/bundle/" + Graph::Serialization::currentGraph + ".graph");
+}
+
 int main(int argc, char** argv)
 {
 #ifdef DIST
@@ -142,6 +147,7 @@ int main(int argc, char** argv)
             auto* newView = new GraphEditorView(primaryWindow->window, *tex, name, flags);
             windows.push_back(newView);
             primaryWindow->graphView = newView;
+            newView->saveCallback = SaveGraph;
 
         }   break;
         case WindowType::LibraryView:

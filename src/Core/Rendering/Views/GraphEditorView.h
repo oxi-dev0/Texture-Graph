@@ -38,6 +38,8 @@ public:
 	int cyclicalNode;
 	int cyclicalPin;
 
+	std::function<void(void)> saveCallback;
+
 	bool dirty;
 
 	sf::Vector2i texSize;

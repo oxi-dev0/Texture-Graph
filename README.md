@@ -18,8 +18,23 @@
 <h6 align="center"> Please Note: Currently the app is quite slow compaired to Substance Designer. I am working on a branch that uses gpu frag shaders to generate the textures rather than lua running on the cpu. </h6>
 <br>
 
-## TO DO: WRITE DOCUMENTATION
+<h2> Program Documentation </h2>
 
-# Texture Graph Node Language
-This language allows core nodes to be programmed for the application. The documentation can be found [here](https://github.com/oxi-dev0/Texture-Graph/tree/main/src/Nodes)  
+
+<h2> Source Documentation </h2>
+<h3> Dependencies </h3>
+<h6> Note: These are all included in the repo, and all are statically linked into the program </h6>
+
+- [Premake](https://github.com/premake/premake-core) - VS Project Generation
+- [SFML](https://github.com/SFML/SFML) - Window + 2D/3D Rendering
+- [ImGui](https://github.com/ocornut/imgui) - GUI
+- [Clip](https://github.com/dacap/clip) - Cross-Platform Clipboard
+- [FPacker](https://github.com/oxi-dev0/fpacker) - Cross-Platform Directory Packing
+- [Lua](https://github.com/lua/lua) - Dynamic Node Texture Generation
+- [NFD](https://github.com/btzy/nativefiledialog-extended) - Cross-Platform File Dialog
+- [spdlog](https://github.com/gabime/spdlog) - Advanced Logging
+
+<h3> Texture Graph Node Language </h3>
+
+This language allows nodes to be programmed for the application. The documentation can be found [here](https://github.com/oxi-dev0/Texture-Graph/tree/main/src/Nodes)  
 There is a [VSCode Syntax Highlighting plugin](https://github.com/oxi-dev0/TGNL) available for TGNL. A VS2022 extension will be coming too.

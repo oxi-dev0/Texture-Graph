@@ -20,3 +20,5 @@
 <h6 align="center"> Please Note: Currently the app is quite slow compared to Substance Designer. I am working on a branch that uses gpu frag shaders to generate the textures rather than lua running on the cpu. </h6>
 <br>
 
+## Documentation
+The documentation can be found [here](https://github.com/oxi-dev0/Texture-Graph/wiki).

@@ -1,3 +1,5 @@
+![image](https://user-images.githubusercontent.com/33568643/174427714-5e855101-8380-416b-b326-6bdef5ac5434.png)
+
 <h1 align="center"> Texture Graph </h2>
 <p align="center">
     <a href="#">

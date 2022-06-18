@@ -4,7 +4,7 @@ These are the core nodes for the Texture Graph app. They are written in the Text
 
 # TGNode Language v0.8 Documentation
 > This language is not smart and requires specific spacing to work;   
-> Each token must be seperated by a space, and each keyword must be seperated by a newline.
+> Each token must be seperated by a space, and each keyword must be separated by a newline.
 
 A VSCode syntax extension can be found [here](https://github.com/oxi-dev0/TGNL)
 

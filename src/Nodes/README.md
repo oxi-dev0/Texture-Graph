@@ -8,7 +8,7 @@ These are the core nodes for the Texture Graph app. They are written in the Text
 
 A VSCode syntax extension can be found [here](https://github.com/oxi-dev0/TGNL)
 
-** Index **
+**Index**
 - [Types](#types)
 - [Overview](#overview)
   - [Metadata Definition](#metadata-definition)

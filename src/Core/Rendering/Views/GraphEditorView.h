@@ -6,6 +6,8 @@
 #include "../../Library/LibraryManager.h"
 #include "../../Bundle/ResourceManager.h"
 
+#include "../../Globals.h"
+
 class GraphEditorView : public SFMLWindow
 {
 private:

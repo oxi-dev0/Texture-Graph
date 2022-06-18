@@ -10,10 +10,10 @@ void MainWindow::MenuBar() {
                 GraphEditorView& c = *graphView;
                 std::function<void(void)> f = [&c]() {
                     Bundle::Serialization::NewBundle();
-                    Graph::Serialization::currentGraph = "";
+                    Globals::currentGraph = "";
                     c.Clear();
                 };
-                if (Bundle::Serialization::dirty && Bundle::Serialization::currentBundle != "") {
+                if (Bundle::Serialization::dirty && Globals::currentBundle != "") {
                     Bundle::Serialization::SafeNew(f);
                 }
                 else {
@@ -28,10 +28,10 @@ void MainWindow::MenuBar() {
                 std::function<void(void)> f = [&c]() {
                     if (Bundle::Serialization::AskLoadBundleFromFile()) {
                         c.Clear();
-                        Graph::Serialization::currentGraph = "";
+                        Globals::currentGraph = "";
                     }
                 };
-                if (Bundle::Serialization::dirty && Bundle::Serialization::currentBundle != "") {
+                if (Bundle::Serialization::dirty && Globals::currentBundle != "") {
                     Bundle::Serialization::SafeNew(f);
                 }
                 else {
@@ -46,7 +46,7 @@ void MainWindow::MenuBar() {
             ImGui::Separator();
 
             if (ImGui::MenuItem("Save Graph")) {
-                Graph::Serialization::SaveGraphToFile(*graphView, "temp/bundle/" + Graph::Serialization::currentGraph + ".graph");
+                Graph::Serialization::SaveGraphToFile(*graphView, "temp/bundle/" + Globals::currentGraph + ".graph");
             }
 
             ImGui::Separator();
@@ -366,7 +366,7 @@ void MainWindow::Popups() {
                 c.Clear();
 
             };
-            if (Bundle::Serialization::dirty && Bundle::Serialization::currentBundle != "") {
+            if (Bundle::Serialization::dirty && Globals::currentBundle != "") {
                 Bundle::Serialization::SafeNew(f);
             }
             else {

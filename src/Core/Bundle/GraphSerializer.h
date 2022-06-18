@@ -6,6 +6,8 @@
 #include "../Library/LibraryManager.h"
 #include "ResourceManager.h"
 
+#include "../Globals.h"
+
 #include "imgui.h"
 
 #include <nfd.h>
@@ -23,7 +25,6 @@ namespace Graph
 
 	namespace Serialization
 	{	
-		extern std::string currentGraph;
 		extern std::function<void(void)> clearPromptCallback;
 		extern std::function<void(std::string)> openPopup;
 

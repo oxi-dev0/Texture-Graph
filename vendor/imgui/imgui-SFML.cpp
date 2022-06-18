@@ -310,6 +310,7 @@ void Init(sf::Window& window, const sf::Vector2f& displaySize, bool loadDefaultF
     loadMouseCursor(ImGuiMouseCursor_ResizeNESW, sf::Cursor::SizeBottomLeftTopRight);
     loadMouseCursor(ImGuiMouseCursor_ResizeNWSE, sf::Cursor::SizeTopLeftBottomRight);
     loadMouseCursor(ImGuiMouseCursor_Hand, sf::Cursor::Hand);
+    loadMouseCursor(ImGuiMouseCursor_NotAllowed, sf::Cursor::NotAllowed);
 
     if (loadDefaultFont) {
         // this will load default font automatically

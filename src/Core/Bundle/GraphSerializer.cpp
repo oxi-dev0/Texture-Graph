@@ -4,7 +4,6 @@ namespace Graph
 {
 	namespace Serialization
 	{
-		std::string currentGraph;
 		std::function<void(void)> clearPromptCallback;
 		std::function<void(std::string)> openPopup;
 
@@ -35,17 +34,17 @@ namespace Graph
 			graph.dirty = false;
 
 			LOG_INFO("Successfully saved graph to '{0}' in {1}s", file, tmr.Elapsed());
-			currentGraph = std::filesystem::path(file).filename().replace_extension("").string();
+			Globals::currentGraph = std::filesystem::path(file).filename().replace_extension("").string();
 			return SerializationStatus::Successful;
 		}
 
 		void NewGraph(GraphEditorView& graph, std::string name) {
 			std::function<void(void)> f = [&graph, name]() {
 				graph.Clear();
-				currentGraph = name;
+				Globals::currentGraph = name;
 				SaveGraphToFile(graph, "temp/bundle/" + name + ".graph");
 			};
-			if (graph.dirty && currentGraph != "") {
+			if (graph.dirty && Globals::currentGraph != "") {
 				SafeClear(f);
 			}
 			else {
@@ -65,7 +64,7 @@ namespace Graph
 
 		void GraphNewPopup(GraphEditorView& graph, char* nameBuf) {
 			if (ImGui::BeginPopup("New Graph")) {
-				if (ImGui::InputText("Name", nameBuf, IM_ARRAYSIZE(nameBuf), ImGuiInputTextFlags_EnterReturnsTrue)) {
+				if (ImGui::InputText("Name", nameBuf, 35, ImGuiInputTextFlags_EnterReturnsTrue)) {
 					NewGraph(graph, nameBuf);
 					ImGui::CloseCurrentPopup();
 				}
@@ -241,7 +240,7 @@ namespace Graph
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Save", ImVec2(80, 30))) {
-					SaveGraphToFile(graph, "temp/bundle/" + currentGraph + ".graph");
+					SaveGraphToFile(graph, "temp/bundle/" + Globals::currentGraph + ".graph");
 					ImGui::CloseCurrentPopup();
 					clearPromptCallback();
 				}
@@ -271,10 +270,10 @@ namespace Graph
 					LOG_ERROR("Loaded graph contains cyclical dependancy, the file may have corrupted.");
 				}
 
-				currentGraph = std::filesystem::path(file).filename().replace_extension("").string();
+				Globals::currentGraph = std::filesystem::path(file).filename().replace_extension("").string();
 				return status;
 			};
-			if (graph.dirty && currentGraph != "") {
+			if (graph.dirty && Globals::currentGraph != "") {
 				SafeClear(la);
 			}
 			else {

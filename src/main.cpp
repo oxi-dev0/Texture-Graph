@@ -38,6 +38,8 @@
 
 #include "Core/Library/LibraryManager.h"
 
+#include "Core/Globals.h"
+
 #define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 
@@ -50,14 +52,13 @@ enum WindowType {
     Inspector
 };
 
-typedef std::tuple<std::string, WindowType, ImGuiWindowFlags> optionalWindow;
-std::vector<optionalWindow> optionalViews = {
-    optionalWindow("Graph Editor", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
-    optionalWindow("Library", WindowType::LibraryView, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
-    optionalWindow("Inspector", WindowType::Inspector, 0),
-    optionalWindow("Browser", WindowType::Browser, 0),
-    optionalWindow("Texture View", WindowType::TextureView, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)
-    //optionalWindow("Graph Editor 2", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
+typedef std::tuple<std::string, WindowType, ImGuiWindowFlags> viewDef;
+std::vector<viewDef> fixedViews = {
+    viewDef("Graph Editor", WindowType::GraphEditor, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
+    viewDef("Library", WindowType::LibraryView, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse),
+    viewDef("Inspector", WindowType::Inspector, 0),
+    viewDef("Browser", WindowType::Browser, 0),
+    viewDef("Texture Preview", WindowType::TextureView, 0 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)
 };
 
 MainWindow* primaryWindow = nullptr;
@@ -85,8 +86,8 @@ void OnExit() {
 }
 
 void SaveGraph() {
-    if (Graph::Serialization::currentGraph == "") { return; }
-    Graph::Serialization::SaveGraphToFile(*primaryWindow->graphView, "temp/bundle/" + Graph::Serialization::currentGraph + ".graph");
+    if (Globals::currentGraph == "") { return; }
+    Graph::Serialization::SaveGraphToFile(*primaryWindow->graphView, "temp/bundle/" + Globals::currentGraph + ".graph");
 }
 
 int main(int argc, char** argv)
@@ -110,6 +111,7 @@ int main(int argc, char** argv)
     NFD_Init();
     ImageCache::Init();
     Bundle::Resources::Init();
+    Globals::Init();
     Bundle::Serialization::NewBundle();
 
     primaryWindow = new MainWindow("Texture Graph");
@@ -129,8 +131,8 @@ int main(int argc, char** argv)
     Graph::Serialization::openPopup = f;
     Bundle::Serialization::openPopup = f;
 
-    std::vector<SubWindow*> windows;
-    for (auto& view : optionalViews) {
+    std::vector<SubWindow*> views;
+    for (auto& view : fixedViews) {
         std::string name = std::get<0>(view);
         WindowType type = std::get<1>(view);
         ImGuiWindowFlags flags = std::get<2>(view);
@@ -138,14 +140,14 @@ int main(int argc, char** argv)
         switch (type) {
         case WindowType::Base:
         {
-            windows.push_back(new SubWindow(primaryWindow->window, name, flags));
+            views.push_back(new SubWindow(primaryWindow->window, name, flags));
         }   break;
         case WindowType::GraphEditor:
         {
             sf::RenderTexture* tex = new sf::RenderTexture();
             textures.push_back(tex);
             auto* newView = new GraphEditorView(primaryWindow->window, *tex, name, flags);
-            windows.push_back(newView);
+            views.push_back(newView);
             primaryWindow->graphView = newView;
             newView->saveCallback = SaveGraph;
 
@@ -153,27 +155,27 @@ int main(int argc, char** argv)
         case WindowType::LibraryView:
         {
             auto* newView = new LibraryEditorView(primaryWindow->window, name, flags);
-            windows.push_back(newView);
+            views.push_back(newView);
             LibraryManager::RegisterLoadCallback(std::bind(&LibraryEditorView::LoadNodes, newView));
         }   break;
         case WindowType::Inspector:
         {
             auto* newView = new InspectorView(primaryWindow->window, name, flags);
             newView->SetGraph(primaryWindow->graphView);
-            windows.push_back(newView);
+            views.push_back(newView);
         }   break;
         case WindowType::TextureView:
         {
             sf::RenderTexture* tex = new sf::RenderTexture();
             textures.push_back(tex);
             auto* newView = new Texture2DView(primaryWindow->window, *tex, name, flags);
-            windows.push_back(newView);
+            views.push_back(newView);
             newView->focusedGraph = primaryWindow->graphView;
         }   break;
         case WindowType::Browser:
         {
             auto* newView = new BrowserView(primaryWindow->window, name, flags);
-            windows.push_back(newView);
+            views.push_back(newView);
             newView->focusedGraphView = primaryWindow->graphView;
 
             newView->RegisterPopupCallback(f);
@@ -193,7 +195,7 @@ int main(int argc, char** argv)
     LibraryManager::LoadNodeLibrary();
     LOG_INFO("");
 
-    primaryWindow->views = &windows;
+    primaryWindow->views = &views;
     
     while (primaryWindow->window.isOpen())
     {
@@ -203,13 +205,13 @@ int main(int argc, char** argv)
 
         primaryWindow->BeginRender();
 
-        for (SubWindow* window : windows) {
-            if (window->enabled) {
+        for (SubWindow* view : views) {
+            if (view->enabled) {
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-                window->visible = ImGui::Begin(window->name.c_str(), &window->enabled, window->flags);
-                if (window->visible)
-                    window->Render();
+                view->visible = ImGui::Begin(view->name.c_str(), &view->enabled, view->flags);
+                if (view->visible)
+                    view->Render();
                 ImGui::End();
                 ImGui::PopStyleVar(2);
             }

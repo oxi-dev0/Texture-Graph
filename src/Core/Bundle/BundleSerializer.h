@@ -6,6 +6,8 @@
 #include "../Utils/Log.h"
 #include "ResourceManager.h"
 
+#include "../Globals.h"
+
 #include <fpacker.h>
 #include <nfd.h>
 
@@ -13,7 +15,6 @@ namespace Bundle
 {
 	namespace Serialization
 	{
-		extern std::string currentBundle;
 		extern std::function<void(void)> clearPromptCallback;
 		extern std::function<void(std::string)> openPopup;
 		extern bool dirty;

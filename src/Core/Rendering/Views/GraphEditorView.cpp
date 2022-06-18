@@ -428,9 +428,13 @@ void GraphEditorView::ToolBarButtons() {
 
 // RENDER STEP FOR THIS VIEW
 void GraphEditorView::ComponentRender() {
+	if (Globals::currentGraph == "") {
+		return;
+	}
+
 	sf::Vector2f mousePos = pixelToGraph(sf::Vector2i((int)ImGui::GetMousePos().x, (int)ImGui::GetMousePos().y));
 	if (moving) {
-		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeAll);
+		ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
 	}
 
 	// Draw Grid (NEEDS WORK)
@@ -503,6 +507,14 @@ sf::Vector2f GraphEditorView::snapPos(sf::Vector2f pos) {
 }
 
 void GraphEditorView::IMGUIRender() {
+	if (Globals::currentGraph == "") {
+		if (ImGui::IsWindowHovered()) {
+			ImGui::SetMouseCursor(ImGuiMouseCursor_NotAllowed);
+			ImGui::SetTooltip("No graph opened");
+		}
+		return;
+	}
+
 	inFocus = ImGui::IsWindowFocused();
 	if (ImGui::BeginDragDropTarget()) 
 	{
@@ -705,6 +717,10 @@ std::vector<int> GraphEditorView::TopologicalSort() {
 
 // SFML EVENTS FOR THIS VIEW
 bool GraphEditorView::ProcessEvent(sf::Event& event) {
+	if (Globals::currentGraph == "") {
+		return false;
+	}
+
 	switch (event.type) {
 	case sf::Event::MouseButtonPressed:
 	{

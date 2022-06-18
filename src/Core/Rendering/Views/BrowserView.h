@@ -8,6 +8,8 @@
 #include "../../Bundle/BundleSerializer.h"
 #include "../../Bundle/ResourceManager.h"
 
+#include "../../Globals.h"
+
 #include <map>
 #include <sstream>
 #include <thread>

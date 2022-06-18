@@ -440,15 +440,6 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 	float nodeHeight = std::max(NODE_MINHEIGHT, neededPinHeight);
 	float nodeWidth = NODE_MINWIDTH;
 
-	if (selected && false) {
-		// Draw select highlight
-		sf::RectangleShape selectRect;
-		selectRect.setPosition(sf::Vector2f(nodePos.x, nodePos.y + nodeHeight));
-		selectRect.setSize(sf::Vector2f(nodeWidth, 3));
-		selectRect.setFillColor(sf::Color(246, 157, 190, transparency));
-		target.draw(selectRect);
-	}
-
 	// Draw node
 	sf::RectangleShape nodeRect;
 	nodeRect.setPosition(nodePos);
@@ -458,28 +449,38 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 	nodeRect.setOutlineThickness(!selected ? 0.4f : 1.f);
 	target.draw(nodeRect);
 
-	sf::RectangleShape titleRect;
-	titleRect.setPosition(nodePos);
-	titleRect.setSize(sf::Vector2f(nodeWidth, NODE_TITLE_HEIGHT));
-	titleRect.setFillColor(sf::Color(50, 50, 50, transparency));
-	target.draw(titleRect);
+	if (zoomLevel < 2.f) {
+		sf::RectangleShape titleRect;
+		titleRect.setPosition(nodePos);
+		titleRect.setSize(sf::Vector2f(nodeWidth, NODE_TITLE_HEIGHT));
+		titleRect.setFillColor(sf::Color(50, 50, 50, transparency));
+		target.draw(titleRect);
 
-	sf::RectangleShape colorRect;
-	colorRect.setPosition(sf::Vector2f(nodePos.x, (nodePos.y + NODE_TITLE_HEIGHT) - (NODE_COLOR_THICKNESS / 2)));
-	colorRect.setSize(sf::Vector2f(nodeWidth, NODE_COLOR_THICKNESS));
-	colorRect.setFillColor(sf::Color(displayColor.r, displayColor.g, displayColor.b, transparency));
-	target.draw(colorRect);
+		sf::RectangleShape colorRect;
+		colorRect.setPosition(sf::Vector2f(nodePos.x, (nodePos.y + NODE_TITLE_HEIGHT) - (NODE_COLOR_THICKNESS / 2)));
+		colorRect.setSize(sf::Vector2f(nodeWidth, NODE_COLOR_THICKNESS));
+		colorRect.setFillColor(sf::Color(displayColor.r, displayColor.g, displayColor.b, transparency));
+		target.draw(colorRect);
 
-	const float baseTextSize = 9.6f;
-	const float DPIScaleMax = 5.0f;
-	const float DPIScaleMin = 0.2f;
-	float textDPIScale = remapRange(zoomLevel, 0.5f, 2.0f, DPIScaleMax, DPIScaleMin);
-	textDPIScale = std::clamp(textDPIScale, DPIScaleMin, DPIScaleMax);
+		const float baseTextSize = 9.6f;
+		const float DPIScaleMax = 5.0f;
+		const float DPIScaleMin = 0.2f;
+		float textDPIScale = remapRange(zoomLevel, 0.5f, 2.0f, DPIScaleMax, DPIScaleMin);
+		textDPIScale = std::clamp(textDPIScale, DPIScaleMin, DPIScaleMax);
 
-	sf::Text titleText = CenteredText(displayName, sf::Vector2f(nodePos.x + nodeWidth / 2, nodePos.y + (NODE_TITLE_HEIGHT / 2) - 2.0f), (unsigned int)(baseTextSize*textDPIScale), RenderingGlobals::font);
-	titleText = ScaleCentered(titleText, 1/textDPIScale);
-	titleText.setFillColor(sf::Color(255,255,255, transparency));
-	target.draw(titleText);
+		sf::Text titleText = CenteredText(displayName, sf::Vector2f(nodePos.x + nodeWidth / 2, nodePos.y + (NODE_TITLE_HEIGHT / 2) - 2.0f), (unsigned int)(baseTextSize * textDPIScale), RenderingGlobals::font);
+		titleText = ScaleCentered(titleText, 1 / textDPIScale);
+		titleText.setFillColor(sf::Color(255, 255, 255, transparency));
+		target.draw(titleText);
+
+		sf::Text timingText = CenteredText(std::format("{:.2f}", prevEvalTime * 1000.0f) + "ms", sf::Vector2f(nodePos.x + nodeWidth / 2, nodePos.y + NODE_TITLE_HEIGHT + nodeHeight), (unsigned int)(baseTextSize * textDPIScale), RenderingGlobals::font);
+		timingText = ScaleCentered(timingText, 1 / textDPIScale);
+		sf::Color badC = sf::Color(237, 159, 114, 255);
+		sf::Color okC = sf::Color(237, 210, 114, 255);
+		sf::Color goodC = sf::Color(178, 237, 114, 255);
+		timingText.setFillColor(threeColorLerp(badC, okC, goodC, remapRange(prevEvalTime * 1000.0f, 30.f, 120.f, 1.f, 0.f)));
+		target.draw(timingText);
+	}
 
 	float tWidth = nodeWidth;
 	float tHeight = tWidth;
@@ -584,15 +585,9 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 
 	renderedPins = true;
 
-	target.draw(pinVerts);
-
-	sf::Text timingText = CenteredText(std::format("{:.2f}", prevEvalTime * 1000.0f) + "ms", sf::Vector2f(nodePos.x + nodeWidth / 2, nodePos.y + NODE_TITLE_HEIGHT + nodeHeight), (unsigned int)(baseTextSize * textDPIScale), RenderingGlobals::font); 
-	timingText = ScaleCentered(timingText, 1 / textDPIScale); 
-	sf::Color badC = sf::Color(237, 159, 114, 255);
-	sf::Color okC = sf::Color(237, 210, 114, 255);
-	sf::Color goodC = sf::Color(178, 237, 114, 255);
-	timingText.setFillColor(threeColorLerp(badC, okC, goodC, remapRange(prevEvalTime*1000.0f, 30.f, 120.f, 1.f, 0.f)));
-	target.draw(timingText);
+	if (zoomLevel < 2.f) {
+		target.draw(pinVerts);
+	}
 
 	// DEBUG: DRAW TOPOLOGICAL SORT ORDER
 	//if (debugEvalIndex == -1) { return; }

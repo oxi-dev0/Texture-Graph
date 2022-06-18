@@ -4,7 +4,6 @@ namespace Bundle
 {
 	namespace Serialization
 	{
-		std::string currentBundle;
 		std::function<void(void)> clearPromptCallback;
 		std::function<void(std::string)> openPopup;
 		bool dirty = false;
@@ -12,7 +11,7 @@ namespace Bundle
 		bool SaveBundleToFile(std::string file) {
 			FPacker::Package pkg = FPacker::Package::LoadDir("temp/bundle");
 			bool res = pkg.Pack(file);
-			currentBundle = file;
+			Globals::currentBundle = file;
 			if (res) {
 				Bundle::Resources::LoadFromBundle();
 				LOG_INFO("Successfully saved bundle '{0}'", file);
@@ -28,7 +27,7 @@ namespace Bundle
 			NewBundle();
 			FPacker::Package pkg = FPacker::Package::LoadPackageFile(file);
 			bool res = pkg.Unpack("temp/bundle");
-			currentBundle = file;
+			Globals::currentBundle = file;
 			if (res) {
 				Bundle::Resources::LoadFromBundle();
 				LOG_INFO("Successfully loaded bundle '{0}'", file);
@@ -86,7 +85,7 @@ namespace Bundle
 			std::filesystem::create_directories(std::filesystem::path("temp/bundle/resources"));
 			Bundle::Resources::LoadFromBundle();
 
-			currentBundle = "";
+			Globals::currentBundle = "";
 			dirty = false;
 		}
 
@@ -111,7 +110,7 @@ namespace Bundle
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Save", ImVec2(80, 30))) {
-					SaveBundleToFile(currentBundle);
+					SaveBundleToFile(Globals::currentBundle);
 					ImGui::CloseCurrentPopup();
 					clearPromptCallback();
 				}

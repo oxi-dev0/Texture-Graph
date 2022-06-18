@@ -25,8 +25,10 @@ project "TextureGraph"
 	  "{MKDIR} %{cfg.targetdir}/resources",
 	  "{MKDIR} %{cfg.targetdir}/library",
 	  "{MKDIR} %{cfg.targetdir}/library/Nodes",
+	  "{MKDIR} %{cfg.targetdir}/examples",
 	  "{COPY} resources %{cfg.targetdir}/resources",
-	  "{COPY} src/Nodes %{cfg.targetdir}/library/Nodes"
+	  "{COPY} src/Nodes %{cfg.targetdir}/library/Nodes",
+	  "{COPY} examples %{cfg.targetdir}/examples"
 	}
 
 	files 

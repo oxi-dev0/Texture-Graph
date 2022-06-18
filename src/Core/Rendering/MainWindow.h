@@ -32,7 +32,7 @@ private:
 	bool fullscreen;
 	bool demoOpen;
 
-	char buf[100] = "";
+	char buf[35] = "";
 	std::string nextOpenId;
 	bool openPopup;
 

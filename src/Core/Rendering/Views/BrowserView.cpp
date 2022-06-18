@@ -17,11 +17,11 @@ void BrowserView::ToolBarButtons() {
 	ImGui::SameLine();
 
 	if (ImGui::ImageButton(*ImageCache::images["icon-save-1"], sf::Vector2f(25, 25), 5)) {
-		if (Bundle::Serialization::currentBundle == "") {
+		if (Globals::currentBundle == "") {
 			Bundle::Serialization::AskSaveBundleToFile();
 		}
 		else {
-			Bundle::Serialization::SaveBundleToFile(Bundle::Serialization::currentBundle);
+			Bundle::Serialization::SaveBundleToFile(Globals::currentBundle);
 		}
 	}
 	if (ImGui::IsItemHovered())
@@ -34,10 +34,10 @@ void BrowserView::ToolBarButtons() {
 		std::function<void(void)> f = [&c]() {
 			if (Bundle::Serialization::AskLoadBundleFromFile()) {
 				c.Clear();
-				Graph::Serialization::currentGraph = "";
+				Globals::currentGraph = "";
 			}
 		};
-		if (Bundle::Serialization::dirty && Bundle::Serialization::currentBundle != "") {
+		if (Bundle::Serialization::dirty && Globals::currentBundle != "") {
 			Bundle::Serialization::SafeNew(f);
 		}
 		else {
@@ -60,7 +60,7 @@ void BrowserView::ComponentRender() {
 	ImGui::BeginChild("##BrowserBody", ImGui::GetContentRegionAvail(), false, window_flags);
 	oldTitleData.open = true;
 	oldTitleData.selected = false;
-	std::string currentBundle = Bundle::Serialization::currentBundle;
+	std::string currentBundle = Globals::currentBundle;
 	Utility::ImGuiExtra::CollapsableSelectorData data = Utility::ImGuiExtra::CollapsingSelectable(currentBundle == "" ? "Unsaved Bundle*" : (std::filesystem::path(currentBundle).filename().replace_extension("").string() + (Bundle::Serialization::dirty ? "*" : "")).c_str(), "TitleSelectable", oldTitleData);
 	oldTitleData.hovered = data.hovered;
 
@@ -68,7 +68,7 @@ void BrowserView::ComponentRender() {
 
 	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_HeaderHovered));
 	for (auto graphFile : Graph::Serialization::GetGraphsInBundle()) {
-		bool selected = Graph::Serialization::currentGraph == std::filesystem::path(graphFile).filename().replace_extension("").string();
+		bool selected = Globals::currentGraph == std::filesystem::path(graphFile).filename().replace_extension("").string();
 
 		if (focusedGraphView->dirty && Bundle::Serialization::dirty == false) { Bundle::Serialization::dirty = true; }
 
@@ -88,10 +88,10 @@ void BrowserView::ComponentRender() {
 			}
 			if (ImGui::Selectable("Delete", false, 0, ImVec2(ImGui::GetContentRegionAvail().x, 30))) {
 				std::filesystem::remove(graphFile);
-				if (Graph::Serialization::currentGraph == std::filesystem::path(graphFile).filename().replace_extension("").string())
+				if (Globals::currentGraph == std::filesystem::path(graphFile).filename().replace_extension("").string())
 				{
 					focusedGraphView->Clear();
-					Graph::Serialization::currentGraph = name;
+					Globals::currentGraph = "";
 				}
 				Bundle::Serialization::dirty = true;
 			}
@@ -102,9 +102,14 @@ void BrowserView::ComponentRender() {
 		}
 		if (ImGui::BeginPopup(("##GraphListingRename" + graphFile).c_str())) {
 			std::function<void(void)> f = [this, graphFile]() {
+				bool open = false;
+				if (Globals::currentGraph == graphFile) {
+					open = true;
+				}
 				std::filesystem::copy(graphFile, std::filesystem::path(graphFile).remove_filename().string() + std::string(inputBuf) + ".graph");
 				std::filesystem::remove(graphFile);
-				Graph::Serialization::LoadGraphFromFile(*focusedGraphView, std::filesystem::path(graphFile).remove_filename().string() + std::string(inputBuf) + ".graph");
+				if(open)
+					Graph::Serialization::LoadGraphFromFile(*focusedGraphView, std::filesystem::path(graphFile).remove_filename().string() + std::string(inputBuf) + ".graph");
 			};
 			if (ImGui::InputText("Name", inputBuf, IM_ARRAYSIZE(inputBuf), ImGuiInputTextFlags_EnterReturnsTrue)) {
 				f();

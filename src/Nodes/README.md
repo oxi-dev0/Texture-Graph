@@ -1,6 +1,6 @@
 # Texture Graph Nodes
 
-These are the core nodes for the Texture Graph app. They are written in the Texture Graph Node Language, and are loaded into the Library window, as well as compiled at runtime.
+These are the core nodes for the Texture Graph app. They are written in the Texture Graph Node Language, and are loaded by the Texture Graph app to be compiled and evaluated at Runtime.
 
 # TGNode Language v0.8 Documentation
 > This language is not smart and requires specific spacing to work. Each token must be seperated by a space, and each keyword must be seperated by a newline.

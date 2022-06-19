@@ -534,6 +534,8 @@ void GraphEditorView::IMGUIRender() {
 
 			selectedNode = (int)nodes.size() - 1;
 
+			dirty = true;
+
 			LOG_TRACE("Instantiated Node (Node Class '{0}')", newNode->nodeClass);
 			LOG_TRACE("Position: ({0}, {1})", newNode->nodePos.x, newNode->nodePos.y);
 		}
@@ -551,6 +553,8 @@ void GraphEditorView::IMGUIRender() {
 			newNode->SetTextureSize(texSize);
 			newNode->resourceName = payload_resource;
 			nodes.push_back(newNode);
+
+			dirty = true;
 
 			selectedNode = (int)nodes.size() - 1;
 		}

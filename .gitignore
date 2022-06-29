@@ -5,7 +5,6 @@
 .git/
 
 bin-int/
-bin/Debug
 
 # Compiled Object files
 *.slo
@@ -22,22 +21,6 @@ bin/Debug
 *.gch
 *.pch
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
 # Fortran module files
 *.mod
 *.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app

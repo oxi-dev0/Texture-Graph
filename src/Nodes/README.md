@@ -15,12 +15,11 @@ A VSCode syntax extension can be found [here](https://github.com/oxi-dev0/TGNL)
   - [Variable Definition](#variable-definition)
   - [Execution Definition](#execution-definition)
 - [Core Functions](#core-functions)
-- [Example](#example)
+- [Examples](#examples)
 
 ## Types
 | Type | Definition | Example | Can be parameter? | Can be pin? |
 | --- | --- | --- | --- | --- |
-|`string` | A single line `"` surrounded string | `"Hello World"` | &cross; | &cross; |
 |`color` | A `0x` prefixed 8 char hex number that defines an RGBA color | `0xFF0000FF` | &check; | &cross; |
 |`int` | A single line integer | `324` | &check; | &cross; |
 |`float` | A single line float that includes a decimal point | `10.0` | &check; | &cross; |
@@ -87,7 +86,6 @@ Before the execution lua is ran, the Node Variables get defined to allow the lua
 TGNL types are converted to lua types to allow them to be processed
 | TGNL Type | Lua Type | Details |
 | --- | --- | --- |
-| `string` | `string` | |
 | `float` | `float` | |
 | `int` | `int` | |
 | `bool` | `bool` | |
@@ -141,40 +139,88 @@ A node's execution lua has core functions available to use, in a similar style t
 
 > More functions will be added in the future.
 
-## Example
-> Ignore the markdown syntax highlighting for the TGNL code.
+## Examples
+### Example 1 (Simple)
+> Ignore the markdown syntax highlighting for the metadata and variable definitions.
 ```lua
 metadata
     name "Solid Colour"
     color 0x8AE9C1FF
 
-    varname Colour "Colour"
-    varname Out "Out"
+    varname inColor "Colour"
+    varname out "Out"
 
     default Colour 0xFF0000FF
 
     display Out
 metadata
 
-param color Colour
-output colortex Out
+param color inColor
+output colortex out
 
 exec
 {
     for x=1, sizeX do
         for y=1, sizeY do
-            Out[x,y] = Colour
+            out[x,y] = inColor
         end
     end
 }
 ```
-> SimpleSC.tgnode
+> Constans/SolidColor.tgnode
 
-#### Example metadata
-This metadata sets the Node's name to be 'Simple Colour', and gives it the colour 0x8AE9C1FF, which is RGBA(138, 233, 193, 255). It then defines two display names for the variables `Colour` and `Out`. It sets `Colour`'s default value to 0xFF0000FF, which is RGBA(255, 0, 0, 255), and then specifies the variable `Out` to be the display variable for the Node. (It will show up on the Node in the graph).
+#### Metadata
+This metadata sets the Node's name to be 'Simple Colour', and gives it the colour 0x8AE9C1FF, which is RGBA(138, 233, 193, 255). It then defines two display names for the variables, `inColor:"Colour"` and `out:"Out"`. It sets `inColor`'s default value to 0xFF0000FF, which is RGBA(255, 0, 0, 255), and then specifies the variable `out` to be the display variable for the Node. (It will show up on the Node in the graph).
 
-#### Example variables
-It then defines a variable called `Colour` with the type `color` and a variable called `Out` with the type `colortex`, which is an RGBA texture.
+#### Variables
+It then defines the `inColor` variable to be of the `color` type, which is a table in the format of `{r=0,g=0,b=0,a=0}`, and defines the `out` variable to be of the `colortex` type, which is a 2D array of `color`s.
 
-#### Example execution
-This lua loops through every pixel in the texture, setting the pixel in the out pin variable `Out`, which is of type `colortex`, to be the parameter variable `Colour`, which is of type `color`. This will result in a texture with a solid color, that can be changed in the inspector.
+#### Execution
+This lua loops through every pixel in the texture, setting the pixel in `out` to be the parameter variable `inColor`, which is of type `color`. This will result in a texture with a solid color, that can be changed in the inspector.
+
+### Example 2 (Complex)
+> Ignore the markdown syntax highlighting for the metadata and variable definitions.
+```lua
+metadata
+    name "Gradient"
+    color 0x9934EBFF
+    category "Core/Patterns"
+
+    varname dir "Direction"
+    varname Out "Out"
+
+    default dir 1.0,0.0
+
+    display Out
+metadata
+
+param vec2 dir
+output greytex Out
+
+exec
+{
+    local norm = normalizeV(dir)
+    local bb = dotV(norm,norm)
+    local max = lengthV(vec2(sizeX*norm.x,sizeY*norm.y))
+
+    for x=1, sizeX do
+        for y=1, sizeY do
+            local vec = vec2(x,y)
+            local proj = mulVC(norm, dotV(vec, norm) / bb)
+            local d = lengthV(vec2(proj.x,proj.y))
+            local col = math.floor(clamp(d/max,0,1)*255)
+            Out[x][y] = col
+        end
+    end
+}
+```
+> Patterns/Gradient.tgnode
+
+#### Metadata
+This metadata sets the Node's name to be 'Gradient', and gives it the colour 0x9934EBFF, which is RGBA(153, 52, 235, 255). It then defines two display names for the variables, `dir:"Direction"` and `out:"Out"`. It sets `dir`'s default value to `vec2(1.0, 0.0)`, and then specifies the variable `out` to be the display variable for the Node. (It will show up on the Node in the graph).
+
+#### Variables
+It then defines the `dir` variable to be of the `vec2` type, which is a table in the format of `{x=0,y=0}`, and defines the `out` variable to be of the `greytex` type, which is a 2D array of `int`s.
+
+#### Execution
+This lua first uses the Core Functions to calculate the normalized form of the `dir` variable, and calculates the dot product of itself. it also calculates the maximum length that the distance a pixel could be, from the top left. It then loops through each pixel of the texture, and, using the Core Functions to manipulate the vectors, calculates the end greyscale value (`col`) to be from 0 to 255. It then sets this pixel in the `out` texture to be this greyscale value.

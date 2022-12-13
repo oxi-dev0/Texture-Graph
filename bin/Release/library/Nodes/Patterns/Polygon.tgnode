@@ -19,24 +19,13 @@ output greytex Out
 
 exec
 {
-    function step(edge, x)
-        if x < edge then
-            return 0
-        end
-        return 1
-    end
-
-    function length(x)
-        return math.sqrt((x.x*x.x) + (x.y*x.y))
-    end
-
     function polygonShape(position, radius, numSides)
         position.x = position.x * 2 - 1
         position.y = position.y * 2 - 1
         local angle = math.atan(position.x, position.y)
         local slice = math.pi * 2 / numSides
 
-        return 1-step(radius, math.cos(math.floor(0.5 + angle / slice) * slice - angle) * length(position))
+        return 1-step(radius, math.cos(math.floor(0.5 + angle / slice) * slice - angle) * lengthV(position))
     end
 
     for x=1, sizeX do

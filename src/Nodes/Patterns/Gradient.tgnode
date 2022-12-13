@@ -19,57 +19,20 @@ output greytex Out
 
 exec
 {
-    function distance ( x1, y1, x2, y2 )
-        local dx = x2 - x1
-        local dy = y2 - y1
-        return math.sqrt ( (dx * dx) + (dy * dy) )
-    end
-
-    function clamp(v,mi,ma)
-        local v1 = v
-        if v1 > ma then
-            v1 = ma
-        end
-        if v1 < mi then
-            v1 = mi
-        end
-        return v1
-    end
-
-    function dot(a,b)
-        return a.x * b.x + a.y * b.y
-    end
-
-    function div(a,b)
-        return {x=a.x/b.x,y=a.y/b.y}
-    end
-
-    function divS(a,b)
-        return {x=a.x/b,y=a.y/b}
-    end
-
-    function mul(a,b)
-        return {x=a.x*b.x,y=a.y*b.y}
-    end
-
-    function mulS(a,b)
-        return {x=a.x*b,y=a.y*b}
-    end
-
-    local dist = distance(0,0,dirX,dirY)
+    local dist = lengthV(vec2(dirX,dirY))
     local normX = dirX/dist
     local normY = dirY/dist
-    local norm = {x=normX,y=normY}
+    local norm = vec2(normX,normY)
 
-    local bb = dot(norm,norm)
+    local bb = dotV(norm,norm)
 
-    local max = distance(0,0,sizeX*normX,sizeY*normY)
+    local max = lengthV(vec2(sizeX*normX,sizeY*normY))
 
     for x=1, sizeX do
         for y=1, sizeY do
-            local vec = {x=x,y=y}
-            local proj = mulS(norm, dot(vec, norm) / bb)
-            local d = distance(0,0,proj.x,proj.y)
+            local vec = vec2(x,y)
+            local proj = mulVC(norm, dotV(vec, norm) / bb)
+            local d = lengthV(vec2(proj.x,proj.y))
             local col = math.floor(clamp(d/max,0,1)*255)
             Out[x][y] = col
         end

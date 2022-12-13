@@ -278,17 +278,32 @@ GraphNode* GraphNode::LoadFromTGNF(std::string classFile) {
 		LOG_CRITICAL("Missing metadata keyword 'category' (Node Class '{0}')", classFile);
 	}
 
+	std::ifstream coreFile("library/Nodes/core.lua");
+
 	std::ofstream tempFile;
 	std::stringstream fileName;
 	auto splitClass = Utility::String::split(newNode.nodeClass, '/');
 	auto classNameLast = splitClass[splitClass.size() - 1];
-
 	classNameLast = Utility::String::split(classNameLast, '.')[0];
 	fileName << "temp/node-exec/" << classNameLast << ".lua";
-	tempFile.open(fileName.str());
+
+	tempFile.open(fileName.str());  
+	
+	tempFile << "-- PREGENERATED CORE --\n";
+
+	std::string coreLine;
+	while (std::getline(coreFile, coreLine))
+	{
+		Utility::String::rtrim(coreLine);
+		tempFile << coreLine << "\n";
+	}
+	coreFile.close();
+	tempFile << "-- PREGENERATED CORE --\n\n-- NODE EXEC --\n";
+
 	for (auto line : newNode.luaLines) {
 		tempFile << line << "\n";
 	}
+	tempFile << "-- NODE EXEC --";
 	tempFile.close();
 
 	newNode.luaTempFile = fileName.str();

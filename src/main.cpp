@@ -102,7 +102,6 @@ int main(int argc, char** argv)
     std::atexit(OnExit);
     std::at_quick_exit(OnExit);
     set_terminate(OnExit);
-    set_unexpected(OnExit);
 
     LOG_INFO("Starting Engine");
     LOG_INFO("");

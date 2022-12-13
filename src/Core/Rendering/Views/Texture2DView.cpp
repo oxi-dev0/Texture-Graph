@@ -85,7 +85,7 @@ void Texture2DView::ComponentRender() {
 		transparentSprite.setTexture(*ImageCache::images["transparencyPreview"]);
 		sf::Vector2u trSize = ImageCache::images["transparencyPreview"]->getSize();
 		auto displayScaleTr = sf::Vector2f(prevSize.y / trSize.y, prevSize.y / trSize.y);
-		transparentSprite.setOrigin(sf::Vector2f(trSize.x / 2, trSize.y / 2));
+		transparentSprite.setOrigin(sf::Vector2f((float)trSize.x / 2.f, (float)trSize.y / 2.f));
 		transparentSprite.setScale(displayScaleTr);
 		transparentSprite.setPosition(sf::Vector2f(prevSize.x / 2, prevSize.y / 2));
 		transparentSprite.setColor(sf::Color(255, 255, 255, 255));
@@ -95,7 +95,7 @@ void Texture2DView::ComponentRender() {
 		displaySprite.setTexture(*displayTexture);
 		sf::Vector2u tSize = displayTexture->getSize();
 		auto displayScale = sf::Vector2f(prevSize.y / tSize.y, prevSize.y / tSize.y);
-		displaySprite.setOrigin(sf::Vector2f(tSize.x/2, tSize.y/2));
+		displaySprite.setOrigin(sf::Vector2f((float)tSize.x/2.f, (float)tSize.y/2.f));
 		displaySprite.setScale(displayScale);
 		displaySprite.setPosition(sf::Vector2f(prevSize.x/2, prevSize.y/2));
 		displaySprite.setColor(sf::Color(255, 255, 255, 255));
@@ -188,11 +188,11 @@ bool Texture2DView::ProcessEvent(sf::Event& event) {
 	} break;
 	case sf::Event::KeyPressed:
 	{
-		switch (event.key.code)
-		{
-		default:
-			break;
-		}
+		// switch (event.key.code)
+		// {
+		// default:
+		//   break;
+		// }
 	} break;
 	}
 

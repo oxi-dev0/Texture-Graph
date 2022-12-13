@@ -18,7 +18,14 @@
 <h6 align="center"> Please Note: The app is, currently, quite slow in comparison to other texture generation programs, such as Substance Designer. </h6>
 <br>
 
-## Installation, Usage and Contribution documentation can be found [here](https://github.com/oxi-dev0/Texture-Graph/wiki).
+## Cloning the repository
+To clone the repository, please only use GitHub Desktop,  
+or with the Git CLI run `git clone --recursive https://github.com/oxi-dev0/Texture-Graph.git`.  
+> The `--recursive` option is very important, as the repository uses the submodules system for it's [Dependencies](https://github.com/oxi-dev0/Texture-Graph/wiki/Dependencies).
+
+<br>
+
+## Usage and Contribution documentation can be found [here](https://github.com/oxi-dev0/Texture-Graph/wiki).
 
 <br>
 

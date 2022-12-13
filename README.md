@@ -17,7 +17,7 @@
 </p>
 
 <h3 align="center"> A node-based texture generation program. </h3>
-<h6 align="center"> Please Note: The app is, currently, quite slow compared to other texture generation software, such as Substance Designer. </h6>
+<h6 align="center"> Please Note: The app is, currently, quite slow in comparison to other texture generation programs, such as Substance Designer. </h6>
 <br>
 
 ## Documentation

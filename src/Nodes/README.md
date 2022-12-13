@@ -17,16 +17,16 @@ A VSCode syntax extension can be found [here](https://github.com/oxi-dev0/TGNL)
 - [Core Functions](#core-functions)
 - [Examples](#examples)
 
-## Types
+## TGNL Types
 | Type | Definition | Example | Can be parameter? | Can be pin? |
 | --- | --- | --- | --- | --- |
-|`color` | A `0x` prefixed 8 char hex number that defines an RGBA color | `0xFF0000FF` | &check; | &cross; |
+|`color` | A `0x` prefixed 8 char hex number that defines an 8-bit RGBA color | `0xFF0000FF` | &check; | &cross; |
 |`int` | A single line integer | `324` | &check; | &cross; |
 |`float` | A single line float that includes a decimal point | `10.0` | &check; | &cross; |
 |`bool` | Either `true` or `false` | | &check; | &cross; |
 |`vec2` | A 2D Vector | `{x=5,y=10}` | &check; | &cross; |
-|`colortex` | A 2D Array of `color` | | &cross; | &check; |
-|`greytex` | A 2D Array of `int` | | &cross; | &check; |
+|`colortex` | A 2D Array of `color`s | | &cross; | &check; |
+|`greytex` | A 2D Array of 8-bit greyscale `int`s | | &cross; | &check; |
 > An `enum` type will be coming later in development
 
 ## Overview

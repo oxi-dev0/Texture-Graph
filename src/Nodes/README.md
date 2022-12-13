@@ -2,7 +2,7 @@
 
 These are the core nodes for the Texture Graph app. They are written in the Texture Graph Node Language, and are loaded by the Texture Graph app to be compiled and evaluated at Runtime.
 
-# TGNode Language v0.8 Documentation
+# TGNode Language v0.9 Documentation
 > This language is not smart and requires specific spacing to work;   
 > Each token must be seperated by a space, and each keyword must be separated by a newline.
 
@@ -14,6 +14,7 @@ A VSCode syntax extension can be found [here](https://github.com/oxi-dev0/TGNL)
   - [Metadata Definition](#metadata-definition)
   - [Variable Definition](#variable-definition)
   - [Execution Definition](#execution-definition)
+- [Core Functions](#core-functions)
 - [Example](#example)
 
 ## Types
@@ -24,6 +25,7 @@ A VSCode syntax extension can be found [here](https://github.com/oxi-dev0/TGNL)
 |`int` | A single line integer | `324` | &check; | &cross; |
 |`float` | A single line float that includes a decimal point | `10.0` | &check; | &cross; |
 |`bool` | Either `true` or `false` | | &check; | &cross; |
+|`vec2` | A 2D Vector | `{x=5,y=10}` | &check; | &cross; |
 |`colortex` | A 2D Array of `color` | | &cross; | &check; |
 |`greytex` | A 2D Array of `int` | | &cross; | &check; |
 > An `enum` type will be coming later in development
@@ -89,6 +91,7 @@ TGNL types are converted to lua types to allow them to be processed
 | `float` | `float` | |
 | `int` | `int` | |
 | `bool` | `bool` | |
+| `vec2` | `table` | Vector2s are formatted like this: `{x=0, y=0}`. |
 | `color` | `table` | Colors are formatted like this: `{r=255, g=0, b=0, a=255}`. |
 | `colortex` | `2D Table of Color(table)` | An example of getting the red channel of the pixel color at (25,25) would be `Texture[25][25].r`. |
 | `greytex` | `2D Table of int(table)` | An example of getting the pixel value at (25,25) would be `Texture[25][25]`. |
@@ -101,8 +104,45 @@ These variables are extra and do not need to be defined in the `.tgnode` file.
 | `sizeX` | `int` | The graph texture width in pixels |
 | `sizeY` | `int` | The graph texture height in pixels |
 
+## Core Functions
+A node's execution lua has core functions available to use, in a similar style to glsl. These core functions are defined in `library/Nodes/core.lua`, and are compiled into the execution lua for each node when the application starts, or when `Engine > Recompile Node Library` is called.
+
+### Function Definitions
+| Function | Parameter Types | Return Type | Description |
+| --- | --- | --- | --- |
+| | | | |
+| **Vector Functions** |
+| `vec2(x,y)` | `x:number`, `y:number` | `vec2` | Returns a Vector2 with the specified components. |
+| `addV(a,b)` | `a:vec2`, `b:vec2` | `vec2` | Returns a + b |
+| `addVC(a,b)` | `a:vec2`, `b:number` | `vec2` | Returns a + b |
+| `subV(a,b)` | `a:vec2`, `b:vec2` | `vec2` | Returns a - b |
+| `subVC(a,b)` | `a:vec2`, `b:number` | `vec2` | Returns a - b |
+| `mulV(a,b)` | `a:vec2`, `b:vec2` | `vec2` | Returns a * b |
+| `mulVC(a,b)` | `a:vec2`, `b:number` | `vec2` | Returns a * b |
+| `divV(a,b)` | `a:vec2`, `b:vec2` | `vec2` | Returns a * b |
+| `divVC(a,b)` | `a:vec2`, `b:number` | `vec2` | Returns a * b |
+| `negateV(v)` | `v:vec2` | `vec2` | Returns -v |
+| `lengthV(v)` | `v:vec2` | `number` | Returns the Sqrt Length of v |
+| `normalize(v)` | `v:vec2` | `vec2` | Returns v divided by its length |
+| `dotV(a,b)` | `a:vec2`, `b:vec2` | `number` | Returns the dot product of a and b |
+| `crossV(a,b)` | `a:vec2`, `b:vec2` | `number` | Returns the cross product of a and b |
+| | | |
+| **Misc. Math Functions** |
+| `clamp(v,mi,ma)` | `v:number`, `mi:number`, 'ma:number' | `number` | Returns a so that mi <= a <= ma |
+| `step(edge,x)` | `edge:number`, `x:number` | `number` | Returns 0 if x < edge, returns 1 otherwise |
+| `mix(a,b,v)` | `a:number`, `b:number`, `v:number` | `number` | Returns a linear interpolation between a and b, using v as the weight |
+| `smoothstep(edge0,edge1,x)` | `edge0:number`, `edge1:number`, `x:number` | `number` | Returns smooth Hermite interpolation between 0 and 1 when edge0 < x < edge1 |
+| `fract(x)` | `x:number` | `number` | Returns the fractional part of x (computed by x - floor(x)) |
+| | | |
+| **2-Dim Misc. Math Functions** |
+| `floorV(v)` | `v:vec2` | `vec2` | Returns a vec2 where each component has been floored |
+| `fractV(v)` | `v:vec2` | `vec2` | Returns a vec2 where each component is it's fractional part |
+| `smoothstepVC(edge0,edge1,v)` | `edge0:number`, `edge1:number`, `v:vec2` | `vec2` | Returns, for each component of the vector (c), smooth Hermite interpolation of c between 0 and 1 when edge0 < c < edge1 |
+
+> More functions will be added in the future.
+
 ## Example
-> Ignore the syntax highlighting for the TGNL code.
+> Ignore the markdown syntax highlighting for the TGNL code.
 ```lua
 metadata
     name "Solid Colour"

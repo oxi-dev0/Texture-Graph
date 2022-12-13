@@ -20,5 +20,13 @@
 <h6 align="center"> Please Note: The app is, currently, quite slow in comparison to other texture generation programs, such as Substance Designer. </h6>
 <br>
 
-## Documentation
-The documentation can be found [here](https://github.com/oxi-dev0/Texture-Graph/wiki).
+## Installation, Usage and Contribution documentation can be found [here](https://github.com/oxi-dev0/Texture-Graph/wiki).
+
+<br>
+
+## Task List for v1.0
+- Deleting nodes will sometimes cause relation issues, with evaluating and serialization [ ]
+- Mouse switching views while inputs are being processed will sometimes cause both views to handle inputs [ ]
+- Main graph editor background is buggy [ ]
+- Evaluation is inefficient, and slow [ ]
+- GUI Overhaul [ ]

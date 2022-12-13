@@ -17,7 +17,7 @@
 </p>
 
 <h3 align="center"> A node-based texture generation program. </h3>
-<h6 align="center"> Please Note: Currently the app is quite slow compared to Substance Designer. I am working on a branch that uses gpu frag shaders to generate the textures rather than lua running on the cpu. </h6>
+<h6 align="center"> Please Note: Currently the app is quite slow compared to other Texture generation software, such as Substance Designer. </h6>
 <br>
 
 ## Documentation

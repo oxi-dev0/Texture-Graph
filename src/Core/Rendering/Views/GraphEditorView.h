@@ -26,12 +26,14 @@ private:
 
 public:
 	std::vector<GraphNode*> nodes;
-	std::vector<std::thread> evalThreads;
 	int selectedNode;
 	int dragNodeRef;
 	std::vector<int> multiSelectNodes;
 
-	std::atomic<int> currentThreadCount;
+	//std::atomic<int> currentThreadCount;
+	//std::vector<std::thread> evalThreads;
+	int maxWorkerCount;
+	std::atomic<int> workerPoolAvail;
 
 	int currentLineFromNode;
 	int currentLineFromPin;
@@ -50,7 +52,10 @@ private:
 	void Grid();
 	bool CyclicalRec(int currentNode, std::vector<int> stack, int prevPin=-1, int prevNode=-1);
 	void TopologicalSortRec(int currentNode, std::vector<int>& ordering);
-	void EvalNodeThread(int nodeIndex);
+
+	//void EvalNodeThread(int nodeIndex);
+	void NodeWorker(int nodeIndex);
+	void NodeScheduler(std::vector<int> evalPool);
 protected:
 	virtual void ComponentRender();
 	virtual void IMGUIRender();

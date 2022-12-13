@@ -6,12 +6,13 @@
 #define TGNL_PIN_ASSERT(keyword, type, file)				if (!Utility::String::includes({"colortex", "greytex"}, Utility::String::toLower(type))) { LOG_CRITICAL("Type '{2}' is not allowed to be used with the keyword '{1}'. (Node Class '{0}')", file, keyword, type); }
 #define TGNL_DISPLAY_ASSERT(type, file)						if (!Utility::String::includes({"colortex", "greytex"}, Utility::String::toLower(type))) { LOG_CRITICAL("Type '{0}' cannot be used with keyword 'display'. (Node Class {1})", type, file); }
 
-#define TGNL_TYPE_ASSERT(keyword, type, file)				if (!Utility::String::includes({"greytex", "int", "float", "color", "bool", "colortex"}, Utility::String::toLower(type))) { LOG_CRITICAL("Unrecognised type '{0}' given to '{2}'. (Node Class '{1}')", type, file, keyword); }
+#define TGNL_TYPE_ASSERT(keyword, type, file)				if (!Utility::String::includes({"greytex", "int", "float", "color", "bool", "colortex", "vec2"}, Utility::String::toLower(type))) { LOG_CRITICAL("Unrecognised type '{0}' given to '{2}'. (Node Class '{1}')", type, file, keyword); }
 #define TGNL_FLOAT_ASSERT(keyword, string, file)			if (!Utility::String::isFloat(string)) { LOG_CRITICAL("Invalid value passed to keyword '{0}'. Expected valid float, but got '{1}'. (Node Class '{2}')", keyword, string, file); }
 #define TGNL_INT_ASSERT(keyword, string, file)				if (!Utility::String::isInt(string)) { LOG_CRITICAL("Invalid value passed to keyword '{0}'. Expected valid int, but got '{1}'. (Node Class '{2}')", keyword, string, file); }
 #define TGNL_BOOL_ASSERT(keyword, bool, file)				if (!Utility::String::includes({"false", "true"}, Utility::String::toLower(bool))) { LOG_CRITICAL("Unrecognised bool '{0}' given to keyword '{2}'. (Node Class '{1}')", bool, file, keyword); }
 #define TGNL_STRING_ASSERT(keyword, string, file)			if (string[0] != '"' || string[string.size()-1] != '"') { LOG_CRITICAL("Invalid string given to keyword '{0}'. Received '{1}'. (Node Class '{2}')", keyword, string, file); }
 #define TGNL_COLOR_ASSERT(keyword, colorString, file)		if (colorString.substr(0,2) != "0x") { LOG_CRITICAL("Invalid color given to keyword '{0}'. Received '{1}', which is missing the '0x' prefix. (Node Class '{2}')", keyword, colorString, file); }												  if (colorString.size() != 10) { LOG_CRITICAL("Invalid color given to keyword '{0}'. Received '{1}', which has an incorrect length. (Node Class '{2}')", keyword, colorString, file); } 
+#define TGNL_VEC2_ASSERT(keyword, vec2String, file)			{std::vector<std::string> parts = Utility::String::split(data, ','); if (parts.size() != 2 || (!Utility::String::isInt(parts[0]) && !Utility::String::isFloat(parts[0])) || (!Utility::String::isFloat(parts[1]) && !Utility::String::isInt(parts[1]))) { LOG_CRITICAL("Invalid vec2 given to keyword '{0}'. Received '{1}', which does not meet the format 'x,y'. (Node Class '{2}')", keyword, vec2String, file); }}
 
 std::string RemoveStringIndicators(std::string orig) {
 	return orig.substr(1, orig.size() - 2);
@@ -236,6 +237,12 @@ GraphNode* GraphNode::LoadFromTGNF(std::string classFile) {
 			TGNL_INT_ASSERT("default", data, classFile);
 			newNode.luaVarData[var].intVar = std::stoi(data);
 			break;
+		case Types::DataType::DataType_Vec2:
+		{
+			TGNL_VEC2_ASSERT("default", data, classFile);
+			std::vector<std::string> parts = Utility::String::split(data, ',');
+			newNode.luaVarData[var].vec2Var = Types::Vec2(std::stof(parts[0]), std::stof(parts[1]));
+		}	break;
 		case Types::DataType::DataType_ColorTex:
 			LOG_CRITICAL("Type 'colortex' is not compatible with keyword 'default'. (Node Class '{0}')", classFile);
 			break;
@@ -460,8 +467,23 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 	nodeRect.setPosition(nodePos);
 	nodeRect.setSize(sf::Vector2f(nodeWidth, nodeHeight));
 	nodeRect.setFillColor(sf::Color(70, 70, 70, transparency));
-	nodeRect.setOutlineColor(!selected ? sf::Color(120, 120, 120) : sf::Color(246, 157, 190, transparency));
-	nodeRect.setOutlineThickness(!selected ? 0.4f : 1.f);
+
+	sf::Color outlineColor = sf::Color(120, 120, 120);
+	float outlineThickness = 0.4f;
+	if (isEvaluating) {
+		outlineColor = sf::Color(109, 171, 247, transparency);
+		outlineThickness = 1.f;
+	}
+	if (selected) {
+		outlineColor = sf::Color(246, 157, 190, transparency);
+		outlineThickness = 1.f;
+	}
+
+	float outlineMultiplier = remapRange(zoomLevel, .2f, 4.f, 1.f, 4.f);
+
+	nodeRect.setOutlineColor(outlineColor);
+	nodeRect.setOutlineThickness(outlineThickness * outlineMultiplier);
+
 	target.draw(nodeRect);
 
 	if (zoomLevel < 2.f) {
@@ -490,10 +512,10 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 
 		sf::Text timingText = CenteredText(std::format("{:.2f}", prevEvalTime * 1000.0f) + "ms", sf::Vector2f(nodePos.x + nodeWidth / 2, nodePos.y + NODE_TITLE_HEIGHT + nodeHeight), (unsigned int)(baseTextSize * textDPIScale), RenderingGlobals::font);
 		timingText = ScaleCentered(timingText, 1 / textDPIScale);
-		sf::Color badC = sf::Color(237, 159, 114, 255);
+		sf::Color badC = sf::Color(255, 74, 74, 255);
 		sf::Color okC = sf::Color(237, 210, 114, 255);
 		sf::Color goodC = sf::Color(178, 237, 114, 255);
-		timingText.setFillColor(threeColorLerp(badC, okC, goodC, remapRange(prevEvalTime * 1000.0f, 30.f, 120.f, 1.f, 0.f)));
+		timingText.setFillColor(threeColorLerp(badC, okC, goodC, std::clamp(remapRange(prevEvalTime * 1000.0f, 50.f, 500.f, 1.f, 0.f), 0.f, 1.f)));
 		target.draw(timingText);
 	}
 
@@ -625,13 +647,23 @@ bool CheckLua(lua_State* L2, int r, std::string owner) {
 	return true;
 }
 
-void GraphNode::Execute(std::atomic<int>* threadCount)
+bool GraphNode::AreDependenciesEvaluated(const std::vector<GraphNode*>* nodes)
 {
-	if (threadCount != nullptr) {
-		// Limit to only 15 nodes executing at one time
-		while (*threadCount > 15) { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
-		(*threadCount)++;
+	bool evaluated = true;
+	for (auto& pin : pins) {
+		auto type = pin.type;
+		if (pin.dir == Direction::In) {
+			if (nodes->operator[](pin.inNodeId)->evaluated == false) {
+				evaluated = false;
+			}
+		}
 	}
+	return evaluated;
+}
+
+void GraphNode::Evaluate()
+{
+	isEvaluating = true;
 
 	lua_State* L;
 	L = luaL_newstate();
@@ -664,6 +696,15 @@ void GraphNode::Execute(std::atomic<int>* threadCount)
 		case Types::DataType_Int: 
 			lua_pushinteger(L, data.intVar);
 			break;
+		case Types::DataType_Vec2:
+		{
+			lua_createtable(L, 0, 2);
+			lua_pushnumber(L, lua_Number((double)data.vec2Var.x));
+			lua_setfield(L, -2, "x");
+			
+			lua_pushnumber(L, lua_Number((double)data.vec2Var.y));
+			lua_setfield(L, -2, "y");
+		}	break;
 		case Types::DataType_Color:
 		{
 			Utility::Timer colorTmr;
@@ -881,10 +922,9 @@ void GraphNode::Execute(std::atomic<int>* threadCount)
 
 	prevEvalTime = (float)fullTimr.Elapsed();
 	lua_close(L);
-	evaluated = true;
 
-	if(threadCount != nullptr)
-		(*threadCount)--;
+	evaluated = true;
+	isEvaluating = false;
 }
 
 void GraphNode::SetTextureSize(sf::Vector2i size)

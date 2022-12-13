@@ -1,0 +1,30 @@
+metadata
+    name ">="
+    color 0xFA7A39FF
+    category "Core/Math/Greyscale"
+
+    varname Out "Out"
+    varname In "In"
+    varname Val "Value"
+
+    default Val 127
+
+    display Out
+metadata
+
+output greytex Out
+input greytex In
+param int Val
+
+exec
+{
+    for x=1, sizeX do
+        for y=1, sizeY do
+            local v = 0
+            if In[x][y] >= Val then
+                v = 255
+            end
+            Out[x][y] = v
+        end
+    end
+}

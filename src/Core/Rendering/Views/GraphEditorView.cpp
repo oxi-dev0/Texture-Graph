@@ -10,6 +10,10 @@ GraphEditorView::GraphEditorView(sf::RenderWindow& main_, sf::RenderTexture& rt_
 	selectedNode = -1;
 	texSize = sf::Vector2i(512, 512);
 	dirty = false;
+
+	unsigned int coreCount = std::thread::hardware_concurrency();
+	if (coreCount == 0) { coreCount = 4; }
+	maxWorkerCount = std::max((int)coreCount - 2, 1);
 } // JUST CALLS CONSTRUCTOR FOR SUBWINDOW
 
 void GraphEditorView::Clear() {
@@ -88,90 +92,18 @@ void GraphEditorView::InfoBarData() {
 	ImGui::SameLine(0.0f, 25.f);
 
 	std::stringstream threadCStream;
-	threadCStream << "Node Thread N#: " << currentThreadCount;
+	threadCStream << "Workers Available/Count: " << workerPoolAvail << " / " << maxWorkerCount;
 	ImGui::Text(threadCStream.str().c_str());
 }
 
-void GraphEditorView::EvalNodeThread(int nodeIndex) {
-	std::vector<std::thread> threadList;
-	Utility::Timer traceTmr;
+void GraphEditorView::NodeWorker(int nodeIndex) {
+	workerPoolAvail -= 1;
 
 	auto& node = nodes[nodeIndex];
-	for (auto& pin : node->pins) {
-		if (pin.dir == Direction::In) {
-			if (pin.inNodeId == -1) { continue; }
+	node->Evaluate();
 
-			auto& inNode = nodes[pin.inNodeId];
-			if (inNode->evaluated) { continue; }
-
-			// Run this function the in node
-			threadList.push_back(std::thread(&GraphEditorView::EvalNodeThread, this, pin.inNodeId));
-
-			// Convert and transfer the in node's output
-			Utility::Timer convTmr;
-			int p = 0;
-			for (auto& pin : inNode->pins) {
-				if (pin.dir == Direction::Out) {
-					int i = 0;
-					for (auto& outinNodeId : pin.outNodeIds) {
-						auto& targetinNode = nodes[outinNodeId];
-						if (targetinNode->luaVarData[targetinNode->pinLuaVars[pin.outPinIndexes[i]]].dataType != inNode->luaVarData[inNode->pinLuaVars[p]].dataType) {
-							if (inNode->luaVarData[inNode->pinLuaVars[p]].dataType == Types::DataType_GreyTex) {
-								Types::colortex converted(texSize.x, std::vector<sf::Color>(texSize.y, sf::Color::White));
-								int x = 0;
-								for (auto& xRow : inNode->luaVarData[inNode->pinLuaVars[p]].greytexVar) {
-									int yI = 0;
-									for (auto& y : xRow) {
-										converted[x][yI] = sf::Color(y, y, y, 255);
-										yI++;
-									}
-									x++;
-								}
-
-								targetinNode->luaVarData[targetinNode->pinLuaVars[pin.outPinIndexes[i]]].colortexVar = converted;
-							}
-							else {
-								Types::greytex converted(texSize.x, std::vector<int>(texSize.y, 0));
-								int x = 0;
-								for (auto& xRow : inNode->luaVarData[inNode->pinLuaVars[p]].colortexVar) {
-									int yI = 0;
-									for (auto& y : xRow) {
-										converted[x][yI] = std::floor(y.r * 0.3f + y.g * 0.59f + y.b * 0.11f);
-										yI++;
-									}
-									x++;
-								}
-
-								targetinNode->luaVarData[targetinNode->pinLuaVars[pin.outPinIndexes[i]]].greytexVar = converted;
-							}
-						}
-						else {
-							if (inNode->luaVarData[inNode->pinLuaVars[p]].dataType == Types::DataType_ColorTex) {
-								targetinNode->luaVarData[targetinNode->pinLuaVars[pin.outPinIndexes[i]]].colortexVar = inNode->luaVarData[inNode->pinLuaVars[p]].colortexVar;
-							}
-							else {
-								targetinNode->luaVarData[targetinNode->pinLuaVars[pin.outPinIndexes[i]]].greytexVar = inNode->luaVarData[inNode->pinLuaVars[p]].greytexVar;
-							}
-						}
-						i++;
-					}
-				}
-				p++;
-			}
-			LOG_TRACE("Conversion and transfer for inNode class '{1}' took {0}ms", convTmr.Elapsed() * 1000.f, inNode->nodeClass);
-		}
-	}
-
-	for (auto& thread : threadList) {
-		thread.join();
-	}
-
-	threadList.clear();
-	// Execute the main node this function is evaluating
-	auto mainEvalThread = std::thread(&GraphNode::Execute, node, &currentThreadCount);
-	mainEvalThread.join();
-
-	// Convert and transfer the main node's output
+	// Pass data to connected nodes
+	Utility::Timer convTmr;
 	int p = 0;
 	for (auto& pin : node->pins) {
 		if (pin.dir == Direction::Out) {
@@ -190,7 +122,6 @@ void GraphEditorView::EvalNodeThread(int nodeIndex) {
 							}
 							x++;
 						}
-
 						targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].colortexVar = converted;
 					}
 					else {
@@ -204,7 +135,6 @@ void GraphEditorView::EvalNodeThread(int nodeIndex) {
 							}
 							x++;
 						}
-
 						targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].greytexVar = converted;
 					}
 				}
@@ -221,7 +151,56 @@ void GraphEditorView::EvalNodeThread(int nodeIndex) {
 		}
 		p++;
 	}
-	LOG_TRACE("Reverse split-threaded evaluation for node class '{1}' took{0}ms", traceTmr.Elapsed() * 1000.f, node->nodeClass);
+
+	LOG_TRACE("Conversion and transfer for node class '{1}' took {0}ms", convTmr.Elapsed() * 1000.f, node->nodeClass);
+	workerPoolAvail += 1;
+}
+
+void GraphEditorView::NodeScheduler(std::vector<int> evalPool) {
+	workerPoolAvail = maxWorkerCount;
+	Utility::Timer execTmr;
+
+	// NEW WORKER SYSTEM
+	// using calculated evaluation order as a hint, whenever workers are available, assign them a node that is able to be evaluated (all dependancy nodes are evaluated). If a node isnt ready, but is next on the eval list, just skip it and
+	// check the next node. If no nodes are ready to be evaluated, just wait until some are ready. Evaluation order is used as a hint to improve performance, so not looping through every node each time. Max worker count is calculated as the
+	// number of CPU cores - 2. If this is smaller than 1, 1 is used as the maximum. worker pool avail is an int as workers are just threads, not actual objects, so it just keeps track of whether resources are available to be used by a new
+	// worker thread.
+
+	while (evalPool.size() > 0) {
+		// POOL DEBUG
+		/*std::stringstream evalPoolDebug;
+		evalPoolDebug << "EvalPool: [";
+		for (int i = 0; i < evalPool.size(); i++) {
+			evalPoolDebug << evalPool[i];
+			if (i != evalPool.size() - 1) {
+				evalPoolDebug << ",";
+			}
+		}
+		evalPoolDebug << "];";
+		LOG_INFO(evalPoolDebug.str());*/
+
+		if (workerPoolAvail > 0) {
+			int targetEvalNode = -1;
+			int i = 0;
+			while (targetEvalNode == -1 && i < evalPool.size()) {
+				if (nodes[evalPool[i]]->AreDependenciesEvaluated(&nodes)) { targetEvalNode = i; }
+				i++;
+			}
+
+			if (targetEvalNode == -1) {
+				// no nodes are ready for eval
+			}
+			else {
+				// assign worker to this node and remove it from eval pool
+				std::thread t = std::thread(&GraphEditorView::NodeWorker, this, evalPool[targetEvalNode]);
+				t.detach();
+				evalPool.erase(evalPool.begin() + targetEvalNode);
+			}
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	}
+
+	LOG_INFO("Executed graph in {0}ms", execTmr.Elapsed() * 1000.f);
 }
 
 void GraphEditorView::EvaluateNodes() {
@@ -232,106 +211,23 @@ void GraphEditorView::EvaluateNodes() {
 		return;
 	}
 
-	/*std::vector<int> evalOrder = TopologicalSort();
+	std::vector<int> evalOrder = TopologicalSort();
 	LOG_TRACE("--- Eval Order ---");
 	int n = 0;
 	for (int nodeI : evalOrder) {
 		auto* node = nodes[nodeI];
 		node->debugEvalIndex = n;
-		LOG_TRACE("{0} at pos ({1}, {2})", node->nodeClass, node->nodePos.x, node->nodePos.y);
+		LOG_TRACE("{0} [{3}] at pos ({1}, {2})", node->nodeClass, node->nodePos.x, node->nodePos.y, nodeI);
 
 		node->SetDirty();
 		n++;
 	}
 
-	LOG_INFO("Calculated execution order in {0}ms", execOrderTmr.Elapsed()*1000.f);*/
+	LOG_INFO("Calculated execution order in {0}ms", execOrderTmr.Elapsed()*1000.f);
 
-	Utility::Timer execTmr;
-
-	// NEW METHOD: USE IN PINS TO SEPERATE EVAL INTO THREADS WORKING BACKWARDS FROM END NODE (POTENTIAL MEMORY ISSUE IF SAVED GRAPH HAS MUTATED CYCLICAL DEPENDANCY (serialised incorrectly))
-	std::vector<int> endNodes;
-	int n = 0;
-	for (auto* node : nodes) {
-		// Set all nodes to be unevaluated. In future, trace forwards from changed nodes to find nodes that need to be reevaluated so that the whole graph isnt processed for no reason
-		node->SetDirty();
-
-		// determine if this is an "end" node (any nodes with 0 connected output pins)
-		bool end = true;
-		for (auto& pin : node->pins) {
-			if (pin.outNodeIds.size() > 0) { end = false; }
-		}
-		if (end) {
-			endNodes.push_back(n);
-		}
-		n++;
-	}
-	
-	std::vector<std::thread> evalThreads;
-	for (int endNode : endNodes) {
-		evalThreads.push_back(std::thread(&GraphEditorView::EvalNodeThread, this, endNode));
-	}
-	for (auto& thread : evalThreads) {
-		thread.join();
-	}
-
-	// OLD METHOD: EVALUATE ALL NODES CONSECUTIVELY USING TOPOLOGICAL SORT
-	//for (int nodeIndex : evalOrder) {
-	//	auto& node = nodes[nodeIndex];
-	//	node->Execute();
-	//	
-	//	// Pass data to connected nodes
-	//	Utility::Timer convTmr;
-	//	int p = 0;
-	//	for (auto& pin : node->pins) {
-	//		if (pin.dir == Direction::Out) {
-	//			int i = 0;
-	//			for (auto& outNodeId : pin.outNodeIds) {
-	//				auto& targetNode = nodes[outNodeId];
-	//				if (targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].dataType != node->luaVarData[node->pinLuaVars[p]].dataType) {
-	//					if (node->luaVarData[node->pinLuaVars[p]].dataType == Types::DataType_GreyTex) {
-	//						Types::colortex converted(texSize.x, std::vector<sf::Color>(texSize.y, sf::Color::White));
-	//						int x = 0;
-	//						for (auto& xRow : node->luaVarData[node->pinLuaVars[p]].greytexVar) {
-	//							int yI = 0;
-	//							for (auto& y : xRow) {
-	//								converted[x][yI] = sf::Color(y, y, y, 255);
-	//								yI++;
-	//							}
-	//							x++;
-	//						}
-	//						targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].colortexVar = converted;
-	//					}
-	//					else {
-	//						Types::greytex converted(texSize.x, std::vector<int>(texSize.y, 0));
-	//						int x = 0;
-	//						for (auto& xRow : node->luaVarData[node->pinLuaVars[p]].colortexVar) {
-	//							int yI = 0;
-	//							for (auto& y : xRow) {
-	//								converted[x][yI] = std::floor(y.r * 0.3f + y.g * 0.59f + y.b * 0.11f);
-	//								yI++;
-	//							}
-	//							x++;
-	//						}
-	//						targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].greytexVar = converted;
-	//					}
-	//				}
-	//				else {
-	//					if (node->luaVarData[node->pinLuaVars[p]].dataType == Types::DataType_ColorTex) {
-	//						targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].colortexVar = node->luaVarData[node->pinLuaVars[p]].colortexVar;
-	//					}
-	//					else {
-	//						targetNode->luaVarData[targetNode->pinLuaVars[pin.outPinIndexes[i]]].greytexVar = node->luaVarData[node->pinLuaVars[p]].greytexVar;
-	//					}
-	//				}
-	//				i++;
-	//			}
-	//		}
-	//		p++;
-	//	}
-	//	LOG_TRACE("Conversion and transfer for node class '{1}' took {0}ms", convTmr.Elapsed() * 1000.f, node->nodeClass);
-	//}
-
-	LOG_INFO("Executed graph in {0}ms", execTmr.Elapsed()*1000.f);
+	// NEW METHOD: EVALUATE ALL NODES CONSECUTIVELY USING TOPOLOGICAL SORT, BUT USING WORKER SYSTEM TO MAXIMISE EFFICIENCY
+	std::thread scheduler = std::thread(&GraphEditorView::NodeScheduler, this, evalOrder);
+	scheduler.join();
 }
 
 sf::Color lerpColor(sf::Color a, sf::Color b, float t) {
@@ -577,6 +473,8 @@ void GraphEditorView::UpdateTexSize(sf::Vector2i size)
 
 void GraphEditorView::DeleteNode(int index)
 {
+	// THIS BREAKS IF YOU DELETE A NODE THAT ISNT THE HIGHEST INDEX
+
 	for (auto& pin : nodes[index]->pins) {
 		if (pin.inNodeId != -1) {
 			auto& targetOutNodeIds = nodes[pin.inNodeId]->pins[pin.inPinIndex].outNodeIds;

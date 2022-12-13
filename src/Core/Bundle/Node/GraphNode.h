@@ -71,6 +71,7 @@ public:
 	sf::Vector2i texSize;
 
 	bool evaluated;
+	std::atomic<bool> isEvaluating;
 
 public:
 	GraphNode() : displayTexture((new sf::Texture)), displayImage((new sf::Image)) {
@@ -107,7 +108,9 @@ public:
 	static GraphNode* LoadFromTGNF(std::string classFile); // Load from Texture Graph Node File
 
 	void SFMLRender(sf::RenderTarget& target, float zoomLevel = 0.5f, bool selected=false, int transparency=255);
-	virtual void Execute(std::atomic<int>* threadCount);
+
+	virtual bool AreDependenciesEvaluated(const std::vector<GraphNode*>* nodes);
+	virtual void Evaluate();
 
 	void SetDirty();
 

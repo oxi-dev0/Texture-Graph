@@ -74,7 +74,7 @@ void LibraryEditorView::RenderThumbnails()
 		Utility::Timer nodeTmr;
 		auto& className = node->nodeClass;
 		node->SetTextureSize(sf::Vector2i(100, 100));
-		node->Execute(nullptr);
+		node->Evaluate();
 		auto* tex = node->displayTexture;
 		thumbnails.insert({ className, tex });
 		LOG_TRACE("Generated thumbnail for Node Class '{0}' in {1}ms", className, nodeTmr.Elapsed() * 1000.f);

@@ -1,0 +1,24 @@
+metadata
+    name "Divide"
+    color 0xFA7A39FF
+    category "Core/Math/Greyscale"
+
+    varname Out "Out"
+    varname A "A"
+    varname B "B"
+
+    display Out
+metadata
+
+output greytex Out
+input greytex A
+input greytex B
+
+exec
+{
+    for x=1, sizeX do
+        for y=1, sizeY do
+            Out[x][y] = math.floor((A[x][y]) / (B[x][y]))
+        end
+    end
+}

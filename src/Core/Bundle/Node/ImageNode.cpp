@@ -1,18 +1,19 @@
 #include "ImageNode.h"
 
-void ImageNode::Execute(std::atomic<int>* threadCount)
+bool ImageNode::AreDependenciesEvaluated(const std::vector<GraphNode*>* nodes)
 {
-	if (threadCount != nullptr) {
-		// Limit to only 15 nodes executing at one time
-		while (*threadCount > 15) { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
-		(*threadCount)++;
-	}
+	return true;
+}
 
+void ImageNode::Evaluate()
+{
+	isEvaluating = true;
 	Utility::Timer fullTimr;
 
 	sf::Image loaded;
+	if (resourceName == "") { return; }
 	if (std::find(Bundle::Resources::resourceList.begin(), Bundle::Resources::resourceList.end(), resourceName) == Bundle::Resources::resourceList.end()) {
-		LOG_ERROR("Invalid resource name {0}", resourceName);
+		LOG_ERROR("Invalid resource name '{0}'", resourceName);
 		return;
 	}
 	if (!loaded.loadFromFile(resourceName)) {
@@ -52,11 +53,9 @@ void ImageNode::Execute(std::atomic<int>* threadCount)
 
 	prevEvalTime = (float)fullTimr.Elapsed();
 	evaluated = true;
+	isEvaluating = false;
 
 	LOG_TRACE("Processed image node in {0}s", fullTimr.Elapsed());
-
-	if (threadCount != nullptr)
-		(*threadCount)--;
 }
 
 ImageNode::ImageNode(const ImageNode& node) : ImageNode()

@@ -1,0 +1,35 @@
+metadata
+    name "Lerp"
+    color 0xFA7A39FF
+    category "Core/Math/Color"
+
+    varname A "A"
+    varname B "B"
+    varname M "Alpha"
+    varname Out "Out"
+
+    display Out
+metadata
+
+input colortex A 
+input colortex B 
+input greytex M 
+output colortex Out
+
+exec
+{
+    function Lerp(a, b, t)
+	    return a + (b - a) * t
+	end
+
+    for x=1, sizeX do
+        for y=1, sizeY do
+            local alpha = M[x][y] / 255
+            local rn = math.floor(mix(A[x][y].r, B[x][y].r, alpha))
+            local gn = math.floor(mix(A[x][y].g, B[x][y].g, alpha))
+            local bn = math.floor(mix(A[x][y].b, B[x][y].b, alpha))
+            local an = math.floor(mix(A[x][y].a, B[x][y].a, alpha))
+            Out[x][y] = {r=rn,g=gn,b=bn,a=an}
+        end
+    end
+}

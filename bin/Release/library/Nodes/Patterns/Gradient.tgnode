@@ -3,30 +3,22 @@ metadata
     color 0x9934EBFF
     category "Core/Patterns"
 
-    varname dirX "Dir X"
-    varname dirY "Dir Y"
+    varname dir "Direction"
     varname Out "Out"
 
-    default dirX 1.0
-    default dirY 0.0
+    default dir 1.0,0.0
 
     display Out
 metadata
 
-param float dirX
-param float dirY
+param vec2 dir
 output greytex Out
 
 exec
 {
-    local dist = lengthV(vec2(dirX,dirY))
-    local normX = dirX/dist
-    local normY = dirY/dist
-    local norm = vec2(normX,normY)
-
+    local norm = normalizeV(dir)
     local bb = dotV(norm,norm)
-
-    local max = lengthV(vec2(sizeX*normX,sizeY*normY))
+    local max = lengthV(vec2(sizeX*norm.x,sizeY*norm.y))
 
     for x=1, sizeX do
         for y=1, sizeY do

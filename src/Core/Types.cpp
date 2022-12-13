@@ -20,6 +20,9 @@ namespace Types
 		case Types::DataType_Bool:
 			stream << std::to_string(boolVar);
 			break;
+		case Types::DataType_Vec2:
+			stream << std::to_string(vec2Var.x) << "," << std::to_string(vec2Var.y);
+			break;
 		case Types::DataType_ColorTex:
 			break;
 		case Types::DataType_GreyTex:
@@ -42,6 +45,13 @@ namespace Types
 			int b = std::stoi(data[2]);
 			int a = std::stoi(data[3]);
 			colorVar = sf::Color(r, g, b, a);
+		}	break;
+		case Types::DataType_Vec2:
+		{
+			auto data = Utility::String::split(s, ',');
+			float x = std::stof(data[0]);
+			float y = std::stof(data[1]);
+			vec2Var = Vec2(x, y);
 		}	break;
 		case Types::DataType_Int:
 			intVar = std::stoi(s);

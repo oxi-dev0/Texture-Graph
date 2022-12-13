@@ -1,0 +1,30 @@
+metadata
+    name "Gradient Radial"
+    color 0x9934EBFF
+    category "Core/Patterns"
+
+    varname Falloff "Falloff"
+    varname Out "Out"
+
+    default Falloff 1.5
+
+    display Out
+metadata
+
+param float Falloff
+output greytex Out
+
+exec
+{
+    local middleX = sizeX/2
+    local middleY = sizeY/2
+    local max = lengthV(vec2(middleX,middleY))
+
+    for x=1, sizeX do
+        for y=1, sizeY do
+            local dist = lengthV(subV(vec2(middleX,middleY), vec2(x,y)))
+            local col = math.floor(clamp(1-(dist/(max/Falloff)),0,1)*255)
+            Out[x][y] = col
+        end
+    end
+}

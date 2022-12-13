@@ -35,6 +35,7 @@ public:
 	//Conversion function
 	ImageNode(GraphNode* node);
 
-	void Execute(std::atomic<int>* threadCount) override;
+	bool AreDependenciesEvaluated(const std::vector<GraphNode*>* nodes);
+	void Evaluate() override;
 };
 

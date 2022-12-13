@@ -30,14 +30,20 @@ void InspectorView::ComponentRender()
 
 	if (graph->selectedNode >= 0 && graph->selectedNode < graph->nodes.size()) {
 		if (ImGui::CollapsingHeader("Node Info", ImGuiTreeNodeFlags_DefaultOpen)) {
+			ImGui::Indent();
 			std::stringstream classStream;
 			classStream << "Class: " << graph->nodes[graph->selectedNode]->nodeClass;
 			ImGui::Text(classStream.str().c_str());
 			std::stringstream idStream;
 			idStream << "ID: " << graph->nodes[graph->selectedNode]->nodeId;
 			ImGui::Text(idStream.str().c_str());
+			std::stringstream evStream;
+			evStream << "Evaluated: " << graph->nodes[graph->selectedNode]->evaluated << "; Evaluating: " << graph->nodes[graph->selectedNode]->isEvaluating;
+			ImGui::Text(evStream.str().c_str());
+			ImGui::Unindent();
 		}
 		if (ImGui::CollapsingHeader("Node Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
+			ImGui::Indent();
 			if (dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode]) != nullptr) {
 				if (dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode])->resourceName != "") {
 					ImGui::InputText("##imagepath", const_cast<char*>(std::filesystem::path(dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode])->resourceName).filename().replace_extension("").string().c_str()), IM_ARRAYSIZE(dynamic_cast<ImageNode*>(graph->nodes[graph->selectedNode])->resourceName.c_str()), ImGuiInputTextFlags_ReadOnly);
@@ -78,10 +84,18 @@ void InspectorView::ComponentRender()
 					ImGui::ColorEdit4(name.c_str(), (float*)&colorTemp, ImGuiColorEditFlags_AlphaPreview);
 					luaVarData.colorVar = sf::Color(colorTemp.Value.x * 255, colorTemp.Value.y * 255, colorTemp.Value.z * 255, colorTemp.Value.w * 255);
 				} break;
+				case Types::DataType_Vec2:
+				{
+					float data[2] = { luaVarData.vec2Var.x, luaVarData.vec2Var.y };
+					ImGui::InputFloat2(name.c_str(), data);
+					luaVarData.vec2Var.x = data[0];
+					luaVarData.vec2Var.y = data[1];
+				}	break;
 				default:
 					break;
 				}
 			}
+			ImGui::Unindent();
 		}
 	}
 }

@@ -1,6 +1,6 @@
 -- These are a bunch of useful functions that can be used in TGNL exec definitions
 
--- VECTOR
+-- VECTOR2
 function vec2(x,y)
     return {x=x,y=y}
 end
@@ -92,13 +92,25 @@ function fract(x)
     return x - math.floor(x)
 end
 
--- Multi-dim float util
+function mod(x,y)
+    return x - y * math.floor(x/y)
+end
+
+-- VECTOR2 FLOAT UTIL
 function floorV(v)
     return {x=math.floor(v.x),y=math.floor(v.y)}
 end
 
+function modVC(v, a)
+    return {x=mod(v.x,a),y=mod(v.y,a)}
+end
+
 function fractV(v)
     return {x=v.x-math.floor(v.x),y=v.y-math.floor(v.y)}
+end
+
+function cosV(v)
+    return {x=math.cos(v.x),y=math.cos(v.y)}
 end
 
 function smoothstepVC(edge0,edge1,v)
@@ -106,3 +118,9 @@ function smoothstepVC(edge0,edge1,v)
     local ty = clamp((v.y - edge0) / (edge1 - edge0), 0.0, 1.0);
     return vec2(tx * tx * (3 - 2 * tx), ty * ty * (3 - 2 * ty));
 end
+
+-- VECTOR4
+function vec4(x,y,z,w)
+    return {x=x,y=y,z=z,w=w}
+end
+

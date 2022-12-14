@@ -1,6 +1,6 @@
 -- These are a bunch of useful functions that can be used in TGNL exec definitions
 
--- VECTOR
+-- VECTOR2
 function vec2(x,y)
     return {x=x,y=y}
 end
@@ -96,7 +96,7 @@ function mod(x,y)
     return x - y * math.floor(x/y)
 end
 
--- Multi-dim float util
+-- VECTOR2 FLOAT UTIL
 function floorV(v)
     return {x=math.floor(v.x),y=math.floor(v.y)}
 end

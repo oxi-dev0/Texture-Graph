@@ -64,7 +64,9 @@ GraphNode* GraphNode::LoadFromTGNF(std::string classFile) {
 	std::map<std::string, std::string> pendingDefaults; // defaults are defined at the start of the file, but have to be processed after variables are specified.
 
 	std::string line;
+	int lIndex = -1;
 	while (std::getline(f, line)) {
+		lIndex += 1;
 		Utility::String::ltrim(line); // Trim Whitespace left
 		Utility::String::rtrim(line); // Trim Whitespace right
 		if (line[0] == '#') { continue; } // Ignore comment lines
@@ -106,6 +108,7 @@ GraphNode* GraphNode::LoadFromTGNF(std::string classFile) {
 				if (keyword == "{") {
 					execdata = true;
 					parsedVariables = true;
+					newNode.definitionExecOffset = lIndex + 1;
 					continue;
 				}
 				else {
@@ -126,7 +129,7 @@ GraphNode* GraphNode::LoadFromTGNF(std::string classFile) {
 		// DEF PROCESSING
 		if (!parsedMetadata) {
 			LOG_CRITICAL("Metadata definition block is required. (Node Class '{0}')", classFile);
-		}
+		} 
 		if (parsedVariables) {
 			LOG_CRITICAL("Execution definition block must be after variable definition block. (Node Class '{0}')", classFile);
 		} 
@@ -295,17 +298,24 @@ GraphNode* GraphNode::LoadFromTGNF(std::string classFile) {
 	fileName << "temp/node-exec/" << classNameLast << ".lua";
 
 	tempFile.open(fileName.str());  
+
+	int lineCount = 0;
 	
 	tempFile << "-- PREGENERATED CORE --\n";
+	lineCount += 1;
 
 	std::string coreLine;
 	while (std::getline(coreFile, coreLine))
 	{
 		Utility::String::rtrim(coreLine);
 		tempFile << coreLine << "\n";
+		lineCount += 1;
 	}
 	coreFile.close();
 	tempFile << "-- PREGENERATED CORE --\n\n-- NODE EXEC --\n";
+	lineCount += 2;
+
+	newNode.luaTempCoreOffset = lineCount;
 
 	for (auto line : newNode.luaLines) {
 		tempFile << line << "\n";
@@ -638,10 +648,42 @@ void GraphNode::SetDirty()
 	evaluated = false;
 }
 
+static void dumpstack(lua_State* L) {
+	int top = lua_gettop(L);
+	for (int i = 1; i <= top; i++) {
+		printf("%d\t%s\t", i, luaL_typename(L, i));
+		switch (lua_type(L, i)) {
+		case LUA_TNUMBER:
+			printf("%g\n", lua_tonumber(L, i));
+			break;
+		case LUA_TSTRING:
+			printf("%s\n", lua_tostring(L, i));
+			break;
+		case LUA_TBOOLEAN:
+			printf("%s\n", (lua_toboolean(L, i) ? "true" : "false"));
+			break;
+		case LUA_TNIL:
+			printf("%s\n", "nil");
+			break;
+		default:
+			printf("%p\n", lua_topointer(L, i));
+			break;
+		}
+	}
+}
 
-bool CheckLua(lua_State* L2, int r, std::string owner) {
+bool CheckLua(lua_State* L2, int r, std::string owner, int coreOffset, int definitionOffset) {
 	if (r != LUA_OK) {
-		LOG_ERROR("{0}'s lua code did not execute successfully. Error: '{1}'", owner, lua_tostring(L2, -1));
+		//dumpstack(L2); 
+		const char* msg = lua_tostring(L2, -1); // temp-file:temp-line: error msg
+		std::vector<std::string> parts = Utility::String::split(std::string(msg), ':');
+		if (parts.size() != 3) { LOG_ERROR("{0}'s lua code did not execute successfully. RAW Error: \"{1}\"", owner, msg); return false; }
+
+		std::string actualError = parts[2];
+		Utility::String::ltrim(actualError);
+		int lineNum = std::stoi(parts[1]);
+
+		LOG_ERROR("{0}'s lua code did not execute successfully. Error: \"{1}\". TGNode Line: {2}, Temp Line: {3}", owner, actualError, std::to_string((lineNum-coreOffset)+definitionOffset), std::to_string(lineNum));
 		return false;
 	}
 	return true;
@@ -802,7 +844,7 @@ void GraphNode::Evaluate()
 	LOG_TRACE("Converted c++ vars to lua in {0}ms", varTmr.Elapsed()*1000.f);
 	Utility::Timer execTmr; 
 	 
-	CheckLua(L, luaL_dofile(L, luaTempFile.c_str()), nodeClass);
+	CheckLua(L, luaL_dofile(L, luaTempFile.c_str()), nodeClass, luaTempCoreOffset, definitionExecOffset);
 
 	LOG_TRACE("Executed node lua in {0}ms", execTmr.Elapsed()*1000.f);
 	Utility::Timer extractTmr;
@@ -968,6 +1010,8 @@ GraphNode::GraphNode(const GraphNode& node) : GraphNode()
 	prevEvalTime = 0.0f;
 	texSize = sf::Vector2i(512, 512);
 	renderedPins = false;
+	luaTempCoreOffset = node.luaTempCoreOffset;
+	definitionExecOffset = node.definitionExecOffset;
 	SetTextureSize(texSize);
 }
 
@@ -984,6 +1028,8 @@ GraphNode::GraphNode(GraphNode* node) : GraphNode() {
 	paramLuaVars = node->paramLuaVars;
 	luaVarData = node->luaVarData;
 	luaVarPins = node->luaVarPins;
+	luaTempCoreOffset = node->luaTempCoreOffset; 
+	definitionExecOffset = node->definitionExecOffset;
 	pinPosCache = std::map<int, sf::Vector2f>();
 	displayVar = node->displayVar;
 	luaLines = node->luaLines;

@@ -60,6 +60,8 @@ public:
 
 	std::vector<std::string> luaLines;
 	std::string luaTempFile;
+	int luaTempCoreOffset;
+	int definitionExecOffset;
 
 	sf::Texture* displayTexture;
 	sf::Image* displayImage;

@@ -3,52 +3,65 @@ metadata
     color 0x3483EBFF
     category "Core/Noise"
 
-    varname Out "Out"
-    varname Scale "Scale"
+    varname out "Out"
+    varname scale "Scale"
+    varname res "Res?"
 
-    default Scale 5.0
+    default scale 5.0
+    default res 1.0
 
-    display Out
+    display out
 metadata
 
-output greytex Out
-param float Scale
+output greytex out
+param float scale
+param float res
 
 exec
 {
-    -- 2D Random
-    function random(v)
-        return fract(math.sin(dotV(v, vec2(12.9898,78.233))) * 43758.5453123)
+    --	Classic Perlin 2D Noise 
+    --	by Stefan Gustavson
+    function fade(t) -- t:vec2
+        return mulV(t,mulV(t,mulV(t,mulV(t,addVC(subVC(mulVC(t,6),15),10)))))
     end
 
-    -- 2D Noise based on Morgan McGuire @morgan3d
-    -- https://www.shadertoy.com/view/4dS3Wd
-    function noise(v)
-        local i = floorV(v) -- v 
-        local f = fractV(v) -- v
-
-        -- Four corners in 2D of a tile
-        local a = random(i)                        -- f 
-        local b = random(addV(i, vec2(1.0, 0.0)))  -- f 
-        local c = random(addV(i, vec2(0.0, 1.0)))  -- f 
-        local d = random(addV(i, vec2(1.0, 1.0)))  -- f
-
-        -- Smooth Interpolation
-
-        -- Cubic Hermine Curve.  Same as SmoothStep()
-        local u = mulV(f,mulV(f,subVC(negateV(mulVC(f,2)), 3)))
-        --local u = smoothstepVC(0,1,f)
-
-        -- Mix 4 coorners percentages
-        return mix(a, b, u.x) + (c - a)* u.y * (1.0 - u.x) + (d - b) * u.x * u.y
+    function cnoise(P) -- P:vec2
+        vec4 Pi = floor(P.xyxy) + vec4(0.0, 0.0, 1.0, 1.0);
+        vec4 Pf = fract(P.xyxy) - vec4(0.0, 0.0, 1.0, 1.0);
+        Pi = mod(Pi, 289.0); // To avoid truncation effects in permutation
+        vec4 ix = Pi.xzxz;
+        vec4 iy = Pi.yyww;
+        vec4 fx = Pf.xzxz;
+        vec4 fy = Pf.yyww;
+        vec4 i = permute(permute(ix) + iy);
+        vec4 gx = 2.0 * fract(i * 0.0243902439) - 1.0; // 1/41 = 0.024...
+        vec4 gy = abs(gx) - 0.5;
+        vec4 tx = floor(gx + 0.5);
+        gx = gx - tx;
+        vec2 g00 = vec2(gx.x,gy.x);
+        vec2 g10 = vec2(gx.y,gy.y);
+        vec2 g01 = vec2(gx.z,gy.z);
+        vec2 g11 = vec2(gx.w,gy.w);
+        vec4 norm = 1.79284291400159 - 0.85373472095314 * 
+            vec4(dot(g00, g00), dot(g01, g01), dot(g10, g10), dot(g11, g11));
+        g00 *= norm.x;
+        g01 *= norm.y;
+        g10 *= norm.z;
+        g11 *= norm.w;
+        float n00 = dot(g00, vec2(fx.x, fy.x));
+        float n10 = dot(g10, vec2(fx.y, fy.y));
+        float n01 = dot(g01, vec2(fx.z, fy.z));
+        float n11 = dot(g11, vec2(fx.w, fy.w));
+        vec2 fade_xy = fade(Pf.xy);
+        vec2 n_x = mix(vec2(n00, n01), vec2(n10, n11), fade_xy.x);
+        float n_xy = mix(n_x.x, n_x.y, fade_xy.y);
+        return 2.3 * n_xy;
     end
 
     for x=1, sizeX do
         for y=1, sizeY do
-            local v = divV(vec2(x,y), vec2(sizeX,sizeY))
-            local pos = mulVC(v, 5)
-
-            Out[x][y] = math.floor(noise(pos) * 255);
+            --out[x][y] = math.floor(pNoise(vec2(x/sizeX, y/sizeY), res)*255)
+            out[x][y] = math.floor(pNoise(vec2(x, y), res)*255)
         end
     end
 }

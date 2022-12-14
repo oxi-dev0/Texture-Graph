@@ -92,13 +92,25 @@ function fract(x)
     return x - math.floor(x)
 end
 
+function mod(x,y)
+    return x - y * math.floor(x/y)
+end
+
 -- Multi-dim float util
 function floorV(v)
     return {x=math.floor(v.x),y=math.floor(v.y)}
 end
 
+function modVC(v, a)
+    return {x=mod(v.x,a),y=mod(v.y,a)}
+end
+
 function fractV(v)
     return {x=v.x-math.floor(v.x),y=v.y-math.floor(v.y)}
+end
+
+function cosV(v)
+    return {x=math.cos(v.x),y=math.cos(v.y)}
 end
 
 function smoothstepVC(edge0,edge1,v)

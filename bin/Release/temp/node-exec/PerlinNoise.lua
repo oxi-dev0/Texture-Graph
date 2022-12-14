@@ -1,3 +1,4 @@
+-- PREGENERATED CORE --
 -- These are a bunch of useful functions that can be used in TGNL exec definitions
 
 -- VECTOR
@@ -41,7 +42,7 @@ function negateV(v)
     return {x=-v.x,y=-v.y}
 end
 
-function lengthV(v) 
+function lengthV(v)
     return math.sqrt((v.x * v.x) + (v.y * v.y))
 end
 
@@ -118,3 +119,50 @@ function smoothstepVC(edge0,edge1,v)
     local ty = clamp((v.y - edge0) / (edge1 - edge0), 0.0, 1.0);
     return vec2(tx * tx * (3 - 2 * tx), ty * ty * (3 - 2 * ty));
 end
+-- PREGENERATED CORE --
+
+-- NODE EXEC --
+-- 2D Random
+function rand(c) -- c:vec2
+return fract(math.sin(dotV(c,vec2(12.9898,78.233))) * 43758.5453)
+end
+function noise(p, freq) -- p:vec2, freq:number
+local unit = sizeX/freq
+local ij = floorV(divVC(p,unit))
+local xy = divVC(modVC(p,unit),unit)
+--xy = 3.*xy*xy-2.*xy*xy*xy
+xy = mulVC(subVC(negateV(cosV(mulVC(xy, math.pi))), 1), 0.5)
+local a = rand(addV(ij,vec2(0,0)))
+local b = rand(addV(ij,vec2(1.,0.)))
+local c = rand(addV(ij,vec2(0.,1.)))
+local d = rand(addV(ij,vec2(1.,1.)))
+local x1 = mix(a, b, xy.x)
+local x2 = mix(c, d, xy.x)
+return mix(x1, x2, xy.y)
+end
+function pNoise(p, res) -- p:vec2, res:number
+local persistance = 0.5
+local n = 0
+local normK = 0
+local f = 4
+local amp = 1
+local iCount = 0
+local i = 0
+while i < 50 do
+n = n + (amp*noise(p, f))
+f = f * 2
+normK = normK + amp
+amp = amp * persistance
+if (iCount == res) then break end
+iCount = iCount + 1
+i = i + 1
+end
+local nf = n/normK
+return nf*nf*nf*nf
+end
+for x=1, sizeX do
+for y=1, sizeY do
+Out[x][y] = math.floor(pNoise(vec2(x/sizeX, y/sizeY), res)*255)
+end
+end
+-- NODE EXEC --

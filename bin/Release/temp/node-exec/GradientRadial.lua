@@ -1,3 +1,4 @@
+-- PREGENERATED CORE --
 -- These are a bunch of useful functions that can be used in TGNL exec definitions
 
 -- VECTOR
@@ -41,7 +42,7 @@ function negateV(v)
     return {x=-v.x,y=-v.y}
 end
 
-function lengthV(v) 
+function lengthV(v)
     return math.sqrt((v.x * v.x) + (v.y * v.y))
 end
 
@@ -118,3 +119,17 @@ function smoothstepVC(edge0,edge1,v)
     local ty = clamp((v.y - edge0) / (edge1 - edge0), 0.0, 1.0);
     return vec2(tx * tx * (3 - 2 * tx), ty * ty * (3 - 2 * ty));
 end
+-- PREGENERATED CORE --
+
+-- NODE EXEC --
+local middleX = sizeX/2
+local middleY = sizeY/2
+local max = lengthV(vec2(middleX,middleY))
+for x=1, sizeX do
+for y=1, sizeY do
+local dist = lengthV(subV(vec2(middleX,middleY), vec2(x,y)))
+local col = math.floor(clamp(1-(dist/(max/Falloff)),0,1)*255)
+Out[x][y] = col
+end
+end
+-- NODE EXEC --

@@ -5,50 +5,64 @@ metadata
 
     varname Out "Out"
     varname Scale "Scale"
+    varname res "Res?"
 
     default Scale 5.0
+    default res 1.0
 
     display Out
 metadata
 
 output greytex Out
 param float Scale
+param float res
 
 exec
 {
     -- 2D Random
-    function random(v)
-        return fract(math.sin(dotV(v, vec2(12.9898,78.233))) * 43758.5453123)
+    function rand(c) -- c:vec2
+	    return fract(math.sin(dotV(c,vec2(12.9898,78.233))) * 43758.5453)
     end
 
-    -- 2D Noise based on Morgan McGuire @morgan3d
-    -- https://www.shadertoy.com/view/4dS3Wd
-    function noise(v)
-        local i = floorV(v) -- v 
-        local f = fractV(v) -- v
+    function noise(p, freq) -- p:vec2, freq:number
+        local unit = sizeX/freq
+        local ij = floorV(divVC(p,unit))
+        local xy = divVC(modVC(p,unit),unit)
+        --xy = 3.*xy*xy-2.*xy*xy*xy
+        xy = mulVC(subVC(negateV(cosV(mulVC(xy, math.pi))), 1), 0.5)
+        local a = rand(addV(ij,vec2(0,0)))
+        local b = rand(addV(ij,vec2(1.,0.)))
+        local c = rand(addV(ij,vec2(0.,1.)))
+        local d = rand(addV(ij,vec2(1.,1.)))
+        local x1 = mix(a, b, xy.x)
+        local x2 = mix(c, d, xy.x)
+	    return mix(x1, x2, xy.y)
+    end
 
-        -- Four corners in 2D of a tile
-        local a = random(i)                        -- f 
-        local b = random(addV(i, vec2(1.0, 0.0)))  -- f 
-        local c = random(addV(i, vec2(0.0, 1.0)))  -- f 
-        local d = random(addV(i, vec2(1.0, 1.0)))  -- f
-
-        -- Smooth Interpolation
-
-        -- Cubic Hermine Curve.  Same as SmoothStep()
-        local u = mulV(f,mulV(f,subVC(negateV(mulVC(f,2)), 3)))
-        --local u = smoothstepVC(0,1,f)
-
-        -- Mix 4 coorners percentages
-        return mix(a, b, u.x) + (c - a)* u.y * (1.0 - u.x) + (d - b) * u.x * u.y
+    function pNoise(p, res) -- p:vec2, res:number
+        local persistance = 0.5
+        local n = 0
+        local normK = 0
+        local f = 4
+        local amp = 1
+        local iCount = 0
+        local i = 0
+        while i < 50 do
+            n = n + (amp*noise(p, f))
+            f = f * 2
+            normK = normK + amp
+            amp = amp * persistance
+            if (iCount == res) then break end
+            iCount = iCount + 1
+            i = i + 1
+        end
+        local nf = n/normK
+        return nf*nf*nf*nf
     end
 
     for x=1, sizeX do
         for y=1, sizeY do
-            local v = divV(vec2(x,y), vec2(sizeX,sizeY))
-            local pos = mulVC(v, 5)
-
-            Out[x][y] = math.floor(noise(pos) * 255);
+            Out[x][y] = math.floor(pNoise(vec2(x/sizeX, y/sizeY), res)*255)
         end
     end
 }

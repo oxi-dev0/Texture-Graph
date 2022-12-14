@@ -1,3 +1,4 @@
+-- PREGENERATED CORE --
 -- These are a bunch of useful functions that can be used in TGNL exec definitions
 
 -- VECTOR
@@ -41,7 +42,7 @@ function negateV(v)
     return {x=-v.x,y=-v.y}
 end
 
-function lengthV(v) 
+function lengthV(v)
     return math.sqrt((v.x * v.x) + (v.y * v.y))
 end
 
@@ -118,3 +119,22 @@ function smoothstepVC(edge0,edge1,v)
     local ty = clamp((v.y - edge0) / (edge1 - edge0), 0.0, 1.0);
     return vec2(tx * tx * (3 - 2 * tx), ty * ty * (3 - 2 * ty));
 end
+-- PREGENERATED CORE --
+
+-- NODE EXEC --
+function polygonShape(position, radius, numSides)
+position.x = position.x * 2 - 1
+position.y = position.y * 2 - 1
+local angle = math.atan(position.x, position.y)
+local slice = math.pi * 2 / numSides
+return 1-step(radius, math.cos(math.floor(0.5 + angle / slice) * slice - angle) * lengthV(position))
+end
+for x=1, sizeX do
+for y=1, sizeY do
+local pos = {x=0,y=0}
+pos.x = x / sizeX
+pos.y = y / sizeY
+Out[x][y] = math.floor(polygonShape(pos, radius, numSides)*255)
+end
+end
+-- NODE EXEC --

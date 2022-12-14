@@ -9,7 +9,7 @@ metadata
 	varname InvertAlpha "Invert Alpha"
 	varname Out "Out"
 
-	# default [lua var] [value] (Only works for color, int, bool, vec2 and float types) - optional, but required if variable is dynamically displayed
+	# default [lua var] [value] (Only works for color, int, bool, string and float types) - optional, but required if variable is dynamically displayed
 	default Invert false
 	default InvertAlpha false
 
@@ -21,9 +21,10 @@ metadata
 	display Out
 metadata
 
-# param is a node param, which can be changed by selecting the node and using the inspector
-# input is an input node pin
-# output is an output node pin
+# param is a node param - not a node pin. input would be a node pin
+# output is a node pin
+# color is a lua table {r=0, g=0, b=0, a=255}
+# tex is a 2d array of colors
 
 # ENUMS WILL BE ADDED IN THE FUTURE
 
@@ -36,9 +37,13 @@ param bool InvertAlpha
 # output [type] [var]
 output colortex Out
 
-# lua exec. all inputs, outputs, core functions and other data are defined before this is called
+# lua exec. all inputs, outputs, and other data are defined before this is called
 exec
 {
+	local outCopy = Out
+	local sizeXCopy = sizeX
+	local sizeYCopy = sizeY
+
 	if Invert then
 		Color.r = 255-Color.r
 		Color.g = 255-Color.g
@@ -47,10 +52,14 @@ exec
 			Color.a = 255-Color.a
 		end
 	end
+
+	local colorCopy = Color
 	
-	for x=1, sizeX do
-		for y=1, sizeY do
-			Out[x][y] = Color
+	for x=1, sizeXCopy do
+		for y=1, sizeYCopy do
+			outCopy[x][y] = colorCopy
 		end
 	end
+
+	Out = outCopy
 }

@@ -1,3 +1,4 @@
+-- PREGENERATED CORE --
 -- These are a bunch of useful functions that can be used in TGNL exec definitions
 
 -- VECTOR
@@ -41,7 +42,7 @@ function negateV(v)
     return {x=-v.x,y=-v.y}
 end
 
-function lengthV(v) 
+function lengthV(v)
     return math.sqrt((v.x * v.x) + (v.y * v.y))
 end
 
@@ -118,3 +119,25 @@ function smoothstepVC(edge0,edge1,v)
     local ty = clamp((v.y - edge0) / (edge1 - edge0), 0.0, 1.0);
     return vec2(tx * tx * (3 - 2 * tx), ty * ty * (3 - 2 * ty));
 end
+-- PREGENERATED CORE --
+
+-- NODE EXEC --
+local gapPx = gap
+local brickX = (sizeX - (gapPx*(bricksPerRow-1)))/bricksPerRow
+local brickY = brickX / ratio
+local brickXC = brickX
+local brickYC = brickY
+for x=1, sizeX do
+for y=1, sizeY do
+local yOffset = (brickXC*0.5)*(math.floor(y/(brickYC+gapPx))%2)
+local posX = ((x+yOffset)%(brickXC+gapPx))
+local posY = ((y)%(brickYC+gapPx))
+local valid = (posX <= brickXC) and (posY <= brickYC)
+local val = 255
+if not valid then
+val = 0
+end
+Out[x][y] = val
+end
+end
+-- NODE EXEC --

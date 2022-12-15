@@ -4,7 +4,6 @@ metadata
     category "Core/Noise"
 
     varname Out "Out"
-
     display Out
 metadata
 

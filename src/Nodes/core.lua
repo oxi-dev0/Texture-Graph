@@ -96,6 +96,10 @@ function mod(x,y)
     return x - y * math.floor(x/y)
 end
 
+function remap(value, low1, high1, low2, high2)
+	return low2 + (value - low1) * (high2 - low2) / (high1 - low1)
+end
+
 -- VECTOR2 FLOAT UTIL
 function floorV(v)
     return {x=math.floor(v.x),y=math.floor(v.y)}

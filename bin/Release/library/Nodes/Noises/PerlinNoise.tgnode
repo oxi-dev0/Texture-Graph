@@ -3,28 +3,28 @@ metadata
     color 0x3483EBFF
     category "Core/Noise"
 
-    varname out "Out"
-    varname firstOctave "Start Octave"
-    varname octaves "# Octaves"
-    varname persistence "Persistence"
-    varname mult "Amplitude"
-    varname offset "Offset"
+    varname Out "Out"
+    varname FirstOctave "Start Octave"
+    varname Octaves "# Octaves"
+    varname Persistence "Persistence"
+    varname Mult "Amplitude"
+    varname Offset "Offset"
 
-    default firstOctave 3
-    default octaves 5
-    default persistence 0.6
-    default mult 0.7
-    default offset 0.3
+    default FirstOctave 3
+    default Octaves 5
+    default Persistence 0.6
+    default Mult 0.7
+    default Offset 0.3
 
-    display out
+    display Out
 metadata
 
-param int firstOctave
-param int octaves
-param float persistence
-param float mult
-param float offset
-output greytex out
+param int FirstOctave
+param int Octaves
+param float Persistence
+param float Mult
+param float Offset
+output greytex Out
 
 exec
 {
@@ -63,10 +63,10 @@ exec
         local sum = 0
         local frequency = 0
         local amplitude = 0
-        local i = firstOctave
-        while i < octaves do
+        local i = FirstOctave
+        while i < Octaves do
             frequency = math.pow(2,i)
-            amplitude = math.pow(persistence,i)
+            amplitude = math.pow(Persistence,i)
             sum = sum + InterpolationNoise(x*frequency,y*frequency)*amplitude
             i = i + 1
         end
@@ -78,7 +78,7 @@ exec
         for y=1, sizeY do
             local uv = divV(vec2(x,y), vec2(sizeX,sizeY))
             local noise = PerlinNoise2D(uv.x,uv.y) --0.3+0.7*PerlinNoise2D(uv.x,uv.y)
-            out[x][y] = math.floor(((mult * noise) + offset)*255)
+            Out[x][y] = math.floor(((Mult * noise) + Offset)*255)
         end
     end
 }

@@ -96,6 +96,10 @@ function mod(x,y)
     return x - y * math.floor(x/y)
 end
 
+function remap(value, low1, high1, low2, high2)
+	return low2 + (value - low1) * (high2 - low2) / (high1 - low1)
+end
+
 -- VECTOR2 FLOAT UTIL
 function floorV(v)
     return {x=math.floor(v.x),y=math.floor(v.y)}
@@ -118,9 +122,3 @@ function smoothstepVC(edge0,edge1,v)
     local ty = clamp((v.y - edge0) / (edge1 - edge0), 0.0, 1.0);
     return vec2(tx * tx * (3 - 2 * tx), ty * ty * (3 - 2 * ty));
 end
-
--- VECTOR4
-function vec4(x,y,z,w)
-    return {x=x,y=y,z=z,w=w}
-end
-

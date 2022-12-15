@@ -21,16 +21,16 @@ exec
 {
     local points = {}
     for p=1, PointCount do
-        points[p] = vec2(math.random(0,sizeX),math.random(0,sizeY))
+        points[p] = vec2(math.random(sizeX),math.random(sizeY))
     end
 
     local maxDist = lengthV(vec2(sizeX/2,sizeY/2))
 
     function getClosest(x, y)
-        local closestIndex = 0
+        local closestIndex = -1
         local closestDist = 1000000000
         for p=1, PointCount do
-            local dist = lengthV(subV(vec2(points[p].x,points[p].y),vec2(x,y)))
+            local dist = lengthV(subV(vec2(x,y),points[p]))
             if dist < closestDist then
                 closestIndex = p
                 closestDist = dist
@@ -42,7 +42,8 @@ exec
     for x=1, sizeX do
         for y=1, sizeY do
             local closest = getClosest(x,y)
-            Out[x][y] = 255-clamp(math.floor((lengthV(subV(vec2(closest.x, closest.y), vec2(x,y)))/(maxDist/Falloff))*255),0,255)
+            local dist = lengthV(subV(vec2(x,y), closest))
+            Out[x][y] = 255-clamp(math.floor(remap(dist, 0, maxDist, 0, Falloff)*255),0,255)
         end
     end
 }

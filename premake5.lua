@@ -48,10 +48,10 @@ project "TextureGraph"
 		"vendor/nfd/src/include",
 		"vendor/lua/include",
 		"vendor/clip",
-		"vendor/fpacker/include"
+		"vendor/fpacker/src"
 	}
 
-	libdirs { "vendor/sfml/extlibs/libs-msvc-universal/x64", "vendor/sfml/lib", "vendor/nfd/build/src/Release", "vendor/lua", "vendor/clip/build/Debug", "vendor/clip/build/Release", "vendor/fpacker/bin/Release", "vendor/fpacker/bin/Debug" }
+	libdirs { "vendor/sfml/extlibs/libs-msvc-universal/x64", "vendor/sfml/lib", "vendor/nfd/build/src/Release", "vendor/lua", "vendor/clip/build/Debug", "vendor/clip/build/Release" }
 	links { "opengl32.lib", "freetype.lib", "winmm.lib", "gdi32.lib", "openal32.lib", "flac.lib", "vorbisenc.lib", "vorbisfile.lib", "vorbis.lib", "ogg.lib", "ws2_32.lib", "legacy_stdio_definitions.lib", "nfd.lib", "lua54.lib" }
 
 
@@ -67,7 +67,7 @@ project "TextureGraph"
 		staticruntime "on"
 		runtime "Debug"
 
-		links { "sfml-graphics-s-d.lib", "sfml-system-s-d.lib", "sfml-window-s-d.lib", "clip-d.lib", "fpacker-d.lib" }
+		links { "sfml-graphics-s-d.lib", "sfml-system-s-d.lib", "sfml-window-s-d.lib", "clip-d.lib"}
 
 	filter "configurations:Release"
 		defines "RELEASE"
@@ -75,7 +75,7 @@ project "TextureGraph"
 		staticruntime "on"
 		runtime "Release"
 
-		links { "sfml-graphics-s.lib", "sfml-system-s.lib", "sfml-window-s.lib", "clip.lib", "fpacker.lib" }
+		links { "sfml-graphics-s.lib", "sfml-system-s.lib", "sfml-window-s.lib", "clip.lib" }
 
 	filter "configurations:Dist"
 		defines "DIST"
@@ -83,4 +83,4 @@ project "TextureGraph"
 		staticruntime "on"
 		runtime "Release"
 
-		links { "sfml-graphics-s.lib", "sfml-system-s.lib", "sfml-window-s.lib", "clip.lib", "fpacker.lib" }
+		links { "sfml-graphics-s.lib", "sfml-system-s.lib", "sfml-window-s.lib", "clip.lib" }

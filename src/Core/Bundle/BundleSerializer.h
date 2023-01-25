@@ -8,11 +8,11 @@
 
 #include "../Globals.h"
 
-#include <fpacker.h>
+#include <fpacker.hpp>
 #include <nfd.h>
 
 namespace Bundle
-{
+{ 
 	namespace Serialization
 	{
 		extern std::function<void(void)> clearPromptCallback;

@@ -9,8 +9,7 @@ namespace Bundle
 		bool dirty = false;
 
 		bool SaveBundleToFile(std::string file) {
-			FPacker::Package pkg = FPacker::Package::LoadDir("temp/bundle");
-			bool res = pkg.Pack(file);
+			bool res = FPacker::Pack("temp/bundle", file);
 			Globals::currentBundle = file;
 			if (res) {
 				Bundle::Resources::LoadFromBundle();
@@ -25,8 +24,7 @@ namespace Bundle
 
 		bool LoadBundleFromFile(std::string file) {
 			NewBundle();
-			FPacker::Package pkg = FPacker::Package::LoadPackageFile(file);
-			bool res = pkg.Unpack("temp/bundle");
+			bool res = FPacker::Unpack(file, "temp/bundle");
 			Globals::currentBundle = file;
 			if (res) {
 				Bundle::Resources::LoadFromBundle();

@@ -38,5 +38,7 @@ or with the Git CLI run `git clone --recursive https://github.com/oxi-dev0/Textu
 | Graph editor view background is buggy | |
 | Evaluation is inefficient, and slow | |
 | GUI Overhaul | |
+| Needs 3D Viewer and maybe material system | |
+| TGNL is badly formatted and unintuitive | |
 
 ![image](https://user-images.githubusercontent.com/33568643/174427714-5e855101-8380-416b-b326-6bdef5ac5434.png)

@@ -212,13 +212,14 @@ void MainWindow::Init(std::string windowTitle) {
     handlingView = nullptr;
 
     // INIT WINDOW
-    window.create(sf::VideoMode(1920, 1080), windowTitle.c_str()); // Main editor window
+    sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
+    desktopMode.width = (unsigned int)((float)desktopMode.width * 0.75f);
+    desktopMode.height = (unsigned int)((float)desktopMode.height * 0.75f);
+    window.create(desktopMode, windowTitle.c_str()); // Main editor window
     window.setVerticalSyncEnabled(true);
     ImGui::SFML::Init(window, false); // Init IMGUI with main window
 
     LOG_INFO("Initialised Window");
-
-
 
     // IMGUI FLAGS
     ImGuiIO& io = ImGui::GetIO();

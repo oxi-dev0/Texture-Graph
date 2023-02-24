@@ -14,7 +14,7 @@ function addVC(a,b)
 end
 
 function subV(a,b)
-    return {x=a.x+b.x,y=a.y+b.y}
+    return {x=a.x-b.x,y=a.y-b.y}
 end
 
 function subVC(a,b)

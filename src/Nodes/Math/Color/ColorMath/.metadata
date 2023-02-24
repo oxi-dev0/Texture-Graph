@@ -1,0 +1,16 @@
+name "Math"
+color 0xFA7A39FF
+category "Core/Math/Color"
+
+input colortex A "A"
+input colortex B "B"
+param bool shouldClamp "Clamp?"
+param color min "Min"
+param color max "Max"
+param enum op "Operation" {"Add","Subtract","Multiply","Divide"} "Add"
+output colortex outTex "Out"
+
+show min (shouldClamp == true)
+show max (shouldClamp == true)
+
+display outTex

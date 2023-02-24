@@ -1,0 +1,8 @@
+name "Gradient Radial"
+color 0x9934EBFF
+category "Core/Patterns"
+
+param float falloff "Falloff" 1.5
+output greytex outTex "Out"
+
+display outTex

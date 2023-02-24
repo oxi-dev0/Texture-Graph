@@ -1,0 +1,13 @@
+local norm = normalizeV(dir)
+local bb = dotV(norm,norm)
+local max = lengthV(vec2(sizeX*norm.x,sizeY*norm.y))
+
+for x=1, sizeX do
+    for y=1, sizeY do
+        local vec = vec2(x,y)
+        local proj = mulVC(norm, dotV(vec, norm) / bb)
+        local d = lengthV(vec2(proj.x,proj.y))
+        local col = math.floor(clamp(d/max,0,1)*255)
+        outTex[x][y] = col
+    end
+end

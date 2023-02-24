@@ -1,0 +1,8 @@
+name "Gradient"
+color 0x9934EBFF
+category "Core/Patterns"
+
+param vec2 dir "Direction" 1.0,0.0
+output greytext outTex "Out"
+
+display outTex

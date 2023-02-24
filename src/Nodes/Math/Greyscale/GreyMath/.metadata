@@ -1,0 +1,16 @@
+name "Math"
+color 0xFA7A39FF
+category "Core/Math/Greyscale"
+
+input greytex A "A"
+input greytex B "B"
+param bool shouldClamp "Clamp?"
+param int min "Min"
+param int max "Max"
+param enum op "Operation" {"Add","Subtract","Multiply","Divide"} "Add"
+output greytex outTex "Out"
+
+show min (shouldClamp == true)
+show max (shouldClamp == true)
+
+display outTex

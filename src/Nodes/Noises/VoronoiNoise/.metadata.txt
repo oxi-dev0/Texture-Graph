@@ -1,9 +1,0 @@
-name "Voronoi Noise"
-color 0x3483EBFF
-category "Core/Noise"
-
-param int pointCount "Point Count" 10
-param float falloff "Falloff" 1.0
-output greytex out "Out"
-
-display out

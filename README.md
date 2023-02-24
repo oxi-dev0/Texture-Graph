@@ -32,7 +32,7 @@ or with the Git CLI run `git clone --recursive https://github.com/oxi-dev0/Textu
 ## Task List for v1.0
 | Issue / Improvement | Complete |
 | --- | --- |
-| Some nodes broke after Core Functions were introduced | |
+| Some nodes broke after Core Functions were introduced |x|
 | Deleting nodes will sometimes cause relation issues, with evaluating and serialization | |
 | Mouse switching views while inputs are being processed will sometimes cause both views to handle inputs | |
 | Graph editor view background is buggy | |

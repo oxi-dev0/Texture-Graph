@@ -40,7 +40,7 @@ void GraphEditorView::Grid() {
 	int xSpace = (int)std::floor((float)rt.mapCoordsToPixel(sf::Vector2f((float)lineSpacing, 0)).x - (float)rt.mapCoordsToPixel(sf::Vector2f(0, 0)).x);
 	int ySpace = (int)std::floor((float)rt.mapCoordsToPixel(sf::Vector2f(0, (float)lineSpacing)).y - (float)rt.mapCoordsToPixel(sf::Vector2f(0, 0)).y);
 
-	sf::Vector2f offset = sf::Vector2f((float)((int)(vcenter.x * prevSize.x * (1 / zoom)) % xSpace), (float)((int)(vcenter.y * prevSize.y * (1 / zoom)) % ySpace)); // -sf::Vector2f(lineSpacingX * std::floor(((vcenter.x * prevSize.x) - (prevSize.x / 2)) / sf::Vector2f(rt.mapCoordsToPixel(sf::Vector2f(lineSpacingX, 0)) - rt.mapCoordsToPixel(sf::Vector2f(0, 0))).length()), lineSpacingY * std::floor(((vcenter.y * prevSize.y) - (prevSize.y / 2)) / sf::Vector2f(rt.mapCoordsToPixel(sf::Vector2f(0, lineSpacingY)) - rt.mapCoordsToPixel(sf::Vector2f(0, 0))).length()));
+	sf::Vector2f offset = sf::Vector2f((float)std::fmodf((vcenter.x * prevSize.x * (1 / zoom)), prevSize.x/2), (float)std::fmodf((vcenter.y * prevSize.y * (1 / zoom)), prevSize.y/2));
 
 	int totalLinesX = (int)prevSize.x / xSpace;
 	int totalLinesY = (int)prevSize.y / ySpace;
@@ -86,7 +86,7 @@ void GraphEditorView::InfoBarData() {
 	ImGui::SameLine(0.0f, 25.0f);
 
 	std::stringstream zoomStream;
-	zoomStream << "Zoom: " << round(zoom * 100.0f) / 100.0f;
+	zoomStream << "Zoom: " << zoom << std::endl;// round(zoom * 100000.0f) / 100000.0f;
 	ImGui::Text(zoomStream.str().c_str());
 
 	ImGui::SameLine(0.0f, 25.f);

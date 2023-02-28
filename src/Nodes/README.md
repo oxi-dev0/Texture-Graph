@@ -29,7 +29,7 @@ A VSCode syntax extension can be found [here](https://github.com/oxi-dev0/TGNL)
 |`enum`| A user-defined set of named options for a variable | `"Add","Subtract"` | &check; | &cross; |
 
 ## Overview
-One node folder requires a `.metadata` and a `program.lua` file to work.
+A Node requires a `.metadata` and a `program.lua` file to work.
 
 ## Metadata Definition
 ### .metadata file

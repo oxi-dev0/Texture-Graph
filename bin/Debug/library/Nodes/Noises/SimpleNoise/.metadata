@@ -1,0 +1,7 @@
+name "Simple Noise"
+color 0x3483EBFF
+category "Core/Noise"
+
+output greytex outTex "Out"
+
+display outTex

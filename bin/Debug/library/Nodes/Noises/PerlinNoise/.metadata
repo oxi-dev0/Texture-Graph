@@ -1,0 +1,12 @@
+name "Perlin Noise"
+color 0x3483EBFF
+category "Core/Noise"
+
+param int firstOctave "Start Octave" 3
+param int octaves "# Octaves" 5
+param float persistance "Persistence" 0.6
+param float mult "Amplitude" 0.7
+param float offset "Offset" 0.3
+output greytex outTex "Out"
+
+display outTex

@@ -1,0 +1,11 @@
+name "Lerp"
+color 0xFA7A39FF
+category "Core/Math/Greyscale"
+
+input greytex A "A"
+input greytex B "B"
+input greytex T "Alpha"
+param bool invert "Invert Alpha?" false
+output greytex outTex "Out"
+
+display outTex

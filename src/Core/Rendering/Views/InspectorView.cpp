@@ -65,6 +65,67 @@ void InspectorView::ComponentRender()
 
 			for (auto& var : graph->nodes[graph->selectedNode]->paramLuaVars)
 			{
+				if (LibraryManager::compiledNodeVarShowExpressions.find(graph->nodes[graph->selectedNode]->nodeClass) != LibraryManager::compiledNodeVarShowExpressions.end()) {
+					auto& luaVarShowExpressionsMap = LibraryManager::compiledNodeVarShowExpressions.find(graph->nodes[graph->selectedNode]->nodeClass)->second;
+						if (luaVarShowExpressionsMap.find(var.second) != luaVarShowExpressionsMap.end()) {
+							std::function<bool(bool, std::string, ConditionParser::ExpressionOperation, bool, std::string)> evalFunc = [&](bool invertVar1, std::string var1Str, ConditionParser::ExpressionOperation op, bool invertVar2, std::string var2Str) {
+								Types::DataType type = Types::DataType::DataType_Bool;
+								bool var1Set = false;
+								bool var2Set = false;
+								Types::WildData var1Data;
+								Types::WildData var2Data;
+
+								auto& varDataMap = graph->nodes[graph->selectedNode]->luaVarData;
+								if (varDataMap.find(var1Str) != varDataMap.end()) {
+									var1Data = varDataMap[var1Str];
+									var1Set = true;
+									type = var1Data.dataType;
+								}
+								if (varDataMap.find(var2Str) != varDataMap.end()) {
+									if (varDataMap[var2Str].dataType != type && var1Set) {
+										LOG_CRITICAL("Variable '{0}' error with 'show' expression: Mismatching data types in comparison '{1}{2}{3}'", var.second, var1Str, ConditionParser::expressionOperationToString.find(op)->second, var2Str);
+									}
+									var2Data = varDataMap[var2Str];
+									var2Set = true;
+									type = var2Data.dataType;
+								}
+
+								if (!var1Set && !var2Set) {
+									LOG_CRITICAL("Variable '{0}' error with 'show' expression: No variable found in comparison '{1}{2}{3}'", var.second, var1Str, ConditionParser::expressionOperationToString.find(op)->second, var2Str);
+								}
+
+								if (!var1Set) {
+									var1Data.dataType = type;
+									var1Data.FromString(var1Str);
+								}
+								if (!var2Set) {
+									var2Data.dataType = type;
+									var2Data.FromString(var2Str);
+								}
+
+								if (type == Types::DataType::DataType_Bool) {
+									if (invertVar1) { var1Data.boolVar = !var1Data.boolVar; }
+									if (invertVar2) { var2Data.boolVar = !var2Data.boolVar; }
+								}
+
+								switch (op) {
+								case ConditionParser::ExpressionOperation::EQUAL:
+									return var1Data.AsString() == var2Data.AsString();
+									break;
+								case ConditionParser::ExpressionOperation::NOTEQUAL:
+									return var1Data.AsString() != var2Data.AsString();
+								}
+
+								return false;
+							};
+
+							bool show = luaVarShowExpressionsMap[var.second]->Eval(evalFunc);
+							if (!show) {
+								continue;
+							}
+						}
+				}
+
 				auto& luaVarData = graph->nodes[graph->selectedNode]->luaVarData[var.second];
 				auto& name = var.first;
 				switch (luaVarData.dataType)
@@ -90,6 +151,28 @@ void InspectorView::ComponentRender()
 					ImGui::InputFloat2(name.c_str(), data);
 					luaVarData.vec2Var.x = data[0];
 					luaVarData.vec2Var.y = data[1];
+				}	break;
+				case Types::DataType_Enum:
+				{
+					auto enumSet = graph->nodes[graph->selectedNode]->luaVarEnumSets[var.second];
+					static int selectedEnum = std::find(enumSet.begin(), enumSet.end(), luaVarData.enumVar) - enumSet.begin();
+					const char* previewVal = enumSet[selectedEnum].c_str();
+					if (ImGui::BeginCombo(name.c_str(), previewVal, ImGuiComboFlags_None))
+					{
+						for (int n = 0; n < enumSet.size(); n++)
+						{
+							const bool selected = (selectedEnum == n);
+							if (ImGui::Selectable(enumSet[n].c_str(), selected)) {
+								selectedEnum = n;
+								luaVarData.enumVar = enumSet[selectedEnum];
+							}
+
+							if (selected) {
+								ImGui::SetItemDefaultFocus();
+							}
+						}
+						ImGui::EndCombo();
+					}
 				}	break;
 				default:
 					break;

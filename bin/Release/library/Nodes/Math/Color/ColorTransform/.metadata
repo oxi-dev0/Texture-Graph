@@ -1,0 +1,14 @@
+name "Transform"
+color 0xFA7A39FF
+category "Core/Math/Color"
+
+input colortex inp "In"
+param float posX "Pos X" 0.0
+param float posY "Pos Y" 0.0
+param float angle "Angle" 0.0
+param float scaleX "Scale X" 1.0
+param float scaleY "Scale Y" 1.0
+param bool rep "Repeat" false
+output colortex outTex "Out"
+
+display outTex

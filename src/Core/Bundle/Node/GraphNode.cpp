@@ -1,18 +1,20 @@
 #include "GraphNode.h"
 
 #define TGNL_LINE_ASSERT(keyword, expected, given, file)	if (expected != given) { LOG_CRITICAL("Too many parameters passed to keyword '{3}'. {1} expected but {2} were given. (Node Class '{0}')", file, expected, given, keyword); }
+#define TGNL_RANGE_LINE_ASSERT(keyword, expectedMin, expectedMax, given, file)	if (given < expectedMin || given > expectedMax) { LOG_CRITICAL("Incorrect amount of parameters passed to keyword '{4}'. {1} - {2} expected but {3} were given. (Node Class '{0}')", file, expectedMin, expectedMax, given, keyword); }
 
 #define TGNL_PARAM_ASSERT(type, file)						if (Utility::String::includes({"colortex", "greytex"}, Utility::String::toLower(type))) { LOG_CRITICAL("Type '{1}' is not allowed to be used with the keyword 'param'. (Node Class '{0}')", file, type); }
 #define TGNL_PIN_ASSERT(keyword, type, file)				if (!Utility::String::includes({"colortex", "greytex"}, Utility::String::toLower(type))) { LOG_CRITICAL("Type '{2}' is not allowed to be used with the keyword '{1}'. (Node Class '{0}')", file, keyword, type); }
 #define TGNL_DISPLAY_ASSERT(type, file)						if (!Utility::String::includes({"colortex", "greytex"}, Utility::String::toLower(type))) { LOG_CRITICAL("Type '{0}' cannot be used with keyword 'display'. (Node Class {1})", type, file); }
 
-#define TGNL_TYPE_ASSERT(keyword, type, file)				if (!Utility::String::includes({"greytex", "int", "float", "color", "bool", "colortex", "vec2"}, Utility::String::toLower(type))) { LOG_CRITICAL("Unrecognised type '{0}' given to '{2}'. (Node Class '{1}')", type, file, keyword); }
+#define TGNL_IO_TYPE_ASSERT(keyword, type, file)				if (!Utility::String::includes({"greytex", "colortex"}, Utility::String::toLower(type))) { LOG_CRITICAL("Unrecognised type '{0}' given to '{2}'. (Node Class '{1}')", type, file, keyword); }
+#define TGNL_PARAM_TYPE_ASSERT(keyword, type, file)				if (!Utility::String::includes({"int", "float", "color", "bool", "vec2", "enum"}, Utility::String::toLower(type))) { LOG_CRITICAL("Unrecognised type '{0}' given to '{2}'. (Node Class '{1}')", type, file, keyword); }
 #define TGNL_FLOAT_ASSERT(keyword, string, file)			if (!Utility::String::isFloat(string)) { LOG_CRITICAL("Invalid value passed to keyword '{0}'. Expected valid float, but got '{1}'. (Node Class '{2}')", keyword, string, file); }
 #define TGNL_INT_ASSERT(keyword, string, file)				if (!Utility::String::isInt(string)) { LOG_CRITICAL("Invalid value passed to keyword '{0}'. Expected valid int, but got '{1}'. (Node Class '{2}')", keyword, string, file); }
 #define TGNL_BOOL_ASSERT(keyword, bool, file)				if (!Utility::String::includes({"false", "true"}, Utility::String::toLower(bool))) { LOG_CRITICAL("Unrecognised bool '{0}' given to keyword '{2}'. (Node Class '{1}')", bool, file, keyword); }
 #define TGNL_STRING_ASSERT(keyword, string, file)			if (string[0] != '"' || string[string.size()-1] != '"') { LOG_CRITICAL("Invalid string given to keyword '{0}'. Received '{1}'. (Node Class '{2}')", keyword, string, file); }
 #define TGNL_COLOR_ASSERT(keyword, colorString, file)		if (colorString.substr(0,2) != "0x") { LOG_CRITICAL("Invalid color given to keyword '{0}'. Received '{1}', which is missing the '0x' prefix. (Node Class '{2}')", keyword, colorString, file); }												  if (colorString.size() != 10) { LOG_CRITICAL("Invalid color given to keyword '{0}'. Received '{1}', which has an incorrect length. (Node Class '{2}')", keyword, colorString, file); } 
-#define TGNL_VEC2_ASSERT(keyword, vec2String, file)			{std::vector<std::string> parts = Utility::String::split(data, ','); if (parts.size() != 2 || (!Utility::String::isInt(parts[0]) && !Utility::String::isFloat(parts[0])) || (!Utility::String::isFloat(parts[1]) && !Utility::String::isInt(parts[1]))) { LOG_CRITICAL("Invalid vec2 given to keyword '{0}'. Received '{1}', which does not meet the format 'x,y'. (Node Class '{2}')", keyword, vec2String, file); }}
+#define TGNL_VEC2_ASSERT(keyword, vec2String, file)			{std::vector<std::string> parts = Utility::String::split(vec2String, ','); if (parts.size() != 2 || (!Utility::String::isInt(parts[0]) && !Utility::String::isFloat(parts[0])) || (!Utility::String::isFloat(parts[1]) && !Utility::String::isInt(parts[1]))) { LOG_CRITICAL("Invalid vec2 given to keyword '{0}'. Received '{1}', which does not meet the format 'x,y'. (Node Class '{2}')", keyword, vec2String, file); }}
 
 std::string RemoveStringIndicators(std::string orig) {
 	return orig.substr(1, orig.size() - 2);
@@ -42,30 +44,35 @@ std::vector<std::string> SmartSplit(std::string s, char seperator, char stickCha
 	return output;
 }
 
-GraphNode* GraphNode::LoadFromTGNF(std::string classFile) {
-	if (!std::filesystem::exists(classFile)) { LOG_CRITICAL("Node Class '{0}' could not be found.", classFile); }
-	std::ifstream f(classFile);
+GraphNode* GraphNode::LoadFromTGNF(std::string classFolder, std::function<bool(const std::string&, const std::string&, ConditionParser::ExpressionBase*)> registerShowExpressionCallback) {
+	if (!std::filesystem::exists(classFolder)) { LOG_CRITICAL("Node Class '{0}' could not be found.", classFolder); }
+	if (!std::filesystem::exists(classFolder + "/.metadata")) { LOG_CRITICAL("Node Class '{0}' is missing the .metadata file.", classFolder); }
+	if (!std::filesystem::exists(classFolder + "/program.lua")) { LOG_CRITICAL("Node Class '{0}' is missing the program.lua file.", classFolder); }
+
+	std::fstream metadataFile(classFolder + "/.metadata");
+	std::fstream programFile(classFolder + "/program.lua");
+
 	GraphNode newNode;
+	newNode.nodeClass = classFolder;
 
-	newNode.nodeClass = classFile;
+	bool nameSet = false;
+	bool colorSet = false;
+	bool categorySet = false;
+	bool displaySet = false;
 
-	bool metadata = false;
-	bool parsedMetadata = false;
-	bool parsedVariables = false;
-	bool execdata = false;
-	bool execprime = false;
-
-	bool setName = false;
-	bool setColor = false;
-	bool setCategory = false;
+	bool hasOutput = false;
 
 	std::vector<std::string> luaLines;
-
-	std::map<std::string, std::string> pendingDefaults; // defaults are defined at the start of the file, but have to be processed after variables are specified.
+	std::string lLine;
+	while (std::getline(programFile, lLine)) {
+		luaLines.push_back(lLine);
+	}
+	newNode.luaLines = luaLines;
+	programFile.close();
 
 	std::string line;
 	int lIndex = -1;
-	while (std::getline(f, line)) {
+	while (std::getline(metadataFile, line)) {
 		lIndex += 1;
 		Utility::String::ltrim(line); // Trim Whitespace left
 		Utility::String::rtrim(line); // Trim Whitespace right
@@ -74,69 +81,50 @@ GraphNode* GraphNode::LoadFromTGNF(std::string classFile) {
 
 		auto data = SmartSplit(line, ' ', '"'); // Smart stick allows "stick" characters to toggle seperation, e.g, a string shouldnt be seperated
 
-		auto keyword = data[0];
-		if (keyword == "metadata") {
-			metadata = !metadata;
-			if (parsedMetadata) {
-				LOG_CRITICAL("Multiple metadata blocks are not supported. (Node Class '{0}')", classFile);
-			}
-			if (!metadata) {
-				parsedMetadata = true;
-			}
-			continue;
-		}
-		if (keyword == "exec") {
-			execprime = true;
-			continue;
-		}
+		if (data[0] == "name") { TGNL_LINE_ASSERT("name",1,data.size()-1,classFolder); TGNL_STRING_ASSERT("name",data[1],classFolder); newNode.displayName=RemoveStringIndicators(data[1]); nameSet=true; continue; }
+		if (data[0] == "category") { TGNL_LINE_ASSERT("category",1,data.size()-1,classFolder); TGNL_STRING_ASSERT("category",data[1],classFolder); newNode.category=RemoveStringIndicators(data[1]); categorySet=true; continue; }
+		if (data[0] == "color") { TGNL_LINE_ASSERT("color",1,data.size()-1,classFolder); TGNL_COLOR_ASSERT("color",data[1],classFolder); newNode.displayColor=Utility::Color::ColorFromHex(data[1]); colorSet=true; continue; }
+		if (data[0] == "display") { TGNL_LINE_ASSERT("color",1,data.size()-1,classFolder); newNode.displayVar=data[1]; displaySet=true; continue; }
 
-		if (metadata) {
-			// METADATA PROCESSING
-			if (keyword == "name") { TGNL_LINE_ASSERT("name", 1, data.size() - 1, classFile) TGNL_STRING_ASSERT("name", data[1], classFile) newNode.displayName = RemoveStringIndicators(data[1]); setName = true; continue; }
-			if (keyword == "color") { TGNL_LINE_ASSERT("color", 1, data.size() - 1, classFile) TGNL_COLOR_ASSERT("color", data[1], classFile) newNode.displayColor = Utility::Color::ColorFromHex(data[1]); setColor = true; continue; }
-			if (keyword == "category") { TGNL_LINE_ASSERT("category", 1, data.size() - 1, classFile) TGNL_STRING_ASSERT("category", data[1], classFile) newNode.category = RemoveStringIndicators(data[1]); setCategory = true; continue; }
-			if (keyword == "varname") { TGNL_LINE_ASSERT("varname", 2, data.size() - 1, classFile) TGNL_STRING_ASSERT("varname", data[2], classFile) newNode.luaVarDisplayNames.insert({data[1], RemoveStringIndicators(data[2])}); continue; }
-			if (keyword == "display") { TGNL_LINE_ASSERT("color", 1, data.size() - 1, classFile) newNode.displayVar = data[1]; continue; }
-			if (keyword == "default") { TGNL_LINE_ASSERT("default", 2, data.size() - 1, classFile) pendingDefaults.insert({ data[1], data[2] }); continue; } // defaults have to be cached until all vars are loaded
+		if (data[0] == "show") {
+			if (data.size() < 3) {
+				LOG_CRITICAL("Too little parameters passed to keyword 'show'. (Node Class '{0}')", classFolder)
+			}
 
-			if (keyword == "show") { /* IMPLEMENT */ }
-			continue;
-		}
-		if (execprime) {
-			// EXEC PROCESSING
-			if (!execdata) {
-				if (keyword == "{") {
-					execdata = true;
-					parsedVariables = true;
-					newNode.definitionExecOffset = lIndex + 1;
-					continue;
-				}
-				else {
-					LOG_CRITICAL("Missing exec brace on line after keyword 'exec'. (Node Class '{0}')", classFile);
+			bool exists = false;
+			for (std::map<std::string, LuaVar>::iterator it = newNode.luaVars.begin(); it != newNode.luaVars.end(); ++it)
+			{
+				if (it->first == data[1]) {
+					exists = true;
 				}
 			}
-			else {
-				if (keyword == "}") {
-					execdata = false;
-					execprime = false;
-					continue;
+			if (!exists) { LOG_CRITICAL("Variable '{0}' is not defined before the 'show' keyword. (Node Class '{1}')", data[1], classFolder); continue; }
+
+			std::stringstream exprStr;
+			for (int i = 2; i < data.size(); i++) {
+				exprStr << data[i];
+				if (i != data.size() - 1) {
+					exprStr << " ";
 				}
-				luaLines.push_back(line);
-				continue;
+			}
+			std::string exprStrF = exprStr.str();
+			exprStrF.erase(std::remove(exprStrF.begin(), exprStrF.end(), ' '), exprStrF.end());
+
+			Utility::Timer tmr;
+			ConditionParser::ExpressionBase* expr = ConditionParser::ExpressionPair::Parse(exprStrF);
+			LOG_TRACE("Compiled show expression for '{1}':'{2}' in {0}s", tmr.Elapsed(), classFolder, data[1]);
+
+			if (!registerShowExpressionCallback(newNode.nodeClass, data[1], expr)) {
+				LOG_CRITICAL("Variable '{0}' has 'show' condition defined multiple times. (Node Class '{1}')", data[1], classFolder);
 			}
 		}
 
-		// DEF PROCESSING
-		if (!parsedMetadata) {
-			LOG_CRITICAL("Metadata definition block is required. (Node Class '{0}')", classFile);
-		} 
-		if (parsedVariables) {
-			LOG_CRITICAL("Execution definition block must be after variable definition block. (Node Class '{0}')", classFile);
-		} 
-		if (keyword == "param") {
-			TGNL_LINE_ASSERT("param", 2, data.size() - 1, classFile);
-			TGNL_TYPE_ASSERT("param", data[1], classFile);
-			TGNL_PARAM_ASSERT(data[1], classFile);
+		if (data[0] == "input") {
+			TGNL_LINE_ASSERT("input", 3, data.size() - 1, classFolder);
+			TGNL_IO_TYPE_ASSERT("input", data[1], classFolder);
+			TGNL_PIN_ASSERT("input", data[1], classFolder);
+			TGNL_STRING_ASSERT("input", data[3], classFolder);
+
 			bool exists = false;
 			for (std::map<std::string, LuaVar>::iterator it = newNode.luaVars.begin(); it != newNode.luaVars.end(); ++it)
 			{
@@ -144,65 +132,10 @@ GraphNode* GraphNode::LoadFromTGNF(std::string classFile) {
 					exists = true;
 				}
 			}
-			if (exists) { LOG_CRITICAL("Variable '{0}' is being redefined. (Node Class '{1}')", data[2], classFile); }
-			Types::DataType dataType = Types::stringToType[Utility::String::toLower(data[1])];
-			if (newNode.luaVarDisplayNames.find(data[2]) == newNode.luaVarDisplayNames.end()) {
-				LOG_CRITICAL("Param variable '{0}' requires a varname defintion in the metadata block, before it's definition. (Node Class '{1}')", data[2], classFile);
-				continue;
-			}
-			newNode.luaVars.insert({ data[2], LuaVar(data[2], dataType) });
-			newNode.paramLuaVars.insert({ newNode.luaVarDisplayNames.find(data[2])->second, data[2]});
-			Types::WildData newData = Types::WildData();
-			newData.dataType = dataType;
-			newNode.luaVarData.insert({ data[2], newData });
-			continue;
-		}
-		if (keyword == "output") {
-			TGNL_LINE_ASSERT("output", 2, data.size() - 1, classFile);
-			TGNL_TYPE_ASSERT("output", data[1], classFile);
-			TGNL_PIN_ASSERT("output", data[1], classFile);
-			bool exists = false;
-			for (std::map<std::string, LuaVar>::iterator it = newNode.luaVars.begin(); it != newNode.luaVars.end(); ++it)
-			{
-				if (it->first == data[2]) {
-					exists = true;
-				}
-			}
-			if (exists) { LOG_CRITICAL("Variable '{0}' is being redefined. (Node Class '{1}')", data[2], classFile); }
-			Types::DataType dataType = Types::stringToType[Utility::String::toLower(data[1])];
-			if (newNode.luaVarDisplayNames.find(data[2]) == newNode.luaVarDisplayNames.end()) {
-				LOG_CRITICAL("Output variable '{0}' requires a varname defintion in the metadata block, before it's definition. (Node Class '{1}')", data[2], classFile);
-				continue;
-			}
+			if (exists) { LOG_CRITICAL("Variable '{0}' is defined multiple times. (Node Class '{1}')", data[2], classFolder); continue; }
 
-			NodePin newPin = NodePin((int)newNode.pins.size(), &newNode.nodeId, dataType, Direction::Out, newNode.luaVarDisplayNames[data[2]]);
-			newNode.pins.push_back(newPin);
-			newNode.luaVars.insert({ data[2], LuaVar(data[2], dataType) });
-			newNode.pinLuaVars.insert({ newPin.pinIndex, data[2]});
-			Types::WildData newData = Types::WildData();
-			newData.dataType = dataType;
-			newNode.luaVarData.insert({ data[2], newData });
-			newNode.luaVarPins.insert({ data[2], newPin.pinIndex });
-			continue;
-		}
-		if (keyword == "input") {
-			TGNL_LINE_ASSERT("input", 2, data.size() - 1, classFile);
-			TGNL_TYPE_ASSERT("input", data[1], classFile);
-			TGNL_PIN_ASSERT("input", data[1], classFile);
-			bool exists = false;
-			for (std::map<std::string, LuaVar>::iterator it = newNode.luaVars.begin(); it != newNode.luaVars.end(); ++it)
-			{
-				if (it->first == data[2]) {
-					exists = true;
-				}
-			}
-			if (exists) { LOG_CRITICAL("Variable '{0}' is being redefined. (Node Class '{1}')", data[2], classFile); }
 			Types::DataType dataType = Types::stringToType[Utility::String::toLower(data[1])];
-			if (newNode.luaVarDisplayNames.find(data[2]) == newNode.luaVarDisplayNames.end()) {
-				LOG_CRITICAL("Input variable '{0}' requires a varname defintion in the metadata block, before it's definition. (Node Class '{1}')", data[2], classFile);
-				continue;
-			}
-			NodePin newPin = NodePin((int)newNode.pins.size(), &newNode.nodeId, dataType, Direction::In, newNode.luaVarDisplayNames[data[2]]);
+			NodePin newPin = NodePin((int)newNode.pins.size(), &newNode.nodeId, dataType, Direction::In, RemoveStringIndicators(data[3]));
 			newNode.pins.push_back(newPin);
 			newNode.luaVars.insert({ data[2], LuaVar(data[2], dataType) });
 			newNode.pinLuaVars.insert({ newPin.pinIndex, data[2] });
@@ -210,82 +143,151 @@ GraphNode* GraphNode::LoadFromTGNF(std::string classFile) {
 			newData.dataType = dataType;
 			newNode.luaVarData.insert({ data[2], newData });
 			newNode.luaVarPins.insert({ data[2], newPin.pinIndex });
+
+			newNode.luaVarDisplayNames.insert({ data[2], RemoveStringIndicators(data[3]) });
 			continue;
-		} 
-	}
-
-	for (std::map<std::string, std::string>::iterator it = pendingDefaults.begin(); it != pendingDefaults.end(); ++it) {
-		auto var = it->first;
-		auto data = it->second;
-
-		if (newNode.luaVarData.find(var) == newNode.luaVarData.end()) {
-			LOG_CRITICAL("Variable '{0}' given to keyword 'default' is not defined. (Node Class '{1}')", var, classFile);
 		}
-		 
-		auto expectedType = newNode.luaVarData[var].dataType;
-		switch (expectedType) {
-		case Types::DataType::DataType_Bool:
-			TGNL_BOOL_ASSERT("default", data, classFile);
-			newNode.luaVarData[var].boolVar = Utility::String::toLower(data) == "true";
-			break;
-		case Types::DataType::DataType_Color:
-			TGNL_COLOR_ASSERT("default", data, classFile);
-			newNode.luaVarData[var].colorVar = Utility::Color::ColorFromHex(data);
-			break;
-		case Types::DataType::DataType_Float:
-			TGNL_FLOAT_ASSERT("default", data, classFile);
-			newNode.luaVarData[var].floatVar = std::stof(data);
-			break;
-		case Types::DataType::DataType_Int:
-			TGNL_INT_ASSERT("default", data, classFile);
-			newNode.luaVarData[var].intVar = std::stoi(data);
-			break;
-		case Types::DataType::DataType_Vec2:
-		{
-			TGNL_VEC2_ASSERT("default", data, classFile);
-			std::vector<std::string> parts = Utility::String::split(data, ',');
-			newNode.luaVarData[var].vec2Var = Types::Vec2(std::stof(parts[0]), std::stof(parts[1]));
-		}	break;
-		case Types::DataType::DataType_ColorTex:
-			LOG_CRITICAL("Type 'colortex' is not compatible with keyword 'default'. (Node Class '{0}')", classFile);
-			break;
-		case Types::DataType::DataType_GreyTex:
-			LOG_CRITICAL("Type 'greytex' is not compatible with keyword 'default'. (Node Class '{0}')", classFile);
-			break;
+
+		if (data[0] == "output") {
+			TGNL_LINE_ASSERT("output", 3, data.size() - 1, classFolder);
+			TGNL_IO_TYPE_ASSERT("output", data[1], classFolder);
+			TGNL_PIN_ASSERT("output", data[1], classFolder);
+			TGNL_STRING_ASSERT("output", data[3], classFolder);
+
+			bool exists = false;
+			for (std::map<std::string, LuaVar>::iterator it = newNode.luaVars.begin(); it != newNode.luaVars.end(); ++it)
+			{
+				if (it->first == data[2]) {
+					exists = true;
+				}
+			}
+			if (exists) { LOG_CRITICAL("Variable '{0}' is defined multiple times. (Node Class '{1}')", data[2], classFolder); }
+
+			Types::DataType dataType = Types::stringToType[Utility::String::toLower(data[1])];
+			NodePin newPin = NodePin((int)newNode.pins.size(), &newNode.nodeId, dataType, Direction::Out, RemoveStringIndicators(data[3]));
+			newNode.pins.push_back(newPin);
+			newNode.luaVars.insert({ data[2], LuaVar(data[2], dataType) });
+			newNode.pinLuaVars.insert({ newPin.pinIndex, data[2] });
+			Types::WildData newData = Types::WildData();
+			newData.dataType = dataType;
+			newNode.luaVarData.insert({ data[2], newData });
+			newNode.luaVarPins.insert({ data[2], newPin.pinIndex });
+
+			newNode.luaVarDisplayNames.insert({ data[2], RemoveStringIndicators(data[3]) });
+
+			hasOutput = true;
+			continue;
+		}
+
+		if (data[0] == "param") {
+			TGNL_RANGE_LINE_ASSERT("param", 3, 5, data.size() - 1, classFolder);
+			TGNL_PARAM_TYPE_ASSERT("param", data[1], classFolder);
+			TGNL_STRING_ASSERT("param", data[3], classFolder);
+
+			bool exists = false;
+			for (std::map<std::string, LuaVar>::iterator it = newNode.luaVars.begin(); it != newNode.luaVars.end(); ++it)
+			{
+				if (it->first == data[2]) {
+					exists = true;
+				}
+			}
+			if (exists) { LOG_CRITICAL("Variable '{0}' is defined multiple times. (Node Class '{1}')", data[2], classFolder); }
+
+			exists = false;
+			for (std::map<std::string, std::string>::iterator it = newNode.paramLuaVars.begin(); it != newNode.paramLuaVars.end(); ++it)
+			{
+				if (it->first == RemoveStringIndicators(data[3])) {
+					exists = true;
+				}
+			}
+			if (exists) { LOG_CRITICAL("Variable Display Name '{0}' cannot be used more than once. (Node Class '{1}')", RemoveStringIndicators(data[3]), classFolder); }
+
+			Types::DataType dataType = Types::stringToType[Utility::String::toLower(data[1])];
+			newNode.luaVars.insert({ data[2], LuaVar(data[2], dataType) });
+			newNode.paramLuaVars.insert({ RemoveStringIndicators(data[3]), data[2]});
+			Types::WildData newData = Types::WildData();
+			newData.dataType = dataType;
+			newNode.luaVarData.insert({ data[2], newData });
+
+			newNode.luaVarDisplayNames.insert({ data[2], RemoveStringIndicators(data[3]) });
+
+			if (data.size() > 4) {
+				switch (dataType) {
+				case Types::DataType::DataType_Bool:
+					TGNL_BOOL_ASSERT("default", data[4], classFolder);
+					newNode.luaVarData[data[2]].boolVar = Utility::String::toLower(data[4]) == "true";
+					break;
+				case Types::DataType::DataType_Color:
+					TGNL_COLOR_ASSERT("default", data[4], classFolder);
+					newNode.luaVarData[data[2]].colorVar = Utility::Color::ColorFromHex(data[4]);
+					break;
+				case Types::DataType::DataType_Float:
+					TGNL_FLOAT_ASSERT("default", data[4], classFolder);
+					newNode.luaVarData[data[2]].floatVar = std::stof(data[4]);
+					break;
+				case Types::DataType::DataType_Int:
+					TGNL_INT_ASSERT("default", data[4], classFolder);
+					newNode.luaVarData[data[2]].intVar = std::stoi(data[4]);
+					break;
+				case Types::DataType::DataType_Vec2:
+				{
+					TGNL_VEC2_ASSERT("default", data[4], classFolder);
+					std::vector<std::string> parts = Utility::String::split(data[4], ',');
+					newNode.luaVarData[data[2]].vec2Var = Types::Vec2(std::stof(parts[0]), std::stof(parts[1]));
+				}	break;
+				case Types::DataType::DataType_Enum:
+				{
+					auto parts = SmartSplit(data[4], ',', '"');
+					TGNL_STRING_ASSERT("default", parts[0], classFolder);
+					newNode.luaVarData[data[2]].enumVar = RemoveStringIndicators(parts[0]);
+				}	break;
+				}
+			}
+
+			if (data[1] == "enum") {
+				if (data.size() == 4) {
+					LOG_CRITICAL("Variable '{0}' is missing it's enum definition. (Node Class '{1}')", data[2], classFolder);
+				}
+
+				auto parts = SmartSplit(data[data.size() - 1], ',', '"');
+				std::vector<std::string> enumParts = {};
+				for (auto part : parts) {
+					TGNL_STRING_ASSERT("enum", part, classFolder);
+					enumParts.push_back(RemoveStringIndicators(part));
+				}
+				newNode.luaVarEnumSets.insert({ data[2], enumParts });
+			}
+
+			continue;
 		}
 	}
 
 	if (newNode.displayVar != "") {
 		if (newNode.luaVars.find(newNode.displayVar) != newNode.luaVars.end()) {
-			TGNL_DISPLAY_ASSERT(Types::typeToString[newNode.luaVars.find(newNode.displayVar)->second.type], classFile);
+			TGNL_DISPLAY_ASSERT(Types::typeToString[newNode.luaVars.find(newNode.displayVar)->second.type], classFolder);
 			if (newNode.pins[newNode.luaVarPins[newNode.luaVars.find(newNode.displayVar)->second.name]].dir == Direction::In) {
-				LOG_CRITICAL("Only 'Out' facing pins can be used for keyword 'display'. Variable '{0}' is facing in. (Node Class '{1}')", newNode.displayVar, classFile);
+				LOG_CRITICAL("Only 'Out' facing pins can be used for keyword 'display'. Variable '{0}' is facing in. (Node Class '{1}')", newNode.displayVar, classFolder);
 			}
 		}
 		else {
-			LOG_CRITICAL("Variable '{0}' given to keyword 'display' is not defined. (Node Class '{1}')", newNode.displayVar, classFile);
+			LOG_CRITICAL("Variable '{0}' given to keyword 'display' is not defined. (Node Class '{1}')", newNode.displayVar, classFolder);
 		}
 	}
 
-	for (std::map<std::string, std::string>::iterator it = newNode.luaVarDisplayNames.begin(); it != newNode.luaVarDisplayNames.end(); ++it) {
-		if (newNode.luaVars.find(it->first) == newNode.luaVars.end()) {
-			LOG_CRITICAL("Variable '{0}' given to keyword 'varname' is not defined. (Node Class '{1}')", it->first, classFile);
-		}
+	if (!nameSet) {
+		LOG_CRITICAL("Missing metadata keyword 'name' (Node Class '{0}')", classFolder);
 	}
-	 
-	newNode.luaLines = luaLines; 
-	if (newNode.luaLines.size() == 0 || newNode.luaLines[0] == "") {
-		LOG_CRITICAL("Missing execution lua. (Node Class '{0}')", classFile);
+	if (!colorSet) {
+		LOG_CRITICAL("Missing metadata keyword 'color' (Node Class '{0}')", classFolder);
 	}
-
-	if (!setName) {
-		LOG_CRITICAL("Missing metadata keyword 'name' (Node Class '{0}')", classFile);
+	if (!categorySet) {
+		LOG_CRITICAL("Missing metadata keyword 'category' (Node Class '{0}')", classFolder);
 	}
-	if (!setColor) {
-		LOG_CRITICAL("Missing metadata keyword 'color' (Node Class '{0}')", classFile);
+	if (!displaySet) {
+		LOG_CRITICAL("Missing metadata keyword 'display' (Node Class '{0}')", classFolder);
 	}
-	if (!setCategory) {
-		LOG_CRITICAL("Missing metadata keyword 'category' (Node Class '{0}')", classFile);
+	if (!hasOutput) {
+		LOG_CRITICAL("Missing at least one output pin. (Node Class '{0}')", classFolder);
 	}
 
 	std::ifstream coreFile("library/Nodes/core.lua");
@@ -294,14 +296,13 @@ GraphNode* GraphNode::LoadFromTGNF(std::string classFile) {
 	std::stringstream fileName;
 	auto splitClass = Utility::String::split(newNode.nodeClass, '/');
 	auto classNameLast = splitClass[splitClass.size() - 1];
-	classNameLast = Utility::String::split(classNameLast, '.')[0];
 	fileName << "temp/node-exec/" << classNameLast << ".lua";
 
 	tempFile.open(fileName.str());  
 
 	int lineCount = 0;
 	
-	tempFile << "-- PREGENERATED CORE --\n";
+	tempFile << "-- [PREGENERATED CORE] --\n";
 	lineCount += 1;
 
 	std::string coreLine;
@@ -312,15 +313,30 @@ GraphNode* GraphNode::LoadFromTGNF(std::string classFile) {
 		lineCount += 1;
 	}
 	coreFile.close();
-	tempFile << "-- PREGENERATED CORE --\n\n-- NODE EXEC --\n";
-	lineCount += 2;
 
+	tempFile << "\n-- [VARIABLE COPY (IMPROVES PERF)] --\n";
+	
+	tempFile << "local sizeX = g_sizeX\n";
+	tempFile << "local sizeY = g_sizeY\n";
+	lineCount += 2;
+	for (std::map<std::string, GraphNode::LuaVar>::iterator it = newNode.luaVars.begin(); it != newNode.luaVars.end(); ++it) {
+		tempFile << "local " << it->first << " = g_" << it->first << "\n";
+		lineCount += 1;
+	}
+	
+	tempFile << "-- [NODE EXEC] --\n";
+	lineCount += 1;
 	newNode.luaTempCoreOffset = lineCount;
 
 	for (auto line : newNode.luaLines) {
 		tempFile << line << "\n";
 	}
-	tempFile << "-- NODE EXEC --";
+
+	tempFile << "-- [RESOLVE GLOBALS] --\n";
+	for (std::map<std::string, int>::iterator it = newNode.luaVarPins.begin(); it != newNode.luaVarPins.end(); ++it) {
+		tempFile << "g_" << it->first << " = " << it->first << "\n";
+	}
+
 	tempFile.close();
 
 	newNode.luaTempFile = fileName.str();
@@ -602,6 +618,49 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 		}
 
 		pinPosCache.insert({ pins[inPinIndexes[p]].pinIndex, sf::Vector2f(x,y) });
+
+		if (selected && zoomLevel < 2.f) {
+			const float baseTextSize = 9.6f;
+			const float DPIScaleMax = 5.0f;
+			const float DPIScaleMin = 0.2f;
+			float textDPIScale = remapRange(zoomLevel, 0.5f, 2.0f, DPIScaleMax, DPIScaleMin);
+			textDPIScale = std::clamp(textDPIScale, DPIScaleMin, DPIScaleMax);
+
+			sf::Text pinText;
+			pinText.setFont(RenderingGlobals::font);
+			pinText.setString(pins[inPinIndexes[p]].displayName);
+			pinText.setCharacterSize((unsigned int)(baseTextSize * textDPIScale));
+
+			size_t CharacterSize = pinText.getCharacterSize();
+			size_t MaxHeight = 0;
+			for (size_t x = 0; x < pins[inPinIndexes[p]].displayName.size(); ++x)
+			{
+				sf::Uint32 Character = pins[inPinIndexes[p]].displayName.at(x);
+				const sf::Glyph& CurrentGlyph = RenderingGlobals::font.getGlyph(Character, (unsigned int)CharacterSize, false);
+				size_t Height = (size_t)CurrentGlyph.bounds.height;
+				if (MaxHeight < Height)
+					MaxHeight = Height;
+			}
+
+			sf::FloatRect rect = pinText.getLocalBounds();
+			rect.left = (float)(x-15) - rect.width;
+			rect.top = (float)(y)-(MaxHeight / 2.0f) - (rect.height - MaxHeight) + ((rect.height - CharacterSize) / 2.0f);
+			pinText.setPosition(sf::Vector2f(rect.left, rect.top));
+
+			auto bBefore = pinText.getGlobalBounds();
+			pinText.setScale(sf::Vector2f(1 / textDPIScale, 1 / textDPIScale));
+			auto bAfter = pinText.getGlobalBounds();
+			auto rBefore = bBefore.left + bBefore.width;
+			auto rAfter = bAfter.left + bAfter.width;
+			auto hBefore = bBefore.top + bBefore.height;
+			auto hAfter = bAfter.top + bAfter.height;
+			auto rdiff = rBefore - rAfter;
+			auto hdiff = hBefore - hAfter;
+			pinText.setPosition(pinText.getPosition() + sf::Vector2f(rdiff, hdiff / 2));
+
+			pinText.setFillColor(sf::Color(255, 255, 255, transparency));
+			target.draw(pinText);
+		}
 	}
 
 	// Draw out pins
@@ -628,6 +687,49 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 			pinVerts[j].color = color;
 		}
 		pinPosCache.insert({ pins[outPinIndexes[p - pCountIn]].pinIndex, sf::Vector2f(x,y) });
+
+		if (selected && zoomLevel < 2.f) {
+			const float baseTextSize = 9.6f;
+			const float DPIScaleMax = 5.0f;
+			const float DPIScaleMin = 0.2f;
+			float textDPIScale = remapRange(zoomLevel, 0.5f, 2.0f, DPIScaleMax, DPIScaleMin);
+			textDPIScale = std::clamp(textDPIScale, DPIScaleMin, DPIScaleMax);
+
+			sf::Text pinText;
+			pinText.setFont(RenderingGlobals::font);
+			pinText.setString(pins[outPinIndexes[p - pCountIn]].displayName);
+			pinText.setCharacterSize((unsigned int)(baseTextSize * textDPIScale));
+
+			size_t CharacterSize = pinText.getCharacterSize();
+			size_t MaxHeight = 0;
+			for (size_t x = 0; x < pins[outPinIndexes[p - pCountIn]].displayName.size(); ++x)
+			{
+				sf::Uint32 Character = pins[outPinIndexes[p - pCountIn]].displayName.at(x);
+				const sf::Glyph& CurrentGlyph = RenderingGlobals::font.getGlyph(Character, (unsigned int)CharacterSize, false);
+				size_t Height = (size_t)CurrentGlyph.bounds.height;
+				if (MaxHeight < Height)
+					MaxHeight = Height;
+			}
+
+			sf::FloatRect rect = pinText.getLocalBounds();
+			rect.left = (float)(x+15);
+			rect.top = (float)(y) - (MaxHeight / 2.0f) - (rect.height - MaxHeight) + ((rect.height - CharacterSize) / 2.0f);
+			pinText.setPosition(sf::Vector2f(rect.left, rect.top));
+
+			auto bBefore = pinText.getGlobalBounds();
+			pinText.setScale(sf::Vector2f(1 / textDPIScale, 1 / textDPIScale));
+			auto bAfter = pinText.getGlobalBounds();
+			auto rBefore = bBefore.left + bBefore.width;
+			auto rAfter = bAfter.left + bAfter.width;
+			auto hBefore = bBefore.top + bBefore.height;
+			auto hAfter = bAfter.top + bAfter.height;
+			auto rdiff = rBefore - rAfter;
+			auto hdiff = hBefore - hAfter;
+			pinText.setPosition(pinText.getPosition() + sf::Vector2f(0, hdiff / 2));
+
+			pinText.setFillColor(sf::Color(255, 255, 255, transparency));
+			target.draw(pinText);
+		}
 	}
 
 	renderedPins = true;
@@ -672,20 +774,20 @@ static void dumpstack(lua_State* L) {
 	}
 }
 
-bool CheckLua(lua_State* L2, int r, std::string owner, int coreOffset, int definitionOffset) {
+bool CheckLua(lua_State* L2, int r, std::string owner, int coreOffset) {
 	if (r != LUA_OK) {
 		//dumpstack(L2); 
 		const char* msg = lua_tostring(L2, -1); // temp-file:temp-line: error msg
 		std::vector<std::string> parts = Utility::String::split(std::string(msg), ':');
-		if (parts.size() != 3) { LOG_ERROR("{0}'s lua code did not execute successfully. RAW Error: \"{1}\"", owner, msg); return false; }
+		if (parts.size() != 3) { LOG_ERROR("{0}'s program did not execute successfully. RAW Error: \"{1}\"", owner, msg); return false; }
 
 		std::string actualError = parts[2];
 		Utility::String::ltrim(actualError);
 		int lineNum = std::stoi(parts[1]);
 
-		LOG_ERROR("{0}'s lua code did not execute successfully. Error: \"{1}\". TGNode Line: {2}, Temp Line: {3}", owner, actualError, std::to_string((lineNum-coreOffset)+definitionOffset), std::to_string(lineNum));
+		LOG_ERROR("{0}'s program did not execute successfully. Error: \"{1}\". TGNode Line: {2}, Temp Line: {3}", owner, actualError, std::to_string((lineNum-coreOffset)), std::to_string(lineNum));
 		return false;
-	}
+	} 
 	return true;
 }
 
@@ -695,6 +797,7 @@ bool GraphNode::AreDependenciesEvaluated(const std::vector<GraphNode*>* nodes)
 	for (auto& pin : pins) {
 		auto type = pin.type;
 		if (pin.dir == Direction::In) {
+			if (pin.inNodeId == -1) { continue; }
 			if (nodes->operator[](pin.inNodeId)->evaluated == false) {
 				evaluated = false;
 			}
@@ -713,9 +816,9 @@ void GraphNode::Evaluate()
 
 	// Globals
 	lua_pushinteger(L, texSize.x);
-	lua_setglobal(L, "sizeX");
+	lua_setglobal(L, "g_sizeX");
 	lua_pushinteger(L, texSize.y);
-	lua_setglobal(L, "sizeY");
+	lua_setglobal(L, "g_sizeY");
 
 	Utility::Timer fullTimr;
 	Utility::Timer varTmr;
@@ -737,6 +840,9 @@ void GraphNode::Evaluate()
 			break;
 		case Types::DataType_Int: 
 			lua_pushinteger(L, data.intVar);
+			break;
+		case Types::DataType_Enum:
+			lua_pushstring(L, data.enumVar.c_str());
 			break;
 		case Types::DataType_Vec2:
 		{
@@ -836,7 +942,7 @@ void GraphNode::Evaluate()
 		}
 
 		if (!ranSet) {
-			lua_setglobal(L, varName.c_str());
+			lua_setglobal(L, std::string("g_" + varName).c_str());
 		}
 		LOG_TRACE("Var '{0}' took {1}ms to convert to lua", varName, specVarTmr.Elapsed() * 1000.f);
 	}
@@ -844,7 +950,7 @@ void GraphNode::Evaluate()
 	LOG_TRACE("Converted c++ vars to lua in {0}ms", varTmr.Elapsed()*1000.f);
 	Utility::Timer execTmr; 
 	 
-	CheckLua(L, luaL_dofile(L, luaTempFile.c_str()), nodeClass, luaTempCoreOffset, definitionExecOffset);
+	CheckLua(L, luaL_dofile(L, luaTempFile.c_str()), nodeClass, luaTempCoreOffset);
 
 	LOG_TRACE("Executed node lua in {0}ms", execTmr.Elapsed()*1000.f);
 	Utility::Timer extractTmr;
@@ -855,7 +961,7 @@ void GraphNode::Evaluate()
 			auto type = pin.type;
 			auto var = pinLuaVars[i];
 
-			lua_getglobal(L, var.c_str());
+			lua_getglobal(L, std::string("g_" + var).c_str());
 			switch (type)
 			{
 			case Types::DataType_ColorTex:
@@ -1007,11 +1113,11 @@ GraphNode::GraphNode(const GraphNode& node) : GraphNode()
 	luaLines = node.luaLines;
 	nodePos = node.nodePos;
 	luaTempFile = node.luaTempFile;
+	luaVarEnumSets = node.luaVarEnumSets;
 	prevEvalTime = 0.0f;
 	texSize = sf::Vector2i(512, 512);
 	renderedPins = false;
 	luaTempCoreOffset = node.luaTempCoreOffset;
-	definitionExecOffset = node.definitionExecOffset;
 	SetTextureSize(texSize);
 }
 
@@ -1029,12 +1135,12 @@ GraphNode::GraphNode(GraphNode* node) : GraphNode() {
 	luaVarData = node->luaVarData;
 	luaVarPins = node->luaVarPins;
 	luaTempCoreOffset = node->luaTempCoreOffset; 
-	definitionExecOffset = node->definitionExecOffset;
 	pinPosCache = std::map<int, sf::Vector2f>();
 	displayVar = node->displayVar;
 	luaLines = node->luaLines;
 	nodePos = node->nodePos;
 	luaTempFile = node->luaTempFile;
+	luaVarEnumSets = node->luaVarEnumSets;
 	prevEvalTime = 0.0f;
 	texSize = sf::Vector2i(512, 512);
 	renderedPins = false;

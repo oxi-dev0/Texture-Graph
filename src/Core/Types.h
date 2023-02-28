@@ -19,6 +19,7 @@ namespace Types {
 		DataType_Vec2, // {x=0,y=0}
 		DataType_ColorTex,   // {{{r=0,g=0,b=0,a=255},{r=0,g=0,b=0,a=255}},{{r=0,g=0,b=0,a=255},{r=0,g=0,b=0,a=255}}} (2d array of colors)
 		DataType_GreyTex,
+		DataType_Enum
 	};
 
 	inline std::unordered_map<std::string, DataType> stringToType = {
@@ -28,7 +29,8 @@ namespace Types {
 		{"bool", DataType::DataType_Bool},
 		{"colortex", DataType::DataType_ColorTex},
 		{"greytex", DataType::DataType_GreyTex},
-		{"vec2", DataType::DataType_Vec2}
+		{"vec2", DataType::DataType_Vec2},
+		{"enum", DataType::DataType_Enum}
 	};
 
 	inline std::unordered_map<DataType, std::string> typeToString = {
@@ -38,7 +40,8 @@ namespace Types {
 		{DataType::DataType_Bool, "bool"},
 		{DataType::DataType_ColorTex, "colortex"},
 		{DataType::DataType_GreyTex, "greytex"},
-		{DataType::DataType_Vec2, "vec2"}
+		{DataType::DataType_Vec2, "vec2"},
+		{DataType::DataType_Enum, "enum"}
 	};
 
 	inline std::unordered_map<DataType, sf::Color> typeToColor = {
@@ -57,7 +60,7 @@ namespace Types {
 		int intVar = 0;
 		float floatVar = 0.0f;
 		sf::Color colorVar;
-		std::string stringVar;
+		std::string enumVar;
 		Vec2 vec2Var;
 		colortex colortexVar;
 		greytex greytexVar;
@@ -70,6 +73,7 @@ namespace Types {
 		WildData(sf::Color c) { colorVar = c; dataType = DataType::DataType_Color; }
 		WildData(colortex t) { colortexVar = t; dataType = DataType::DataType_ColorTex; }
 		WildData(greytex t) { greytexVar = t; dataType = DataType::DataType_GreyTex; }
+		WildData(std::string e) { enumVar = e; }
 		WildData(DataType t) { dataType = t; }
 		WildData() {
 			boolVar = false;
@@ -80,7 +84,7 @@ namespace Types {
 			greytexVar = greytex(256, std::vector<int>(256, 0));
 			dataType = DataType::DataType_Bool;
 			vec2Var = Vec2(0, 0);
-			stringVar = "";
+			enumVar = "";
 		}
 
 		std::string AsString();

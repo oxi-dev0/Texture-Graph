@@ -2,7 +2,7 @@
 
 These are the core nodes for the Texture Graph app. They are written in the Texture Graph Node Language, and are loaded by the Texture Graph app to be compiled and evaluated at Runtime.
 
-# TGNode Language v0.9 Documentation
+# TGNode Language v1.0 Documentation
 > This language is not smart and requires specific spacing to work;   
 > Each token must be seperated by a space, and each keyword must be separated by a newline.
 

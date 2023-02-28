@@ -27,6 +27,9 @@ namespace Types
 			break;
 		case Types::DataType_GreyTex:
 			break;
+		case Types::DataType_Enum:
+			stream << enumVar;
+			break;
 		default:
 			break;
 		}
@@ -60,11 +63,14 @@ namespace Types
 			floatVar = std::stof(s);
 			break;
 		case Types::DataType_Bool:
-			boolVar = s == "1";
+			boolVar = s == "1" || s == "true";
 			break;
 		case Types::DataType_ColorTex:
 			break;
 		case Types::DataType_GreyTex:
+			break;
+		case Types::DataType_Enum:
+			enumVar = s;
 			break;
 		default:
 			break;

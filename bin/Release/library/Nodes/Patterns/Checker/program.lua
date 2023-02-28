@@ -1,5 +1,5 @@
-patternSizeX = sizeFX
-patternSizeY = sizeFY
+patternSizeX = sizeFNU.x
+patternSizeY = sizeFNU.y
 if uniform then
     patternSizeX = sizeFU
     patternSizeY = sizeFU

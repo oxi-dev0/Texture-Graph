@@ -24,6 +24,7 @@ void Texture2DView::InfoBarData() {
 	ImGui::Text(zoomStream.str().c_str());
 
 	if (selectedNode > focusedGraph->nodes.size() - 1) { return; }
+	if (focusedGraph->nodes.size() < selectedNode) { selectedNode = -1; }
 	if (focusedGraph == nullptr || selectedNode == -1 || !focusedGraph->nodes[selectedNode]->evaluated) { return; }
 	ImGui::SameLine(0.0f, 15.0f);
 	std::stringstream nameStream;

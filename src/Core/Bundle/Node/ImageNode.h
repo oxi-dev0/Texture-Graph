@@ -26,7 +26,7 @@ public:
 
 		resourceName = "";
 
-		NodePin newPin(0, &nodeId, Types::DataType_ColorTex, Direction::Out, "Out");
+		NodePin newPin(0, Types::DataType_ColorTex, Direction::Out, "Out");
 		pins.push_back(newPin);
 	}
 

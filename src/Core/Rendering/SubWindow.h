@@ -9,7 +9,6 @@
 #include <SFML/Window.hpp>
 
 #include "../Utils/Log.h"
-#include "ColourSchemes.h"
 
 #include <string>
 #include <sstream>

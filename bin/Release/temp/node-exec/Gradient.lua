@@ -131,6 +131,7 @@ local bClamp = g_bClamp
 local clampMax = g_clampMax
 local clampMin = g_clampMin
 local dir = g_dir
+local multi = g_multi
 local outTex = g_outTex
 -- [NODE EXEC] --
 local norm = normalizeV(dir)
@@ -142,6 +143,7 @@ for x=1, sizeX do
         local vec = vec2(x,y)
         local proj = mulVC(norm, dotV(vec, norm) / bb)
         local d = lengthV(vec2(proj.x,proj.y))
+        d = d * multi
         local col = math.floor(clamp(d/max,0,1)*255)
 
         if bClamp then

@@ -15,6 +15,7 @@ void InspectorView::SetGraph(GraphEditorView* newGraph) {
 void InspectorView::ComponentRender()
 {
 	if (ImGui::CollapsingHeader("Graph Properties", ImGuiTreeNodeFlags_DefaultOpen)) {
+		ImGui::Indent();
 		ImGui::SliderInt("##XTexSlider", &newSize[0], 1, 12); ImGui::SameLine(); ImGui::Text(("Size X: " + std::to_string((int)pow(2, newSize[0]))).c_str());
 		ImGui::SliderInt("##YTexSlider", &newSize[1], 1, 12); ImGui::SameLine(); ImGui::Text(("Size Y: " + std::to_string((int)pow(2, newSize[1]))).c_str());
 		if (ImGui::Button("Update Graph", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
@@ -26,6 +27,7 @@ void InspectorView::ComponentRender()
 				graph->UpdateTexSize(sf::Vector2i(newX, newY));
 			}
 		}
+		ImGui::Unindent();
 	}
 
 	if (graph->selectedNode >= 0 && graph->selectedNode < graph->nodes.size()) {

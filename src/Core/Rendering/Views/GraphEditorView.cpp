@@ -240,7 +240,7 @@ sf::Color lerpColor(sf::Color a, sf::Color b, float t) {
 }
 
 void GraphEditorView::RenderLine(sf::Vector2f start, sf::Vector2f end, sf::Color startCol, sf::Color endCol, float width) {
-	// 4 Point Bezier =>| P = (1-t)^3 * P0 + 3 * (1-t)^2 * t * P1 + 3(1-t) * t^2 * P2 + t^3 * P3 |
+	// 4 Point Bezier => P = (1-t)^3 * P0 + 3 * (1-t)^2 * t * P1 + 3(1-t) * t^2 * P2 + t^3 * P3 
 	if (start == end) { return; }
 
 	sf::Vector2f P0 = start;
@@ -249,7 +249,16 @@ void GraphEditorView::RenderLine(sf::Vector2f start, sf::Vector2f end, sf::Color
 	sf::Vector2f P2 = sf::Vector2f((start.x + end.x) / 2, end.y);
 
 	std::vector<sf::Vector2f> points;
-	for (float t = 0; t <= 1.01f; t += 0.01f) {
+	int pointCount = 15;
+	if (zoom < 2.f) {
+		pointCount = 30;
+	}
+	if (zoom < 0.5f) {
+		pointCount = 50;
+	}
+
+	for (int i = 0; i <= pointCount; i++) {
+		float t = (float)i / (float)pointCount;
 		sf::Vector2f newPoint;
 		newPoint = (float)pow(1 - t, 3) * P0 + 3.f * (float)pow(1 - t, 2) * t * P1 + 3.f * (1 - t) * (float)pow(t, 2) * P2 + (float)pow(t, 3) * P3;
 		points.push_back(newPoint);
@@ -297,7 +306,7 @@ void GraphEditorView::RenderLine(sf::Vector2f start, sf::Vector2f end, sf::Color
 }
 
 void ToolBarSeparator() {
-	ImGui::Image(*ImageCache::images["detail-separator"], sf::Vector2f(15, 35));
+	//ImGui::Image(*ImageCache::images["detail-separator"], sf::Vector2f(1, 35), sf::Color(0, 0, 0, 0), sf::Color(0, 0, 0, 0));
 }
 
 void GraphEditorView::ToolBarButtons() {
@@ -388,7 +397,7 @@ void GraphEditorView::ComponentRender() {
 		selectBox.setPosition(pos);
 		selectBox.setFillColor(sf::Color(122, 193, 255, 90));
 		selectBox.setOutlineColor(sf::Color(122, 193, 255, 200));
-		selectBox.setOutlineThickness(2.f);
+		selectBox.setOutlineThickness(2.f * zoom);
 		rt.draw(selectBox);
 	}
 }
@@ -473,54 +482,37 @@ void GraphEditorView::UpdateTexSize(sf::Vector2i size)
 
 void GraphEditorView::DeleteNode(int index)
 {
-	// THIS BREAKS IF YOU DELETE A NODE THAT ISNT THE HIGHEST INDEX
-
-	for (auto& pin : nodes[index]->pins) {
-		if (pin.inNodeId != -1) {
-			auto& targetOutNodeIds = nodes[pin.inNodeId]->pins[pin.inPinIndex].outNodeIds;
-			auto& targetOutPinIndexes = nodes[pin.inNodeId]->pins[pin.inPinIndex].outPinIndexes;
-			auto ref = std::find(targetOutNodeIds.begin(), targetOutNodeIds.end(), index);
-			if (ref != targetOutNodeIds.end()) {
-				int refIndex = std::distance(targetOutNodeIds.begin(), ref);
-				targetOutNodeIds.erase(targetOutNodeIds.begin() + refIndex);
-				targetOutPinIndexes.erase(targetOutPinIndexes.begin() + refIndex);
-			}
-		}
-		int n = 0;
-		for (auto outNode : pin.outNodeIds) {
-			nodes[outNode]->pins[pin.outPinIndexes[n]].inNodeId = -1;
-			nodes[outNode]->pins[pin.outPinIndexes[n]].inPinIndex = -1;
-			n++;
-		}
-	}
+	delete nodes[index];
+	nodes.erase(nodes.begin() + index);
 
 	// update all other node references (shift any node indexes above the deleted node index down by 1)
 	for (int n = 0; n < nodes.size(); n++) {  
 		auto* node = nodes[n];
-		if (n > index) {
-			for (auto& pin : nodes[n]->pins) {
-				pin.nodeId -= 1;
-				if (pin.inNodeId < 0) { continue; }
-				if (pin.inNodeId >= nodes.size()) { continue; }
-				auto& targetOutNodeIds = nodes[pin.inNodeId]->pins[pin.inPinIndex].outNodeIds;
-				auto ref = std::find(targetOutNodeIds.begin(), targetOutNodeIds.end(), n);
-				if (ref != targetOutNodeIds.end()) {
-					int refIndex = std::distance(targetOutNodeIds.begin(), ref);
-					targetOutNodeIds[refIndex] -= 1;
-				}
-			}
+		if (node->nodeId > index) {
 			node->nodeId -= 1;
 		}
-		else { 
-			for (auto& pin : nodes[n]->pins) {
-				if (pin.inNodeId <= index) { continue; }
+	}
+	for (int n = 0; n < nodes.size(); n++) {
+		for (auto& pin : nodes[n]->pins) {
+			if (pin.inNodeId > index) {
 				pin.inNodeId -= 1;
+			}
+			else if (pin.inNodeId == index) {
+				pin.inNodeId = -1;
+				pin.inPinIndex = -1;
+			}
+			for (int i = 0; i < pin.outNodeIds.size(); i++) {
+				if (pin.outNodeIds[i] > index) {
+					pin.outNodeIds[i] -= 1;
+				}
+				else if (pin.outNodeIds[i] == index) {
+					pin.outNodeIds[i] = -1;
+					pin.outPinIndexes[i] = -1;
+				}
 			}
 		}
 	}
 
-	delete nodes[index];
-	nodes.erase(nodes.begin() + index);
 	dirty = true;
 }
 
@@ -617,6 +609,16 @@ std::vector<int> GraphEditorView::TopologicalSort() {
 	return orderingList;
 }
 
+bool LineIntersection(sf::Vector2f a1, sf::Vector2f a2, sf::Vector2f b1, sf::Vector2f b2, sf::Vector2f& outPos) {
+	// https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_two_points_on_each_line_segment
+	float t = ((a1.x - b1.x) * (b1.y - b2.y) - (a1.y - b1.y) * (b1.x - b2.x)) / ((a1.x - a2.x) * (b1.y - b2.y) - (a1.y - a2.y) * (b1.x - b2.x));
+	float u = ((a1.x - b1.x) * (a1.y - a2.y) - (a1.y - b1.y) * (a1.x - a2.x)) / ((a1.x - a2.x) * (b1.y - b2.y) - (a1.y - a2.y) * (b1.x - b2.x));
+
+	outPos.x = (a1.x + t * (a2.x - a1.x));
+	outPos.y = (a1.y + t * (a2.y - a1.y));
+	return (t >= 0 && t <= 1) && (u >= 0 && u <= 1);
+}
+
 // SFML EVENTS FOR THIS VIEW
 bool GraphEditorView::ProcessEvent(sf::Event& event) {
 	if (Globals::currentGraph == "") {
@@ -692,12 +694,27 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 			selectBoxEnd = mousePos;
 			return true; // gain handling priority
 		}
+		else if (event.mouseButton.button == sf::Mouse::Button::Right) {
+			cutting = true;
+
+			sf::Vector2f mousePos = pixelToGraph(sf::Vector2i((int)ImGui::GetMousePos().x, (int)ImGui::GetMousePos().y));
+			oldCutPos = mousePos;
+
+			return true; // gain handling priority
+		}
 	} break;
 	case  sf::Event::MouseButtonReleased:
 	{
 		if (event.mouseButton.button == sf::Mouse::Button::Middle) {
 			moving = false;
 			return true; // lose handling priority
+		}
+		else if (event.mouseButton.button == sf::Mouse::Button::Right) {
+			if (cutting) {
+				cutting = false;
+			}
+
+			return true; // gain handling priority
 		}
 		else if (event.mouseButton.button == sf::Mouse::Button::Left) {
 			if (draggingNode) {
@@ -825,13 +842,59 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 			vcenter += sf::Vector2f(deltaPos.x / prevSize.x, deltaPos.y / prevSize.y);
 
 			oldPos = sf::Vector2f((float)pos.x, (float)pos.y);
-			
 		}
 
 		if (selectBoxStart != sf::Vector2f(0, 0))
 		{
 			sf::Vector2f mousePos = pixelToGraph(sf::Vector2i((int)ImGui::GetMousePos().x, (int)ImGui::GetMousePos().y));
 			selectBoxEnd = mousePos;
+		}
+
+		if (cutting) {
+			sf::Vector2f mousePos = pixelToGraph(sf::Vector2i((int)ImGui::GetMousePos().x, (int)ImGui::GetMousePos().y));
+			sf::Vector2f knifeFrom = oldCutPos;
+			sf::Vector2f knifeTo = mousePos;
+			oldCutPos = mousePos;
+
+			if (knifeFrom != knifeTo) {
+				for (int n = 0; n < nodes.size(); n++) {
+					int i = 0;
+					for (auto& pin : nodes[n]->pins) {
+						if ((pin.dir == Direction::In) && (pin.inNodeId > -1)) {
+							sf::Vector2f P0 = nodes[n]->pinPosCache[i];
+							sf::Vector2f P3 = nodes[pin.inNodeId]->pinPosCache[pin.inPinIndex];
+							sf::Vector2f P1 = sf::Vector2f((P0.x + P3.x) / 2, P0.y);
+							sf::Vector2f P2 = sf::Vector2f((P0.x + P3.x) / 2, P3.y);
+
+							int pointCount = 10;
+							sf::Vector2f prevPoint = P0;
+							for (int i = 0; i <= pointCount; i++) {
+								float t = (float)i / (float)pointCount;
+								sf::Vector2f newPoint;
+								newPoint = (float)pow(1 - t, 3) * P0 + 3.f * (float)pow(1 - t, 2) * t * P1 + 3.f * (1 - t) * (float)pow(t, 2) * P2 + (float)pow(t, 3) * P3;
+
+								if (prevPoint == newPoint) { continue; }
+
+								sf::Vector2f intersectionPoint;
+								if (LineIntersection(knifeFrom, knifeTo, prevPoint, newPoint, intersectionPoint)) {
+									auto& inPin = nodes[pin.inNodeId]->pins[pin.inPinIndex];
+									auto it = std::find(inPin.outNodeIds.begin(), inPin.outNodeIds.end(), nodes[n]->nodeId);
+									size_t index = it - inPin.outNodeIds.begin();
+									inPin.outNodeIds.erase(it);
+									inPin.outPinIndexes.erase(inPin.outPinIndexes.begin() + index);
+									pin.inNodeId = -1;
+									pin.inPinIndex = -1;
+									CheckCyclical();
+									break;
+								}
+
+								prevPoint = newPoint;
+							}
+						}
+						i++;
+					}
+				}
+			}
 		}
 	} break;
 	case sf::Event::MouseWheelScrolled:
@@ -857,17 +920,39 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 		case sf::Keyboard::Delete: 
 		{
 			if (!inFocus) { break; }
-			if (selectedNode == -1) { break; }
-			DeleteNode(selectedNode);
-			selectedNode = -1;
+			if (selectedNode > -1) {
+				DeleteNode(selectedNode);
+				selectedNode = -1;
+			}
+			if (multiSelectNodes.size() > 0) {
+				std::vector<GraphNode*> nodeReferences;
+				for (auto& node : multiSelectNodes) {
+					nodeReferences.push_back(nodes[node]);
+				}
+				for (auto& node : nodeReferences) {
+					DeleteNode(node->nodeId);
+				}
+				multiSelectNodes.clear();
+			}
 			CheckCyclical();
 		} break;
 		case sf::Keyboard::Backspace:
 		{
 			if (!inFocus) { break; }
-			if (selectedNode == -1) { break; }
-			DeleteNode(selectedNode);
-			selectedNode = -1;
+			if (selectedNode > -1) {
+				DeleteNode(selectedNode);
+				selectedNode = -1;
+			}
+			if (multiSelectNodes.size() > 0) {
+				std::vector<GraphNode*> nodeReferences;
+				for (auto& node : multiSelectNodes) {
+					nodeReferences.push_back(nodes[node]);
+				}
+				for (auto& node : nodeReferences) {
+					DeleteNode(node->nodeId);
+				}
+				multiSelectNodes.clear();
+			}
 			CheckCyclical();
 		} break;
 		default:

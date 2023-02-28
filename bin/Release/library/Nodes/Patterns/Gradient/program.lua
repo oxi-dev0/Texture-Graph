@@ -7,6 +7,7 @@ for x=1, sizeX do
         local vec = vec2(x,y)
         local proj = mulVC(norm, dotV(vec, norm) / bb)
         local d = lengthV(vec2(proj.x,proj.y))
+        d = d * multi
         local col = math.floor(clamp(d/max,0,1)*255)
 
         if bClamp then

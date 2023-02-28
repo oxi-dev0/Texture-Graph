@@ -135,7 +135,7 @@ GraphNode* GraphNode::LoadFromTGNF(std::string classFolder, std::function<bool(c
 			if (exists) { LOG_CRITICAL("Variable '{0}' is defined multiple times. (Node Class '{1}')", data[2], classFolder); continue; }
 
 			Types::DataType dataType = Types::stringToType[Utility::String::toLower(data[1])];
-			NodePin newPin = NodePin((int)newNode.pins.size(), &newNode.nodeId, dataType, Direction::In, RemoveStringIndicators(data[3]));
+			NodePin newPin = NodePin((int)newNode.pins.size(), dataType, Direction::In, RemoveStringIndicators(data[3]));
 			newNode.pins.push_back(newPin);
 			newNode.luaVars.insert({ data[2], LuaVar(data[2], dataType) });
 			newNode.pinLuaVars.insert({ newPin.pinIndex, data[2] });
@@ -164,7 +164,7 @@ GraphNode* GraphNode::LoadFromTGNF(std::string classFolder, std::function<bool(c
 			if (exists) { LOG_CRITICAL("Variable '{0}' is defined multiple times. (Node Class '{1}')", data[2], classFolder); }
 
 			Types::DataType dataType = Types::stringToType[Utility::String::toLower(data[1])];
-			NodePin newPin = NodePin((int)newNode.pins.size(), &newNode.nodeId, dataType, Direction::Out, RemoveStringIndicators(data[3]));
+			NodePin newPin = NodePin((int)newNode.pins.size(), dataType, Direction::Out, RemoveStringIndicators(data[3]));
 			newNode.pins.push_back(newPin);
 			newNode.luaVars.insert({ data[2], LuaVar(data[2], dataType) });
 			newNode.pinLuaVars.insert({ newPin.pinIndex, data[2] });
@@ -501,7 +501,8 @@ void GraphNode::SFMLRender(sf::RenderTarget& target, float zoomLevel, bool selec
 		outlineThickness = 1.f;
 	}
 	if (selected) {
-		outlineColor = sf::Color(246, 157, 190, transparency);
+		ImVec4 col = ImGui::GetStyle().Colors[ImGuiCol_SliderGrabActive];
+		outlineColor = sf::Color(col.x*255.f, col.y*255.f, col.z*255.f, transparency);
 		outlineThickness = 1.f;
 	}
 

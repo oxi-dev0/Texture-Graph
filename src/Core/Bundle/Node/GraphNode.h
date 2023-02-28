@@ -4,6 +4,8 @@
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
 
+#include <imgui.h>
+
 #include <string>
 #include <map>
 #include <fstream>

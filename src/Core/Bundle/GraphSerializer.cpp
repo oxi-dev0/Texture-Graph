@@ -72,7 +72,7 @@ namespace Graph
 					ImGui::CloseCurrentPopup();
 				}
 				ImGui::SameLine();
-				if (ImGui::Button("Ok")) {
+				if (ImGui::Button("Create")) {
 					NewGraph(graph, nameBuf);
 					ImGui::CloseCurrentPopup();
 				}

@@ -8,6 +8,7 @@ param enum op "Operation" "Add" "Add","Subtract","Multiply","Divide"
 param bool shouldClamp "Clamp?"
 param color min "Min"
 param color max "Max"
+param bool useAlpha "Use Alpha?" true
 output colortex outTex "Out"
 
 show min (shouldClamp == true)

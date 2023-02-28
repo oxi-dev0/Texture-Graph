@@ -16,7 +16,7 @@ namespace Utility {
 			float width = ImGui::GetContentRegionAvail().x;
 			//ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, ImVec2(0, 0));
 			bool selectableHovered = data.hovered;
-			float selectIndicatorWidth = 4.0f;
+			float selectIndicatorWidth = 2.0f;
 
 			bool oldSelected = data.selected;
 			if (ImGui::Selectable(label, data.selected, 0, ImVec2(width - (data.selected ? selectIndicatorWidth : 0), height), true, &selectableHovered, true)) {
@@ -26,8 +26,8 @@ namespace Utility {
 			if (oldSelected) {
 				// select bar
 				ImGui::PushID("Indicator"); 
-				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.968f, 0.619f, 0.749f, 1.0f));
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.968f, 0.619f, 0.749f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_SliderGrabActive]);
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyle().Colors[ImGuiCol_SliderGrabActive]);
 				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
 				ImGui::PushItemFlag(ImGuiItemFlags_Disabled, false);
 				ImGui::Button("", ImVec2(selectIndicatorWidth, height));
@@ -70,6 +70,7 @@ namespace Utility {
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 			ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0, 0.5));
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 10));
+			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.f,0.f,0.f,0.f));
 			float fullWidth = ImGui::GetContentRegionAvail().x;
 			bool arrowButtonHovered = data.hovered;
 			if (ImGui::ArrowButton("dropButton", data.open ? ImGuiDir_Down : ImGuiDir_Right, &arrowButtonHovered, &data.selected, true)) {
@@ -79,11 +80,12 @@ namespace Utility {
 			ImVec2 max = ImGui::GetItemRectMax();
 			float height = max.y - min.y;
 			ImGui::PopStyleVar(1);
+			ImGui::PopStyleColor(1);
 			ImGui::SameLine();
 			float width = ImGui::GetContentRegionAvail().x;
 			//ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, ImVec2(0, 0));
 			bool selectableHovered = data.hovered;
-			float selectIndicatorWidth = 4.0f;
+			float selectIndicatorWidth = 2.0f;
 
 			bool oldSelected = data.selected;
 			if (ImGui::Selectable(label, data.selected, 0, ImVec2(width-(data.selected ? selectIndicatorWidth : 0), height), true, &selectableHovered, true)) {
@@ -93,8 +95,8 @@ namespace Utility {
 				ImGui::SameLine();
 				// select bar
 				ImGui::PushID("Indicator");
-				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.968f, 0.619f, 0.749f, 1.0f));
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.968f, 0.619f, 0.749f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_SliderGrabActive]);
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyle().Colors[ImGuiCol_SliderGrabActive]);
 				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
 				ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
 				ImGui::Button("", ImVec2(selectIndicatorWidth, height));

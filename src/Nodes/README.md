@@ -182,8 +182,9 @@ for x=1, sizeX do
         local d = lengthV(vec2(proj.x,proj.y))
         local col = math.floor(clamp(d/max,0,1)*255)
 
-        if bClamp:
+        if bClamp then
             col = clamp(col, clampMin, clampMax)
+        end
 
         outTex[x][y] = col
     end

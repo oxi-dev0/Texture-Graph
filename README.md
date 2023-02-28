@@ -42,4 +42,5 @@ or with the Git CLI run `git clone --recursive https://github.com/oxi-dev0/Textu
 | TGNL is badly formatted and unintuitive |x|
 | New TGNL condition parser needs validation checking | |
 
-![image](https://user-images.githubusercontent.com/33568643/174427714-5e855101-8380-416b-b326-6bdef5ac5434.png)
+
+<img width="1440" alt="V1 0-Progress" src="https://user-images.githubusercontent.com/33568643/221988685-cf63a443-9fec-4519-be77-234a89295e3e.png">

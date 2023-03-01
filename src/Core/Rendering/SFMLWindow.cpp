@@ -56,6 +56,9 @@ void SFMLWindow::Render() {
 	ImVec2 pos = GetPos();
 	rt.clear(bgCol);
 
+	prevPos = sf::Vector2i((int)pos.x, (int)pos.y);
+	prevSize = sf::Vector2u((unsigned int)contentAvail.x, (unsigned int)contentAvail.y);
+
 	ComponentRender();
 
 	rt.display();
@@ -68,7 +71,7 @@ void SFMLWindow::Render() {
 	view.setSize(contentAvail.x, contentAvail.y);
 	view.setViewport(sf::FloatRect(sf::Vector2f(0, 0), sf::Vector2f(contentAvail.x / (float)rt.getSize().x, contentAvail.y / (float)rt.getSize().y)));
 	prevZoom = std::lerp(prevZoom, zoom, lerpSpeed);
-	view.zoom(prevZoom);
+	view.zoom(zoom);
 	rt.setView(view);
 
 	ImGui::Image(rt, sf::Vector2f((float)rt.getSize().x, (float)rt.getSize().y));
@@ -76,7 +79,4 @@ void SFMLWindow::Render() {
 
 	InfoBar(25.0f);
 	ToolBar(45.0f);
-
-	prevPos = sf::Vector2i((int)pos.x, (int)pos.y);
-	prevSize = sf::Vector2u((unsigned int)contentAvail.x, (unsigned int)contentAvail.y);
 }

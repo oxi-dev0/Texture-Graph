@@ -37,13 +37,13 @@ void GraphEditorView::Grid() {
 	ImVec4 col = ImVec4(bgColor.x * mul, bgColor.y * mul, bgColor.z * mul, 1);
 	sf::Color lineColor = sf::Color((sf::Uint8)(col.x * 255), (sf::Uint8)(col.y * 255), (sf::Uint8)(col.z * 255), (sf::Uint8)(col.w * 255));
 
-	int xSpace = (int)std::floor((float)rt.mapCoordsToPixel(sf::Vector2f((float)lineSpacing, 0)).x - (float)rt.mapCoordsToPixel(sf::Vector2f(0, 0)).x);
-	int ySpace = (int)std::floor((float)rt.mapCoordsToPixel(sf::Vector2f(0, (float)lineSpacing)).y - (float)rt.mapCoordsToPixel(sf::Vector2f(0, 0)).y);
+	int xSpace = rt.mapCoordsToPixel(sf::Vector2f((float)lineSpacing, 0.f)).x - rt.mapCoordsToPixel(sf::Vector2f(0.f,0.f)).x;
+	int ySpace = rt.mapCoordsToPixel(sf::Vector2f(0.f, (float)lineSpacing)).y - rt.mapCoordsToPixel(sf::Vector2f(0.f,0.f)).y;
 
-	sf::Vector2f offset = sf::Vector2f((float)std::fmodf((vcenter.x * prevSize.x * (1 / zoom)), prevSize.x/2), (float)std::fmodf((vcenter.y * prevSize.y * (1 / zoom)), prevSize.y/2));
+	sf::Vector2i offset = sf::Vector2i((int)std::floor(vcenter.x * prevSize.x * (1/zoom)) % xSpace, (int)std::floor(vcenter.y * prevSize.y * (1/zoom)) % ySpace);
 
-	int totalLinesX = (int)prevSize.x / xSpace;
-	int totalLinesY = (int)prevSize.y / ySpace;
+	int totalLinesX = 50;// (int)std::floor(prevSize.x / xSpace);
+	int totalLinesY = 50;// (int)std::floor(prevSize.y / ySpace);
 	lines = sf::VertexArray(sf::Lines, 2 + ((totalLinesX)+(totalLinesY)) * 2);
 
 	for (int x = 0; x <= totalLinesX; x += 1) {
@@ -51,10 +51,10 @@ void GraphEditorView::Grid() {
 		int i2 = (x * 2) + 1;
 
 		// pixel space
-		float xPos = ((float)rt.mapCoordsToPixel(sf::Vector2f((float)lineSpacing, 0)).x - (float)rt.mapCoordsToPixel(sf::Vector2f(0, 0)).x) * (float)x;
+		float xPos = (xSpace * x) - offset.x;
 
-		lines[i1].position = sf::Vector2f(rt.mapPixelToCoords(sf::Vector2i(sf::Vector2f(xPos, 0.0f - (float)lineSpacing*2.0f) - offset)));
-		lines[i2].position = sf::Vector2f(rt.mapPixelToCoords(sf::Vector2i(sf::Vector2f(xPos, prevSize.y + (float)lineSpacing) - offset)));
+		lines[i1].position = sf::Vector2f(rt.mapPixelToCoords(sf::Vector2i(sf::Vector2f(xPos, 0.0f))));
+		lines[i2].position = sf::Vector2f(rt.mapPixelToCoords(sf::Vector2i(sf::Vector2f(xPos, prevSize.y))));
 		lines[i1].color = lineColor;
 		lines[i2].color = lineColor;
 	}
@@ -67,10 +67,10 @@ void GraphEditorView::Grid() {
 		i2 += totalLinesX * 2;
 
 		// pixel space
-		float yPos = ((float)rt.mapCoordsToPixel(sf::Vector2f(0, (float)lineSpacing)).y - (float)rt.mapCoordsToPixel(sf::Vector2f(0, 0)).y) * (float)y;
+		float yPos = (ySpace * y) - offset.y;
 
-		lines[i1].position = sf::Vector2f(rt.mapPixelToCoords(sf::Vector2i(sf::Vector2f(0.0f - (float)lineSpacing*2.0f, yPos) - offset)));
-		lines[i2].position = sf::Vector2f(rt.mapPixelToCoords(sf::Vector2i(sf::Vector2f(prevSize.x + lineSpacing, yPos) - offset)));
+		lines[i1].position = sf::Vector2f(rt.mapPixelToCoords(sf::Vector2i(sf::Vector2f(0.0f, yPos))));
+		lines[i2].position = sf::Vector2f(rt.mapPixelToCoords(sf::Vector2i(sf::Vector2f(prevSize.x, yPos))));
 		lines[i1].color = lineColor;
 		lines[i2].color = lineColor;
 	}
@@ -907,6 +907,7 @@ bool GraphEditorView::ProcessEvent(sf::Event& event) {
 		float sensMax = 0.6f;
 		zoomSens = remapRange2(zoom, 0.4f, 1.0f, sensMin, sensMax);
 		zoomSens = std::clamp(zoomSens, sensMin, sensMax);
+		zoomSens = 0.2f;
 
 		if (event.mouseWheelScroll.delta <= -1)
 			zoom = std::min(4.f, zoom + zoomSens);

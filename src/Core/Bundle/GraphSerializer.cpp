@@ -63,7 +63,7 @@ namespace Graph
 		}
 
 		void GraphNewPopup(GraphEditorView& graph, char* nameBuf) {
-			if (ImGui::BeginPopup("New Graph")) {
+			if (ImGui::BeginPopupModal("New Graph", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
 				if (ImGui::InputText("Name", nameBuf, 35, ImGuiInputTextFlags_EnterReturnsTrue)) {
 					NewGraph(graph, nameBuf);
 					ImGui::CloseCurrentPopup();
@@ -226,7 +226,7 @@ namespace Graph
 		}
 
 		void ClearPromptPopup(GraphEditorView& graph) {
-			if (ImGui::BeginPopup("##ClearPrompt")) {
+			if (ImGui::BeginPopupModal("##ClearPrompt", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
 				ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5, 0.5));
 				ImGui::Selectable("You have unsaved graph changes.", false, 0, ImVec2(270, 25), false, nullptr, false, true);
 				ImGui::PopStyleVar();

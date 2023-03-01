@@ -62,8 +62,11 @@ namespace Graph
 			return p;
 		}
 
-		void GraphNewPopup(GraphEditorView& graph, char* nameBuf) {
+		void GraphNewPopup(GraphEditorView& graph, char* nameBuf, bool opened) {
 			if (ImGui::BeginPopupModal("New Graph", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+				if (opened) {
+					ImGui::SetKeyboardFocusHere(0);
+				}
 				if (ImGui::InputText("Name", nameBuf, 35, ImGuiInputTextFlags_EnterReturnsTrue)) {
 					NewGraph(graph, nameBuf);
 					ImGui::CloseCurrentPopup();
@@ -251,7 +254,7 @@ namespace Graph
 		SerializationStatus LoadGraphFromFile(GraphEditorView& graph, std::string file) {
 			if (!std::filesystem::exists(file)) { LOG_CRITICAL("Graph File '{0}' could not be found.", file); }
 
-			std::function<void(void)> la = [&graph, file]() {
+			std::function<SerializationStatus(void)> la = [&graph, file]() {
 				std::ifstream f(file);
 				graph.Clear();
 
@@ -275,11 +278,11 @@ namespace Graph
 			};
 			if (graph.dirty && Globals::currentGraph != "") {
 				SafeClear(la);
+				return SerializationStatus::Successful;
 			}
 			else {
-				la();
+				return la();
 			}
-			return SerializationStatus::Successful;
 		}
 	}
 }

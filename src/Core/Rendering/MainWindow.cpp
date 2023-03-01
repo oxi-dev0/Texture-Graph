@@ -447,12 +447,18 @@ void MainWindow::OpenPopup(std::string id) {
 }
 
 void MainWindow::Popups() {
+    bool openedNow = openPopup;
     if (openPopup) {
         ImGui::OpenPopup(nextOpenId.c_str());
+        openedNow = true;
         openPopup = false;
     }
 
     ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 2);
+    Graph::Serialization::GraphNewPopup(*graphView, buf, openedNow);
+    Graph::Serialization::ClearPromptPopup(*graphView);
+    Bundle::Serialization::BundlePromptPopup();
+
     if (ImGui::BeginPopup("##BrowserNew")) {
         if (ImGui::Selectable("Bundle...", false, 0, ImVec2(70, 30))) {
             GraphEditorView& c = *graphView;
@@ -472,10 +478,6 @@ void MainWindow::Popups() {
         if (ImGui::Selectable("Graph...", false, 0, ImVec2(70, 30))) { OpenPopup("New Graph"); ImGui::CloseCurrentPopup(); }
         ImGui::EndPopup();
     }
-
-    Graph::Serialization::GraphNewPopup(*graphView, buf);
-    Graph::Serialization::ClearPromptPopup(*graphView);
-    Bundle::Serialization::BundlePromptPopup();
 
     ImGui::PopStyleVar(1);
 }

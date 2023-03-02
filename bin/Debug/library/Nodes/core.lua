@@ -100,6 +100,10 @@ function remap(value, low1, high1, low2, high2)
 	return low2 + (value - low1) * (high2 - low2) / (high1 - low1)
 end
 
+function saturate(x)
+    return math.min(math.max(x, 0), 1)
+end
+
 -- VECTOR2 FLOAT UTIL
 function floorV(v)
     return {x=math.floor(v.x),y=math.floor(v.y)}

@@ -6,7 +6,6 @@ param vec2 dir "Direction" 1.0,0.0
 param bool bClamp "Clamp?" false
 param int clampMin "Min" 0
 param int clampMax "Max" 255
-param float multi "Multiplier" 1.0
 output greytex outTex "Out"
 
 show clampMin (bClamp == true)

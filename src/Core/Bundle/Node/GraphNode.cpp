@@ -72,6 +72,7 @@ GraphNode* GraphNode::LoadFromTGNF(std::string classFolder, std::function<bool(c
 
 	std::string line;
 	int lIndex = -1;
+	int currentLuaVarIndex = 0;
 	while (std::getline(metadataFile, line)) {
 		lIndex += 1;
 		Utility::String::ltrim(line); // Trim Whitespace left
@@ -205,6 +206,8 @@ GraphNode* GraphNode::LoadFromTGNF(std::string classFolder, std::function<bool(c
 			Types::DataType dataType = Types::stringToType[Utility::String::toLower(data[1])];
 			newNode.luaVars.insert({ data[2], LuaVar(data[2], dataType) });
 			newNode.paramLuaVars.insert({ RemoveStringIndicators(data[3]), data[2]});
+			newNode.luaVarOrder.insert({ currentLuaVarIndex, RemoveStringIndicators(data[3]) });
+			currentLuaVarIndex += 1;
 			Types::WildData newData = Types::WildData();
 			newData.dataType = dataType;
 			newNode.luaVarData.insert({ data[2], newData });
@@ -334,6 +337,7 @@ GraphNode* GraphNode::LoadFromTGNF(std::string classFolder, std::function<bool(c
 
 	tempFile << "-- [RESOLVE GLOBALS] --\n";
 	for (std::map<std::string, int>::iterator it = newNode.luaVarPins.begin(); it != newNode.luaVarPins.end(); ++it) {
+		if (newNode.pins[it->second].dir != Direction::Out) { continue;  }
 		tempFile << "g_" << it->first << " = " << it->first << "\n";
 	}
 
@@ -807,6 +811,42 @@ bool GraphNode::AreDependenciesEvaluated(const std::vector<GraphNode*>* nodes)
 	return evaluated;
 }
 
+static int l_printOverride(lua_State* L) {
+	int nargs = lua_gettop(L);
+
+	std::stringstream output;
+	for (int i = 1; i <= nargs; i++) {
+		if (lua_isstring(L, i)) {
+			output << lua_tostring(L, i);
+		}
+		else {
+			switch (lua_type(L, i)) {
+			case LUA_TNUMBER:
+				output << lua_tonumber(L, i);
+				break;
+			case LUA_TBOOLEAN:
+				output << (lua_toboolean(L, i) ? "true" : "false");
+				break;
+			case LUA_TNIL:
+				output << "nil";
+				break;
+			default:
+				output << "{pointer:" << lua_topointer(L, i) << "}";
+				break;
+			}
+		}
+	}
+	
+	int ret = lua_getglobal(L, "g_internal_nodename");
+	if (ret == LUA_TNIL) { LOG_TRACE("COULD NOT FIND 'g_internal_nodename"); }
+	std::string nodeName = lua_tostring(L, lua_gettop(L));
+	lua_pop(L, 1);
+
+	LOG_TRACE("'{0}': {1}", nodeName, output.str());
+
+	return 0;
+}
+
 void GraphNode::Evaluate()
 {
 	isEvaluating = true;
@@ -816,6 +856,18 @@ void GraphNode::Evaluate()
 	luaL_openlibs(L);
 
 	// Globals
+	const struct luaL_Reg printOverrideLib[] = {
+		{"print", l_printOverride},
+		{NULL, NULL}
+	};
+
+	lua_getglobal(L, "_G");
+	luaL_setfuncs(L, printOverrideLib, 0);
+	lua_pop(L, 1);
+
+	lua_pushstring(L, displayName.c_str());
+	lua_setglobal(L, "g_internal_nodename");
+
 	lua_pushinteger(L, texSize.x);
 	lua_setglobal(L, "g_sizeX");
 	lua_pushinteger(L, texSize.y);
@@ -1119,6 +1171,7 @@ GraphNode::GraphNode(const GraphNode& node) : GraphNode()
 	texSize = sf::Vector2i(512, 512);
 	renderedPins = false;
 	luaTempCoreOffset = node.luaTempCoreOffset;
+	luaVarOrder = node.luaVarOrder;
 	SetTextureSize(texSize);
 }
 
@@ -1145,5 +1198,6 @@ GraphNode::GraphNode(GraphNode* node) : GraphNode() {
 	prevEvalTime = 0.0f;
 	texSize = sf::Vector2i(512, 512);
 	renderedPins = false;
+	luaVarOrder = node->luaVarOrder;
 	SetTextureSize(texSize);
 }

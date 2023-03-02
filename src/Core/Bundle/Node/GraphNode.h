@@ -60,6 +60,7 @@ public:
 	std::map<std::string, Types::WildData> luaVarData; // Lua Var Name -> Data
 	std::map<int, sf::Vector2f> pinPosCache; // Pin Index -> Location
 	std::map<std::string, std::vector<std::string>> luaVarEnumSets; // Lua Var Name -> Enum Values
+	std::map<int, std::string> luaVarOrder; // Order Index -> Display Name
 
 	std::string displayVar; // Lua Var Name
 

@@ -84,8 +84,8 @@ function mix(a,b,v)
 end
 
 function smoothstep(edge0,edge1,x)
-    local t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-    return t * t * (3 - 2 * t);
+    local t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0)
+    return t * t * (3 - 2 * t)
 end
 
 function fract(x)
@@ -122,7 +122,7 @@ function cosV(v)
 end
 
 function smoothstepVC(edge0,edge1,v)
-    local tx = clamp((v.x - edge0) / (edge1 - edge0), 0.0, 1.0);
-    local ty = clamp((v.y - edge0) / (edge1 - edge0), 0.0, 1.0);
-    return vec2(tx * tx * (3 - 2 * tx), ty * ty * (3 - 2 * ty));
+    local tx = clamp((v.x - edge0) / (edge1 - edge0), 0.0, 1.0)
+    local ty = clamp((v.y - edge0) / (edge1 - edge0), 0.0, 1.0)
+    return vec2(tx * tx * (3 - 2 * tx), ty * ty * (3 - 2 * ty))
 end

@@ -1,0 +1,12 @@
+name "Remap"
+color 0xFF2E89FF
+category "Core/Filters"
+
+input greytex inTex "In"
+param int inMin "In Min" 0
+param int inMax "In Max" 127
+param int outMin "Out Min" 0
+param int outMax "Out Max" 255
+output greytex outTex "Out"
+
+display outTex

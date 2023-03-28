@@ -20,6 +20,9 @@
 <h6 align="center"> Please Note: The app is, currently, quite slow in comparison to other texture generation programs, such as Substance Designer. </h6>
 <br>
 
+## About Texture Graph
+Often I find the need to create textures for my game projects, and hand-drawing textures takes a lot of time. Therefore I created this program which allows for quick texture generation using procedural nodes that can be connected in a graph, similar to a program like Substance Designer. It is not finished currently, but the core of the app is working and I have found it very useful for creating my games.
+
 ## Cloning the repository
 To clone the repository, please only use GitHub Desktop,  
 or with the Git CLI run `git clone --recursive https://github.com/oxi-dev0/Texture-Graph.git`.  

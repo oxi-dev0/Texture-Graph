@@ -1,3 +1,5 @@
+<img width="1440" alt="V1 0-Progress" src="https://user-images.githubusercontent.com/33568643/221988685-cf63a443-9fec-4519-be77-234a89295e3e.png">
+
 <h1 align="center"> Texture Graph </h2>
 <p align="center">
     <a href="#">
@@ -41,6 +43,3 @@ or with the Git CLI run `git clone --recursive https://github.com/oxi-dev0/Textu
 | Needs 3D Viewer and maybe material system | |
 | TGNL is badly formatted and unintuitive |x|
 | New TGNL condition parser needs validation checking | |
-
-
-<img width="1440" alt="V1 0-Progress" src="https://user-images.githubusercontent.com/33568643/221988685-cf63a443-9fec-4519-be77-234a89295e3e.png">

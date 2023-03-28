@@ -4,6 +4,8 @@
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
 
+#include <imgui.h>
+
 #include <string>
 #include <map>
 #include <fstream>
@@ -21,6 +23,8 @@
 
 #include "../../Rendering/RenderingGlobals.h"
 #include "../../Rendering/CachedImages.h"
+
+#include "../../ConditionParser.h"
 
 #include <lua.hpp>
 
@@ -52,16 +56,17 @@ public:
 	std::map<std::string, LuaVar> luaVars; // Lua Var Name -> Lua Var
 	std::map<int, std::string> pinLuaVars; // Pin Index -> Lua Var Name
 	std::map<std::string, int> luaVarPins; // Lua Var Name -> Pin Index
-	std::map<std::string, std::string> paramLuaVars; // Param Name -> Lua Var Name
+	std::map<std::string, std::string> paramLuaVars; // Display Name -> Lua Var Name
 	std::map<std::string, Types::WildData> luaVarData; // Lua Var Name -> Data
 	std::map<int, sf::Vector2f> pinPosCache; // Pin Index -> Location
+	std::map<std::string, std::vector<std::string>> luaVarEnumSets; // Lua Var Name -> Enum Values
+	std::map<int, std::string> luaVarOrder; // Order Index -> Display Name
 
 	std::string displayVar; // Lua Var Name
 
 	std::vector<std::string> luaLines;
 	std::string luaTempFile;
-	int luaTempCoreOffset;
-	int definitionExecOffset;
+	int luaTempCoreOffset; 
 
 	sf::Texture* displayTexture;
 	sf::Image* displayImage;
@@ -90,6 +95,7 @@ public:
 		luaVarData = std::map<std::string, Types::WildData>();
 		luaVarPins = std::map<std::string, int>();
 		pinPosCache = std::map<int, sf::Vector2f>();
+		luaVarEnumSets = std::map<std::string, std::vector<std::string>>();
 		displayVar = "";
 		luaLines = std::vector<std::string>();
 		nodePos = sf::Vector2f(0, 0);
@@ -107,7 +113,7 @@ public:
 		delete displayTexture;
 	}
 
-	static GraphNode* LoadFromTGNF(std::string classFile); // Load from Texture Graph Node File
+	static GraphNode* LoadFromTGNF(std::string classFile, std::function<bool(const std::string&, const std::string&, ConditionParser::ExpressionBase*)> registerShowExpressionCallback); // Load from Texture Graph Node File
 
 	void SFMLRender(sf::RenderTarget& target, float zoomLevel = 0.5f, bool selected=false, int transparency=255);
 
@@ -115,7 +121,6 @@ public:
 	virtual void Evaluate();
 
 	void SetDirty();
-
 	void SetTextureSize(sf::Vector2i size);
 
 	sf::FloatRect calcBounds(); // Calculate bounds in graph space

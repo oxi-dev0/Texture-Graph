@@ -1,0 +1,7 @@
+name "Gradient Radial"
+color 0x9934EBFF
+category "Core/Patterns"
+
+output greytex outTex "Out"
+
+display outTex

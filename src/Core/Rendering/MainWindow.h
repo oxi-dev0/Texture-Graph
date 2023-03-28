@@ -10,7 +10,6 @@
 
 #include "../Utils/Log.h"
 #include "../Utils/Mapping.h"
-#include "ColourSchemes.h"
 #include "SubWindow.h"
 #include "../Utils/Keybinds.h"
 

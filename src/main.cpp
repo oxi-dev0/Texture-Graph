@@ -19,7 +19,6 @@
 #include "Core/Utils/Timer.h"
 #include <imgui_internal.h>
 
-#include "Core/Rendering/ColourSchemes.h"
 #include "Core/Rendering/RenderingGlobals.h"
 #include "Core/Rendering/MainWindow.h"
 #include "Core/Rendering/CachedImages.h"
@@ -120,8 +119,6 @@ int main(int argc, char** argv)
 
     ImGui::LoadIniSettingsFromDisk("resources/defaultlayout.ini");
     LOG_INFO("Successfully loaded layout from 'resources/defaultlayout.ini'");
-      
-    //sf::RenderTexture newT; // trying to fix unique ptrs being deleted
 
     MainWindow& mC = *primaryWindow;
     std::function<void(std::string)> f = [&mC](std::string id) {

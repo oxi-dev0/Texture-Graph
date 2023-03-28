@@ -1,0 +1,9 @@
+name "Polygon"
+color 0x9934EBFF
+category "Core/Patterns"
+
+param int numSides "Number of Sides" 5
+param float radius "Radius" 0.6
+output greyTex outTex "Out"
+
+display outTex

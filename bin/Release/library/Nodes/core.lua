@@ -14,7 +14,7 @@ function addVC(a,b)
 end
 
 function subV(a,b)
-    return {x=a.x+b.x,y=a.y+b.y}
+    return {x=a.x-b.x,y=a.y-b.y}
 end
 
 function subVC(a,b)
@@ -84,8 +84,8 @@ function mix(a,b,v)
 end
 
 function smoothstep(edge0,edge1,x)
-    local t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-    return t * t * (3 - 2 * t);
+    local t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0)
+    return t * t * (3 - 2 * t)
 end
 
 function fract(x)
@@ -98,6 +98,10 @@ end
 
 function remap(value, low1, high1, low2, high2)
 	return low2 + (value - low1) * (high2 - low2) / (high1 - low1)
+end
+
+function saturate(x)
+    return math.min(math.max(x, 0), 1)
 end
 
 -- VECTOR2 FLOAT UTIL
@@ -118,7 +122,7 @@ function cosV(v)
 end
 
 function smoothstepVC(edge0,edge1,v)
-    local tx = clamp((v.x - edge0) / (edge1 - edge0), 0.0, 1.0);
-    local ty = clamp((v.y - edge0) / (edge1 - edge0), 0.0, 1.0);
-    return vec2(tx * tx * (3 - 2 * tx), ty * ty * (3 - 2 * ty));
+    local tx = clamp((v.x - edge0) / (edge1 - edge0), 0.0, 1.0)
+    local ty = clamp((v.y - edge0) / (edge1 - edge0), 0.0, 1.0)
+    return vec2(tx * tx * (3 - 2 * tx), ty * ty * (3 - 2 * ty))
 end

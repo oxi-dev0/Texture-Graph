@@ -1,0 +1,15 @@
+name "Checker"
+color 0x9934EBFF
+category "Core/Patterns"
+
+param color colA "Color A" 0xFFFFFFFF
+param color colB "Color B" 0x000000FF
+param bool uniform "Uniform Size"
+param float sizeFU "Size (U)" 0.1
+param vec2 sizeFNU "Size (NU)" 0.1,0.1
+output colortex outTex "Out"
+
+show sizeFU (uniform == true)
+show sizeFNU (uniform == false)
+
+display outTex

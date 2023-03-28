@@ -1,0 +1,8 @@
+name "Invert"
+color 0xFA7A39FF
+category "Core/Math/Greyscale"
+
+input greytex inTex "In"
+output greytex outTex "Out"
+
+display outTex

@@ -1,3 +1,5 @@
+<img width="1440" alt="V1 0-Progress" src="https://user-images.githubusercontent.com/33568643/221988685-cf63a443-9fec-4519-be77-234a89295e3e.png">
+
 <h1 align="center"> Texture Graph </h2>
 <p align="center">
     <a href="#">
@@ -32,13 +34,12 @@ or with the Git CLI run `git clone --recursive https://github.com/oxi-dev0/Textu
 ## Task List for v1.0
 | Issue / Improvement | Complete |
 | --- | --- |
-| Some nodes broke after Core Functions were introduced | |
+| Some nodes broke after Core Functions were introduced |x|
 | Deleting nodes will sometimes cause relation issues, with evaluating and serialization | |
 | Mouse switching views while inputs are being processed will sometimes cause both views to handle inputs | |
 | Graph editor view background is buggy | |
 | Evaluation is inefficient, and slow | |
 | GUI Overhaul | |
 | Needs 3D Viewer and maybe material system | |
-| TGNL is badly formatted and unintuitive | |
-
-![image](https://user-images.githubusercontent.com/33568643/174427714-5e855101-8380-416b-b326-6bdef5ac5434.png)
+| TGNL is badly formatted and unintuitive |x|
+| New TGNL condition parser needs validation checking | |

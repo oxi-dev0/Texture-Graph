@@ -24,6 +24,9 @@ private:
 	sf::Vector2f selectBoxStart;
 	sf::Vector2f selectBoxEnd;
 
+	bool cutting = false;
+	sf::Vector2f oldCutPos;
+
 public:
 	std::vector<GraphNode*> nodes;
 	int selectedNode;

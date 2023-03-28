@@ -1,0 +1,9 @@
+name "Greater Than"
+color 0xFA7A39FF
+category "Core/Math/Greyscale"
+
+input greytex inTex "In"
+param int threshold "Threshold" 127
+output greytex outTex "Out"
+
+display outTex

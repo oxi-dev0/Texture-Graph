@@ -31,7 +31,7 @@ namespace Graph
 		SerializationStatus SaveNodesToData(GraphEditorView& graph, std::vector<int> nodesList, std::string& lines);
 
 		void NewGraph(GraphEditorView& graph, std::string name);
-		void GraphNewPopup(GraphEditorView& graph, char* nameBuf);
+		void GraphNewPopup(GraphEditorView& graph, char* nameBuf, bool opened);
 
 		void SafeClear(std::function<void(void)> callback);
 		void ClearPromptPopup(GraphEditorView& graph);

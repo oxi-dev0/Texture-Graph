@@ -94,7 +94,7 @@ namespace Bundle
 		}
 
 		void BundlePromptPopup() {
-			if (ImGui::BeginPopup("##BundlePrompt")) {
+			if (ImGui::BeginPopupModal("##BundlePrompt", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
 				ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5, 0.5));
 				ImGui::Selectable("You have unsaved bundle changes.", false, 0, ImVec2(270, 25), false, nullptr, false, true);
 				ImGui::PopStyleVar();

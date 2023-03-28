@@ -13,7 +13,7 @@ void BrowserView::ToolBarButtons() {
 		ImGui::SetTooltip("New");
 
 	ImGui::SameLine();
-	ImGui::Image(*ImageCache::images["detail-separator"], sf::Vector2f(15, 35));
+	//ImGui::Image(*ImageCache::images["detail-separator"], sf::Vector2f(1, 35), sf::Color(0, 0, 0, 0), sf::Color(0, 0, 0, 0));
 	ImGui::SameLine();
 
 	if (ImGui::ImageButton(*ImageCache::images["icon-save-1"], sf::Vector2f(25, 25), 5)) {
@@ -57,7 +57,8 @@ void BrowserView::ComponentRender() {
 		| ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
 		| ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
-	ImGui::BeginChild("##BrowserBody", ImGui::GetContentRegionAvail(), false, window_flags);
+	//ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 2);
+	ImGui::BeginChild("##BrowserBody", ImGui::GetContentRegionAvail(), true, window_flags);
 	oldTitleData.open = true;
 	oldTitleData.selected = false;
 	std::string currentBundle = Globals::currentBundle;
@@ -100,16 +101,30 @@ void BrowserView::ComponentRender() {
 		if (openRename) {
 			ImGui::OpenPopup(("##GraphListingRename" + graphFile).c_str());
 		}
-		if (ImGui::BeginPopup(("##GraphListingRename" + graphFile).c_str())) {
+		if (ImGui::BeginPopupModal(("##GraphListingRename" + graphFile).c_str(), NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
 			std::function<void(void)> f = [this, graphFile]() {
 				bool open = false;
-				if (Globals::currentGraph == graphFile) {
+				if (Globals::currentGraph == std::filesystem::path(graphFile).filename().replace_extension("").string()) {
 					open = true;
 				}
-				std::filesystem::copy(graphFile, std::filesystem::path(graphFile).remove_filename().string() + std::string(inputBuf) + ".graph");
-				std::filesystem::remove(graphFile);
-				if(open)
-					Graph::Serialization::LoadGraphFromFile(*focusedGraphView, std::filesystem::path(graphFile).remove_filename().string() + std::string(inputBuf) + ".graph");
+				if (open) {
+					Graph::Serialization::SafeClear([=]() 
+						{
+							std::filesystem::copy(graphFile, std::filesystem::path(graphFile).remove_filename().string() + std::string(inputBuf) + ".graph");
+							std::filesystem::remove(graphFile);
+							if (open) {
+								Graph::Serialization::LoadGraphFromFile(*focusedGraphView, std::filesystem::path(graphFile).remove_filename().string() + std::string(inputBuf) + ".graph");
+							}
+						}); 
+				}
+				else {
+					std::filesystem::copy(graphFile, std::filesystem::path(graphFile).remove_filename().string() + std::string(inputBuf) + ".graph");
+					std::filesystem::remove(graphFile);
+					if (open) {
+						Graph::Serialization::LoadGraphFromFile(*focusedGraphView, std::filesystem::path(graphFile).remove_filename().string() + std::string(inputBuf) + ".graph");
+					}
+				}
+				
 			};
 			if (ImGui::InputText("Name", inputBuf, IM_ARRAYSIZE(inputBuf), ImGuiInputTextFlags_EnterReturnsTrue)) {
 				f();

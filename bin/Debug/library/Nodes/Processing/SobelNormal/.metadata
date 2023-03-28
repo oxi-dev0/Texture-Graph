@@ -1,0 +1,8 @@
+name "Normal Sobel"
+color 0xFA7A39FF
+category "Core/Processing"
+
+input colortex inTex "In"
+output colortex outTex "Out"
+
+display outTex

@@ -1,0 +1,8 @@
+name "Constant Color"
+color 0x8AE9C1FF
+category "Core/Constants"
+
+param color inCol "Color"
+output colortex outTex "Out"
+
+display outTex

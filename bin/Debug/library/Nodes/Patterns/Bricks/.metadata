@@ -1,0 +1,10 @@
+name "Bricks"
+color 0x9934EBFF
+category "Core/Patterns"
+
+param int bricksPerRow "# Bricks per row" 5
+param int gap "Gap" 5
+param float ratio "Size Ratio" 2.0
+output greytex outTex "Out"
+
+display outTex

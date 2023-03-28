@@ -1,0 +1,13 @@
+name "Constant Greyscale"
+color 0x8AE9C1FF
+category "Core/Constants"
+
+param bool useFloat "Use Float Input?" false
+param float floatVal "Value(F)" 1.0
+param int intVal "Value(I)" 255
+output greytex outTex "Out"
+
+show floatVal (useFloat == true)
+show intVal (useFloat == false)
+
+display outTex

@@ -159,8 +159,8 @@ void InspectorView::ComponentRender()
 				case Types::DataType_Enum:
 				{
 					auto enumSet = graph->nodes[graph->selectedNode]->luaVarEnumSets[var];
-					static int selectedEnum = std::find(enumSet.begin(), enumSet.end(), luaVarData.enumVar) - enumSet.begin();
-					const char* previewVal = enumSet[selectedEnum].c_str();
+					int selectedEnum = std::find(enumSet.begin(), enumSet.end(), luaVarData.enumVar) - enumSet.begin();
+					const char* previewVal = enumSet[selectedEnum].c_str(); 
 					if (ImGui::BeginCombo(name.c_str(), previewVal, ImGuiComboFlags_None))
 					{
 						for (int n = 0; n < enumSet.size(); n++)

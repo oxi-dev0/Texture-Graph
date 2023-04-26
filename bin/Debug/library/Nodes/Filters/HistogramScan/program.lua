@@ -1,6 +1,6 @@
 contrast = contrast * 0.5
 local low = saturate(position - contrast)
-local high = saturate(position + contrast);
+local high = saturate(position + contrast)
 position = position * 2 - 1
 
 for x=1, sizeX do

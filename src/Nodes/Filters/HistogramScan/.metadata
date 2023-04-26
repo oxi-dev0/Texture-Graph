@@ -4,7 +4,7 @@ category "Core/Filters"
 
 input greytex inTex "In"
 param float position "Position" 0.5
-param float contrast "Contast" 1.0
+param float contrast "Contrast" 1.0
 param bool invert "Invert" false
 output greytex outTex "Out"
 

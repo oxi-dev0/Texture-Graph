@@ -1,0 +1,12 @@
+name "Skew"
+color 0xFA7A39FF
+category "Core/Math/Greyscale"
+
+input greytex inpTex "In"
+param enum dir "Direction" "Horizontal" "Horizontal","Vertical"
+param enum anchor "Center" "Center","Top Left","Bottom Right"
+param float amount "Amount" 0.0
+param bool rep "Repeat" false
+output greytex outTex "Out"
+
+display outTex

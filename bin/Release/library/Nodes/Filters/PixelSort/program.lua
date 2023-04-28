@@ -1,9 +1,32 @@
-function compare(a,b)
+function compareSum(a,b)
     local sA = a.r + a.g + a.b + a.a
     local sB = b.r + b.g + b.b + b.a
     if sA > sB then return 1 end
     if sB > sA then return -1 end
     if sA == sB then return 0 end
+end
+
+function compareAvg(a,b)
+    local aA = (a.r+a.g+a.b+a.a)/4
+    local aB = (b.r+b.g+b.b+b.a)/4
+    if aA > aB then return 1 end
+    if aB > aA then return -1 end
+    if aA == aB then return 0 end
+end
+
+function compareGrey(a,b)
+    local gA = (a.r * 0.3 + a.g * 0.59 + a.b * 0.11) * (a.a/255)
+    local gB = (b.r * 0.3 + b.g * 0.59 + b.b * 0.11) * (b.a/255)
+    if gA > gB then return 1 end
+    if gB > gA then return -1 end
+    if gA == gB then return 0 end
+end
+
+function compare(a,b)
+    if comp == "Sum" then return compareSum(a,b) end
+    if comp == "Average" then return compareAvg(a,b) end
+    if comp == "Greyscale" then return compareGrey(a,b) end
+    return 0
 end
 
 function bubbleSort(list, invert)

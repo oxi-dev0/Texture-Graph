@@ -5,7 +5,8 @@ category "Core/Filters"
 input colortex inTex "In"
 param enum dir "Direction" "Left to Right" "Left to Right","Right to Left","Top to Bottom","Bottom to Top"
 param enum algo "Algorithm" "Bubble Sort" "Bubble Sort","Gnome Sort","Insertion Sort"
-param int iters "Iterations" 0
+param enum comp "Comparison" "Sum" "Sum","Average","Greyscale"
+param int iters "Iterations" 1
 output colortex outTex "Out"
 
 display outTex

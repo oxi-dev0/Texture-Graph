@@ -1,0 +1,10 @@
+name "Gaussian Blur"
+color 0xFF2E89FF
+category "Core/Filters"
+
+input colortex inTex "In"
+param enum radius "Radius" "Medium" "Small","Medium","Large"
+param enum dir "Direction" "Both" "X","Y","Both"
+output colortex outTex "Out"
+
+display outTex

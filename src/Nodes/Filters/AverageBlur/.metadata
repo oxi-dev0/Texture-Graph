@@ -1,0 +1,9 @@
+name "Average Blur"
+color 0xFF2E89FF
+category "Core/Filters"
+
+input greytex inTex "In"
+param int radius "Radius" 2
+output greytex outTex "Out"
+
+display outTex

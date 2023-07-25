@@ -130,3 +130,53 @@ function smoothstepVC(edge0,edge1,v)
     local ty = clamp((v.y - edge0) / (edge1 - edge0), 0.0, 1.0)
     return vec2(tx * tx * (3 - 2 * tx), ty * ty * (3 - 2 * ty))
 end
+
+-- COLOR4
+function col4(r,g,b,a)
+    return {r=r,g=g,b=b,a=a}
+end
+
+function addCol(a,b)
+    return {r=a.r+b.r,g=a.g+b.g,b=a.b+b.b,a=a.a+b.a}
+end
+
+function addColC(a,b)
+    return {r=a.r+b,g=a.g+b,b=a.b+b,a=a.a+b}
+end
+
+function subCol(a,b)
+    return {r=a.r-b.r,g=a.g-b.g,b=a.b-b.b,a=a.a-b.a}
+end
+
+function subColC(a,b)
+    return {r=a.r-b,g=a.g-b,b=a.b-b,a=a.a-b}
+end
+
+function mulCol(a,b)
+    return {r=((a.r/255)*(b.r/255))*255,g=((a.g/255)*(b.g/255))*255,b=((a.b/255)*(b.b/255))*255,a=((a.a/255)*(b.a/255))*255}
+end
+
+function mulColC(a,b)
+    return {r=a.r*b,g=a.g*b,b=a.b*b,a=a.a*b}
+end
+
+function divColC(a,b)
+    return {r=a.r/b,g=a.g/b,b=a.b/b,a=a.a/b}
+end
+
+function invertCol(c)
+    return {r=255-c.r,g=255-c.g,b=255-c.b,a=255-c.a}
+end
+
+-- COLOR4 FLOAT UTIL
+function floorCol(c)
+    return {r=math.floor(c.r),g=math.floor(c.g),b=math.floor(c.b),a=math.floor(c.a)}
+end
+
+function clampCol(c, mi, ma)
+    return {r=clamp(c.r,mi.ma),g=clamp(c.g,mi,ma),b=clamp(c.b,mi,ma),a=clamp(c.a,mi,ma)}
+end
+
+function modCol(c, a)
+    return {r=mod(c.r,a),g=mod(c.g,a),b=mod(c.b,a),a=mod(c.a,a)}
+end

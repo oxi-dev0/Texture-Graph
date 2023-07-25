@@ -31,10 +31,10 @@ end
 function overlay(x,y,val)
     if overlayMode == "Add" then
         outTex[x][y] = clamp(outTex[x][y] + val, 0, 255)
-    else 
-        if overlayMode == "Multiply" then
-            outTex[x][y] = (outTex[x][y]/255)*(val/255)
-        end
+    elseif overlayMode == "Greatest" then
+        outTex[x][y] = math.max(outTex[x][y], val)
+    elseif overlayMode == "Multiply" then
+        outTex[x][y] = (outTex[x][y]/255)*(val/255)
     end
 end
 

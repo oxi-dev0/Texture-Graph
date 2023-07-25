@@ -109,6 +109,10 @@ function floorV(v)
     return {x=math.floor(v.x),y=math.floor(v.y)}
 end
 
+function clampV(v, mi, ma)
+    return {x=clamp(v.x, mi.x, ma.x), y=clamp(v.y, mi.y, ma.y)}
+end
+
 function modVC(v, a)
     return {x=mod(v.x,a),y=mod(v.y,a)}
 end

@@ -1,0 +1,11 @@
+name "Radial Blur"
+color 0xFF2E89FF
+category "Core/Filters"
+
+input colortex inTex "In"
+param int sampleCount "# Samples" 10
+param float blurWidth "Blur Width" 0.1
+param vec2 blurPoint "Blur Point" 0.5,0.5
+output colortex outTex "Out"
+
+display outTex

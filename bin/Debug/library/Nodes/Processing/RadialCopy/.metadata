@@ -1,0 +1,12 @@
+name "Radial Copy"
+color 0xFA7A39FF
+category "Core/Processing"
+
+input greytex inp "In"
+param int copies "# Copies" 1
+param vec2 pivotVec "Pivot" 0.5,0.5
+param bool rep "Repeat Edges" false
+param enum overlayMode "Overlay Mode" "Add" "Add","Multiply"
+output greytex outTex "Out"
+
+display outTex

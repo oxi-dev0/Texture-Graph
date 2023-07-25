@@ -78,7 +78,7 @@ function gnomeSort(list, invert)
     end
 end
 
-function insertionSort(list, invert)
+function insertionSort(list, invert, debug)
     local target = -1
     if invert == true then
         target = 1
@@ -90,6 +90,9 @@ function insertionSort(list, invert)
         while i <= #list do
             local j = i
             while j > 1 and compare(list[j-1], list[j]) == target do
+                if debug == true then
+                    print("Swap: " .. tostring(j-1) .. "<->" .. tostring(j))
+                end
                 local temp = list[j]
                 list[j] = list[j-1]
                 list[j-1] = temp
@@ -101,13 +104,13 @@ function insertionSort(list, invert)
     end
 end
 
-function sort(list, invert)
+function sort(list, invert, debug)
     if algo == "Bubble Sort" then
         bubbleSort(list, invert)
     elseif algo == "Gnome Sort" then
         gnomeSort(list, invert)
     elseif algo == "Insertion Sort" then
-        insertionSort(list, invert)
+        insertionSort(list, invert, debug)
     end
 end
 
@@ -123,7 +126,7 @@ if dir == "Left to Right" or dir == "Right to Left" then
         for x=1, sizeX do
             table.insert(list, inTex[x][y])
         end
-        sort(list, dir=="Right to Left")
+        sort(list, dir=="Right to Left", (y==255))
         for x=1, sizeX do
             outTex[x][y] = list[x]
         end

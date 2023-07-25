@@ -838,7 +838,7 @@ static int l_printOverride(lua_State* L) {
 	}
 	
 	int ret = lua_getglobal(L, "g_internal_nodename");
-	if (ret == LUA_TNIL) { LOG_TRACE("COULD NOT FIND 'g_internal_nodename"); }
+	if (ret == LUA_TNIL) { LOG_TRACE("COULD NOT FIND 'g_internal_nodename'"); }
 	std::string nodeName = lua_tostring(L, lua_gettop(L));
 	lua_pop(L, 1);
 
@@ -875,6 +875,30 @@ void GraphNode::Evaluate()
 
 	Utility::Timer fullTimr;
 	Utility::Timer varTmr;
+
+	// Reset all outputs
+	int j = 0;
+	for (auto& pin : pins) {
+		if (pin.dir == Direction::Out) {
+			auto type = pin.type;
+			auto var = pinLuaVars[j];
+
+			switch (type)
+			{
+			case Types::DataType_ColorTex:
+			{
+				luaVarData[var].colortexVar = Types::colortex(texSize.x, std::vector<sf::Color>(texSize.y, sf::Color::White));
+			}	break;
+			case Types::DataType_GreyTex:
+			{
+				luaVarData[var].greytexVar = Types::greytex(texSize.x, std::vector<int>(texSize.y, 0));
+			}	break;
+			default:
+				break;
+			}
+		}
+		j++;
+	}
 
 	for (auto& var : luaVars) {
 		Utility::Timer specVarTmr;

@@ -102,8 +102,8 @@ A node's execution lua has core functions available to use, in a similar style t
 | `subVC(a,b)` | `a:vec2`, `b:number` | `vec2` | Returns a - b |
 | `mulV(a,b)` | `a:vec2`, `b:vec2` | `vec2` | Returns a * b |
 | `mulVC(a,b)` | `a:vec2`, `b:number` | `vec2` | Returns a * b |
-| `divV(a,b)` | `a:vec2`, `b:vec2` | `vec2` | Returns a * b |
-| `divVC(a,b)` | `a:vec2`, `b:number` | `vec2` | Returns a * b |
+| `divV(a,b)` | `a:vec2`, `b:vec2` | `vec2` | Returns a / b |
+| `divVC(a,b)` | `a:vec2`, `b:number` | `vec2` | Returns a / b |
 | `negateV(v)` | `v:vec2` | `vec2` | Returns -v |
 | `lengthV(v)` | `v:vec2` | `number` | Returns the Sqrt Length of v |
 | `normalize(v)` | `v:vec2` | `vec2` | Returns v divided by its length |
@@ -116,11 +116,35 @@ A node's execution lua has core functions available to use, in a similar style t
 | `mix(a,b,v)` | `a:number`, `b:number`, `v:number` | `number` | Returns a linear interpolation between a and b, using v as the weight |
 | `smoothstep(edge0,edge1,x)` | `edge0:number`, `edge1:number`, `x:number` | `number` | Returns smooth Hermite interpolation between 0 and 1 when edge0 < x < edge1 |
 | `fract(x)` | `x:number` | `number` | Returns the fractional part of x (computed by x - floor(x)) |
+| `mod(x,y)` | `x:number`, `y:number` | `number` | Returns x modulo y (computed by x - y * floor(x/y)) |
+| `remap(value,low1,high1,low2,high2)` | `value:number`, `low1:number`, `high1:number`, `low2:number`, `high2:number` | `number` | Returns value remapped from the first range to the second |
+| `saturate(x)` | `x:number` | `number` | Returns x clamped in the range 0 <= x <= 1 |
 | | | |
 | **2-Dim Misc. Math Functions** |
 | `floorV(v)` | `v:vec2` | `vec2` | Returns a vec2 where each component has been floored |
+| `clampV(v,mi,ma)` | `v:vec2`, `mi:vec2`, `ma:vec2` | `vec2` | Returns a vec2 where each component has been clamped between the same component of mi and ma |
+| `modVC(v,a)` | `v:vec2`, `a:number` | `vec2` | Returns v where each component is it's modulo with a |
 | `fractV(v)` | `v:vec2` | `vec2` | Returns a vec2 where each component is it's fractional part |
+| `cosV(v)` | `v:vec2` | `vec2` | Returns a vec2 where each component is the cosine of the original component |
+| `sinV(v)` | `v:vec2` | `vec2` | Returns a vec2 where each component is the sine of the original component |
 | `smoothstepVC(edge0,edge1,v)` | `edge0:number`, `edge1:number`, `v:vec2` | `vec2` | Returns, for each component of the vector (c), smooth Hermite interpolation of c between 0 and 1 when edge0 < c < edge1 |
+| | | |
+| **Color Functions** |
+| `col4(r,g,b,a)` | `r:number`, `g:number`, `b:number`, `a:number` | `col4` | Returns a Color4 with the specified components. |
+| `addCol(a,b)` | `a:col4`, `b:col4` | `col4` | Returns a + b |
+| `addColC(a,b)` | `a:col4`, `b:number` | `col4` | Returns a + b |
+| `subCol(a,b)` | `a:col4`, `b:col4` | `col4` | Returns a - b |
+| `subColC(a,b)` | `a:col4`, `b:number` | `col4` | Returns a - b |
+| `mulCol(a,b)` | `a:col4`, `b:col4` | `col4` | Returns a * b (As Color4s are intended to store a value from 0-255, this will convert them to range 0-1 before multiplying then convert back to 0-255 after the operation) |
+| `mulColC(a,b)` | `a:col4`, `b:number` | `col4` | Returns a * b |
+| `divColC(a,b)` | `a:col4`, `b:number` | `col4` | Returns a / b (There is no function to divide two Color4s currently, only a function to divide a Color4 by a number) |
+| `invertCol(c)` | `c:col4` | `col4` | Returns 255 - c |
+| | | |
+| **4-Dim Misc. Math Functions** |
+| `floorCol(c)` | `c:col4` | `col4` | Returns a col4 where each component has been floored |
+| `clampColC(c,mi,ma)` | `c:col4`, `mi:number`, `ma:number` | `col4` | Returns a col4 where each component has been clamped between mi and ma |
+| `modColC(c,a)` | `c:col4`, `a:number` | `col4` | Returns c where each component is it's modulo with a |
+| | | |
 
 > More functions will be added in the future.
 

@@ -125,6 +125,10 @@ function cosV(v)
     return {x=math.cos(v.x),y=math.cos(v.y)}
 end
 
+function sinV(v)
+    return {x=math.sin(v.x),y=math.sin(v.y)}
+end
+
 function smoothstepVC(edge0,edge1,v)
     local tx = clamp((v.x - edge0) / (edge1 - edge0), 0.0, 1.0)
     local ty = clamp((v.y - edge0) / (edge1 - edge0), 0.0, 1.0)
@@ -173,10 +177,10 @@ function floorCol(c)
     return {r=math.floor(c.r),g=math.floor(c.g),b=math.floor(c.b),a=math.floor(c.a)}
 end
 
-function clampCol(c, mi, ma)
-    return {r=clamp(c.r,mi.ma),g=clamp(c.g,mi,ma),b=clamp(c.b,mi,ma),a=clamp(c.a,mi,ma)}
+function clampColC(c, mi, ma)
+    return {r=clamp(c.r,mi,ma),g=clamp(c.g,mi,ma),b=clamp(c.b,mi,ma),a=clamp(c.a,mi,ma)}
 end
 
-function modCol(c, a)
+function modColC(c, a)
     return {r=mod(c.r,a),g=mod(c.g,a),b=mod(c.b,a),a=mod(c.a,a)}
 end
